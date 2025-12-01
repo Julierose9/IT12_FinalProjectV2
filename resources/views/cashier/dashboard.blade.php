@@ -486,12 +486,12 @@
       <div class="collapse" id="salesSubmenu">
         <div class="nav flex-column ms-3">
           {{-- Sales (Combined Orders & Payments) --}}
-          <a class="nav-link" href="{{ route('cashier.sales.index') }}">
+          <a class="nav-link" href="{{ route('cashier.sales') }}">
             <i class="fas fa-shopping-bag me-2"></i> Sales
           </a>
 
           {{-- Transactions History --}}
-          <a class="nav-link" href="{{ route('cashier.transactions.index') }}">
+          <a class="nav-link" href="{{ route('cashier.transaction.history') }}">
             <i class="fas fa-history me-2"></i> Transaction History
           </a>
         </div>
@@ -503,7 +503,7 @@
       </a>
       <div class="collapse" id="reportsSubmenu">
         <div class="nav flex-column ms-3">
-          <a class="nav-link" href="{{ route('cashier.reports.daily-sales') }}">
+          <a class="nav-link" href="{{ route('cashier.daily.sales') }}">
             <i class="fas fa-chart-line me-2"></i> Daily Sales
           </a>
         </div>

@@ -16,6 +16,10 @@ return new class extends Migration
         $table->string('SupplierName');
         $table->string('SupplierContactNo')->nullable();
         $table->string('Address')->nullable();
+        $table->unsignedInteger('ProductSupplied')  // ProductSupplied counter
+                  ->default(0);
+            $table->enum('Status', ['Active', 'Inactive', 'Pending'])
+                  ->default('Pending');
         $table->timestamps();
     });
     

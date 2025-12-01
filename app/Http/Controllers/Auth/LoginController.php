@@ -11,39 +11,36 @@ class LoginController extends Controller
     public function showLoginForm()
     {
         if (Auth::check()) {
-            return redirect()->route(Auth::user()->Role === 'Admin' ? 'admin.dashboard' : 'cashier.dashboard');
+            return $this->redirectBasedOnRole();
         }
         return view('auth.login');
     }
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
+        $request->validate([
+            'email'    => 'required|email',
             'password' => 'required|string',
         ]);
 
-        // Try to log the user in
-        if (Auth::attempt($credentials, $request->has('remember'))) {
-            
-            // THIS IS CRITICAL
+        $remember = $request->has('remember'); // Fixed: use has() not filled()
+
+        // THIS IS THE KEY: Use 'email' field exactly as in DB
+        if (Auth::attempt([
+            'email'    => $request->email,
+            'password' => $request->password
+        ], $remember)) {
             $request->session()->regenerate();
 
-            $user = Auth::user();
+            \Log::info('Login Success: ' . Auth::user()->email . ' | Role: ' . Auth::user()->Role);
 
-            // Optional: Log for debugging
-            \Log::info('Login SUCCESS', ['user' => $user->email, 'role' => $user->Role]);
-
-            // Redirect based on role
-            return redirect()->intended(
-                $user->Role === 'Admin' ? route('admin.dashboard') : route('cashier.dashboard')
-            );
+            return $this->redirectBasedOnRole();
         }
 
-        // Login failed
+        // Show error if credentials wrong
         return back()->withErrors([
             'email' => 'The provided credentials are incorrect.',
-        ])->onlyInput('email');
+        ])->withInput($request->only('email'));
     }
 
     public function logout(Request $request)
@@ -53,5 +50,15 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->with('success', 'Logged out successfully!');
+    }
+
+    private function redirectBasedOnRole()
+    {
+        return match (Auth::user()->Role) {
+            'Admin'   => redirect()->route('admin.dashboard'),
+            'Cashier' => redirect()->route('cashier.dashboard'),
+            default   => redirect()->route('login')
+                ->withErrors(['email' => 'Your role is not authorized. Contact admin.']),
+        };
     }
 }

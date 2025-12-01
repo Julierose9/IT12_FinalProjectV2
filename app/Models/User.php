@@ -11,10 +11,9 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $table = 'users';
-
     protected $primaryKey = 'UserID';
-    public $incrementing = false;          // Because UserID = USR001
-    protected $keyType = 'string';         // string PK
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'UserID',
@@ -29,6 +28,26 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    // Laravel automatically uses "email" for login
-    // Laravel automatically uses "password" for authentication
+    // THIS IS THE MISSING LINE THAT BREAKS EVERYTHING
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'Role' => 'string',
+    ];
+
+    // CRITICAL: Tell Laravel to use 'email' as login field
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    // Optional: if you ever use remember token
+    public function getRememberToken()
+    {
+        return $this->remember_token;
+    }
+
+    public function setRememberToken($value)
+    {
+        $this->remember_token = $value;
+    }
 }

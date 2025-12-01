@@ -3,63 +3,137 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; 
+
 
 class SupplierController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $suppliers = Supplier::withCount('products')
+            ->orderBy('SupplierName')
+            ->get();
+
+        return view('admin.supplier', compact('suppliers'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'SupplierName' => 'required|string|max:255|unique:suppliers,SupplierName',
+            'SupplierContactNo' => 'required|string|max:20',
+            'Address' => 'required|string|max:500',
+            'Status' => 'required|in:Active,Inactive,Pending',
+        ]);
+
+        // Auto-generate SupplierID: SUP001, SUP002...
+        $lastSupplier = Supplier::orderBy('id', 'desc')->first();
+        $newId = $lastSupplier ? intval(substr($lastSupplier->SupplierID, 3)) + 1 : 1;
+        $supplierId = 'SUP' . str_pad($newId, 3, '0', STR_PAD_LEFT);
+
+        Supplier::create([
+            'SupplierID' => $supplierId,
+            'SupplierName' => $request->SupplierName,
+            'SupplierContactNo' => $request->SupplierContactNo,
+            'Address' => $request->Address,
+            'Status' => $request->Status,
+        ]);
+
+        return redirect()->route('admin.supplier')
+            ->with('success', 'Supplier created successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit($id)
     {
-        //
+        // Use where clause with SupplierID instead of find()
+        $supplier = DB::table('Suppliers')
+            ->where('SupplierID', $id)
+            ->first();
+    
+        if (!$supplier) {
+            return redirect()->route('admin.supplier')->with('error', 'Supplier not found.');
+        }
+    
+        return response()->json($supplier);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    
+    public function update(Request $request, $id)
     {
-        //
+        // Find supplier by SupplierID
+        $supplier = DB::table('Suppliers')
+            ->where('SupplierID', $id)
+            ->first();
+    
+        if (!$supplier) {
+            return redirect()->route('admin.supplier')->with('error', 'Supplier not found.');
+        }
+    
+        $request->validate([
+            'SupplierName' => 'required|string|max:255|unique:Suppliers,SupplierName,' . $id . ',SupplierID',
+            'SupplierContactNo' => 'required|string|max:20',
+            'Address' => 'required|string|max:500',
+            'Status' => 'required|in:Active,Inactive,Pending',
+        ]);
+    
+        DB::table('Suppliers')
+            ->where('SupplierID', $id)
+            ->update([
+                'SupplierName' => $request->SupplierName,
+                'SupplierContactNo' => $request->SupplierContactNo,
+                'Address' => $request->Address,
+                'Status' => $request->Status,
+                'updated_at' => now(),
+            ]);
+    
+        return redirect()->route('admin.supplier')
+            ->with('success', 'Supplier updated successfully!');
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    
+    public function destroy($id)
     {
-        //
+        $supplier = DB::table('Suppliers')
+            ->where('SupplierID', $id)
+            ->first();
+    
+        if (!$supplier) {
+            return redirect()->route('admin.supplier')->with('error', 'Supplier not found.');
+        }
+    
+        // Check if supplier has products
+        $productCount = DB::table('Products')
+            ->where('SupplierID', $id)
+            ->count();
+    
+        if ($productCount > 0) {
+            return back()->with('error', 'Cannot delete supplier with linked products!');
+        }
+    
+        DB::table('Suppliers')
+            ->where('SupplierID', $id)
+            ->delete();
+    
+        return back()->with('success', 'Supplier deleted successfully!');
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    
+    public function show($id)
     {
-        //
+        $supplier = DB::table('Suppliers')
+            ->where('SupplierID', $id)
+            ->first();
+    
+        if (!$supplier) {
+            return response()->json(['error' => 'Supplier not found.'], 404);
+        }
+    
+        // Get products count
+        $productsCount = DB::table('Products')
+            ->where('SupplierID', $id)
+            ->count();
+    
+        $supplier->products_count = $productsCount;
+    
+        return response()->json($supplier);
     }
 }

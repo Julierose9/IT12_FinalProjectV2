@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PullOut;
+use App\Models\Product;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 
 class PullOutController extends Controller
@@ -12,15 +15,15 @@ class PullOutController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $pullOuts = PullOut::with(['product', 'employee'])
+                            ->orderBy('DatePullOut', 'desc')
+                            ->get();
+        
+        // Get products and employees for the dropdowns
+        $products = Product::all();
+        $employees = Employee::all();
+        
+        return view('admin.pullout', compact('pullOuts', 'products', 'employees'));
     }
 
     /**
@@ -28,31 +31,29 @@ class PullOutController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        // Validate and store pullout data
+        $validated = $request->validate([
+            'ProductID' => 'required|exists:products,ProductID',
+            'EmployeeID' => 'required|exists:employees,EmployeeID',
+            'Qty' => 'required|integer|min:1',
+            'Reason' => 'required|string',
+            'DatePullOut' => 'required|date',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        // Generate PullOutID
+        $pullOutId = 'PO-' . date('Ymd') . '-' . str_pad(PullOut::count() + 1, 3, '0', STR_PAD_LEFT);
+        
+        PullOut::create([
+            'PullOutID' => $pullOutId,
+            'ProductID' => $validated['ProductID'],
+            'EmployeeID' => $validated['EmployeeID'],
+            'PullOutQty' => $validated['Qty'],
+            'PullOutReason' => $validated['Reason'],
+            'DatePullOut' => $validated['DatePullOut'],
+        ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
+        return redirect()->route('admin.pullout')
+            ->with('success', 'Pullout record created successfully!');
     }
 
     /**
@@ -60,6 +61,10 @@ class PullOutController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $pullOut = PullOut::findOrFail($id);
+        $pullOut->delete();
+        
+        return redirect()->route('admin.pullout')
+            ->with('success', 'Pullout record deleted successfully!');
     }
 }
