@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\PullOutController;
 use App\Http\Controllers\Admin\StockInController;
+use App\Http\Controllers\Admin\Reports\InventoryReportController; // Add this import
 
 // ==================== PUBLIC ROUTES ====================
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -75,13 +76,25 @@ Route::middleware('auth')->group(function () {
         Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
-        // ==================== OTHER ADMIN PAGES ====================
-Route::get('/reports/inventory', [InventoryReportController::class, 'index'])
-    ->name('admin.reports.inventory');
+        // ==================== TRANSACTION ====================
+        Route::get('/transaction', fn() => view('admin.transaction'))->name('transaction');
 
-Route::get('/reports/inventory/export', [InventoryReportController::class, 'export'])
-    ->name('admin.reports.inventory.export');        Route::get('/transaction', fn() => view('admin.transaction'))->name('transaction');
-    });
+        // ==================== INVENTORY REPORT ====================
+        // Main inventory report page (alias for admin.inventory)
+        Route::get('/inventory', [InventoryReportController::class, 'index'])
+            ->name('inventory');
+        
+        // ==================== REPORTS GROUP ====================
+        Route::prefix('reports')->name('reports.')->group(function () {
+            // Inventory report (alternative URL, same as above)
+            Route::get('/inventory', [InventoryReportController::class, 'index'])
+                ->name('inventory');
+            
+            // Inventory export
+            Route::get('/inventory/export', [InventoryReportController::class, 'export'])
+                ->name('inventory.export');
+        });
+    }); // End of admin group
 
     // ==================== CASHIER ROUTES ====================
     Route::prefix('cashier')->name('cashier.')->group(function () {
@@ -90,4 +103,11 @@ Route::get('/reports/inventory/export', [InventoryReportController::class, 'expo
         Route::get('/sales', fn() => view('cashier.sales'))->name('sales');
         Route::get('/transaction-history', fn() => view('cashier.transactionhistory'))->name('transaction.history');
     });
-});
+
+}); // End of auth middleware group
+
+// ==================== LOGOUT ROUTE ====================
+Route::post('/logout', function () {
+    auth()->logout();
+    return redirect('/login');
+})->name('logout');
