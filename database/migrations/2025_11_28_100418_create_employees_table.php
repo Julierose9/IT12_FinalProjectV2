@@ -6,26 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
-{
-    Schema::create('employees', function (Blueprint $table) {
-        $table->string('EmployeeID', 10)->primary();
-        $table->string('EmployeeFName');
-        $table->string('EmployeeLName');
-        $table->string('EmployeeMName')->nullable();
-        $table->string('EmployeeContactNum');
-        $table->enum('Role', ['Admin', 'Cashier']);
-        $table->enum('EmployeeStatus', ['Active', 'Inactive']);
-        $table->timestamps();
-    });
-}
+    {
+        Schema::create('employees', function (Blueprint $table) {
+            // Auto-incrementing BIG INT ID (standard Laravel way)
+            $table->id(); // creates `id` BIGINT UNSIGNED AUTO_INCREMENT
 
-    /**
-     * Reverse the migrations.
-     */
+            // Custom formatted employee code (e.g., EMP001, EMP042)
+            $table->string('EmployeeID', 10)->unique(); // This will be "EMP001"
+
+            $table->string('EmployeeFName', 50);
+            $table->string('EmployeeLName', 50);
+            $table->string('EmployeeMName', 1)->nullable();
+            $table->string('EmployeeContactNum', 20);
+            $table->enum('Role', ['Admin', 'Cashier', 'Manager']);
+            $table->enum('EmployeeStatus', ['Active', 'Inactive', 'On Leave'])->default('Active');
+            $table->timestamps();
+        });
+    }
+
     public function down(): void
     {
         Schema::dropIfExists('employees');

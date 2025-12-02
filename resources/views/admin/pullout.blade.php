@@ -606,7 +606,6 @@
     <div class="topbar">
       <div class="d-flex align-items-center gap-3">
         <h4 class="mb-0">Pullouts Management</h4>
-        <small class="text-muted">Removed Items Tracking</small>
       </div>
 
       <div class="user-section">
@@ -616,7 +615,7 @@
             <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
             <div class="user-details">
               <div class="user-name">Dora</div>
-              <div class="user-role">Administrator</div>
+              <div class="user-role">Admin</div>
             </div>
             <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
           </button>
@@ -749,7 +748,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h5 class="card-title mb-0">Pullout Records</h5>
           <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPulloutModal">
-            <i class="fas fa-plus-circle me-2"></i>New Pullout
+            <i class="fas fa-plus me-2"></i>New Pullout
           </button>
         </div>
 
@@ -903,6 +902,77 @@
         <button type="submit" class="btn btn-primary">Add Pullout</button>
     </div>
 </form>
+{{-- Edit Pullout Modal --}}
+<div class="modal fade" id="editPulloutModal" tabindex="-1" aria-labelledby="editPulloutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPulloutModalLabel">Edit Pullout</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editPulloutForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Product *</label>
+                                <select class="form-select" name="ProductID" required>
+                                    <option value="">Select Product</option>
+                                    @foreach($products as $product)
+                                        <option value="{{ $product->ProductID }}">{{ $product->ProdName }} ({{ $product->ProductID }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Employee *</label>
+                                <select class="form-select" name="EmployeeID" required>
+                                    <option value="">Select Employee</option>
+                                    @foreach($employees as $employee)
+                                        <option value="{{ $employee->EmployeeID }}">{{ $employee->EmpFName }} {{ $employee->EmpLName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Quantity *</label>
+                                <input type="number" class="form-control" name="Qty" min="1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Reason *</label>
+                                <select class="form-select" name="Reason" required>
+                                    <option value="Damaged during handling">Damaged</option>
+                                    <option value="Expired products">Expired</option>
+                                    <option value="Customer return - defective">Customer Return</option>
+                                    <option value="Quality control rejection">Quality Control</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Date Pulled Out *</label>
+                                <input type="date" class="form-control" name="DatePullOut" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Pullout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
       </div>
     </div>
   </div>

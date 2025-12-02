@@ -8,29 +8,16 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
-    {
-        $categories = Category::withCount('products')->get();
-        return view('admin.categories.index', compact('categories'));
-    }
-
     public function store(Request $request)
     {
         $request->validate([
-            'CategoryID' => 'required|unique:categories,CategoryID',
             'CategoryName' => 'required|string|max:255|unique:categories,CategoryName'
         ]);
 
-        try {
-            Category::create($request->all());
+        Category::create($request->only('CategoryName')); // Let model generate ID & prefix
 
-            return redirect()->route('admin.products')
-                ->with('success', 'Category created successfully!');
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Error creating category: ' . $e->getMessage())
-                ->withInput();
-        }
+        return redirect()->route('admin.products')
+            ->with('success', 'Category created successfully!');
     }
 
     public function update(Request $request, $id)
@@ -38,39 +25,29 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
 
         $request->validate([
-            'CategoryName' => 'required|string|max:255|unique:categories,CategoryName,' . $id . ',CategoryID'
+            'CategoryName' => 'required|string|max:255|unique:categories,CategoryName,' . $category->CategoryID . ',CategoryID',
         ]);
 
-        try {
-            $category->update($request->all());
+        $data = $request->only(['CategoryName']);
 
-            return redirect()->route('admin.products')
-                ->with('success', 'Category updated successfully!');
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Error updating category: ' . $e->getMessage())
-                ->withInput();
-        }
+        
+
+        $category->update($data);
+
+        return redirect()->route('admin.products')
+            ->with('success', 'Category updated successfully!');
     }
 
     public function destroy($id)
     {
-        try {
-            $category = Category::findOrFail($id);
-            
-            // Check if category has products
-            if ($category->products()->count() > 0) {
-                // Optionally, you can set products to null or handle differently
-                // $category->products()->update(['CategoryID' => null]);
-            }
-            
-            $category->delete();
+        $category = Category::findOrFail($id);
 
-            return redirect()->route('admin.products')
-                ->with('success', 'Category deleted successfully!');
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Error deleting category: ' . $e->getMessage());
+        if ($category->products()->exists()) {
+            return back()->with('error', 'Cannot delete category with assigned products.');
         }
+
+        $category->delete();
+
+        return back()->with('success', 'Category deleted successfully!');
     }
 }

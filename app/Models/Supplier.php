@@ -7,12 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Supplier extends Model
 {
     protected $table = 'suppliers';
-    protected $primaryKey = 'id';
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $primaryKey = 'SupplierID';    // This is the key!
+    public $incrementing = false;            // Not auto-increment int
+    protected $keyType = 'string';           // It's a string
 
     protected $fillable = [
-        'SupplierID', 'SupplierName', 'SupplierContactNo', 'Address', 'Status'
+        'SupplierID',
+        'SupplierName',
+        'SupplierContactNo',
+        'Address',
+        'Status'
     ];
 
     public function products()
@@ -20,16 +24,14 @@ class Supplier extends Model
         return $this->hasMany(Product::class, 'SupplierID', 'SupplierID');
     }
 
-    // Auto-set SupplierID before creating
-    protected static function boot()
+    // Auto-generate SUP001, SUP002... in Laravel
+    protected static function booted()
     {
-        parent::boot();
-
         static::creating(function ($supplier) {
             if (empty($supplier->SupplierID)) {
-                $lastSupplier = Supplier::orderBy('id', 'desc')->first();
-                $newId = $lastSupplier ? intval(substr($lastSupplier->SupplierID, 3)) + 1 : 1;
-                $supplier->SupplierID = 'SUP' . str_pad($newId, 3, '0', STR_PAD_LEFT);
+                $last = static::orderByRaw('CAST(SUBSTRING(SupplierID, 4) AS UNSIGNED) DESC')->first();
+                $nextNum = $last ? (intval(substr($last->SupplierID, 3)) + 1) : 1;
+                $supplier->SupplierID = 'SUP' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
             }
         });
     }

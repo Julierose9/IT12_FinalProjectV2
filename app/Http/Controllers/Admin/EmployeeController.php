@@ -25,7 +25,6 @@ public function index()
             'EmployeeLName' => 'required|string|max:50',
             'EmployeeMName' => 'nullable|string|max:1',
             'EmployeeContactNum' => 'required|string|max:20',
-            'EmployeeEmail' => 'nullable|email|max:100',
             'Role' => 'required|in:Admin,Cashier,Manager',
             'EmployeeStatus' => 'required|in:Active,Inactive,On Leave'
         ]);

@@ -16,10 +16,7 @@ class StockIn extends Model
         'Qty',
         'ProdStatus',
         'DateRcvd',
-        'temp_sku',
-        'temp_product_name',
-        'temp_description',
-        'temp_category_id'
+        
     ];
     
     protected $dates = ['DateRevd'];

@@ -29,7 +29,7 @@ class SupplierController extends Controller
         ]);
 
         // Auto-generate SupplierID: SUP001, SUP002...
-        $lastSupplier = Supplier::orderBy('id', 'desc')->first();
+        $lastSupplier = Supplier::orderBy('SupplierID', 'desc')->first();
         $newId = $lastSupplier ? intval(substr($lastSupplier->SupplierID, 3)) + 1 : 1;
         $supplierId = 'SUP' . str_pad($newId, 3, '0', STR_PAD_LEFT);
 

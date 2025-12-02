@@ -192,7 +192,8 @@
       min-height: 200px;
     }
     
-    .user-section {
+               /* ========== USER SECTION STYLES ========== */
+               .user-section {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
@@ -231,8 +232,8 @@
             object-fit: cover;
         }
         
-         /* User dropdown for sign out */
-         .user-dropdown {
+        /* User dropdown for sign out */
+        .user-dropdown {
             position: relative;
         }
         
@@ -286,6 +287,7 @@
             background: #f8f9fa;
             color: var(--primary-color);
         }
+
 
         /* ========== FILTER & SEARCH STYLES ========== */
         .search-filter-section {

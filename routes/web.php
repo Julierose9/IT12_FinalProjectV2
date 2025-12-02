@@ -62,14 +62,14 @@ Route::middleware('auth')->group(function () {
         
         // ==================== STOCK IN ROUTES ====================
         Route::get('/stockin', [StockInController::class, 'index'])->name('stockin');
-        Route::post('/stockin/existing', [StockInController::class, 'storeForExisting'])->name('stockin.existing');
-        Route::post('/stockin/newitem', [StockInController::class, 'storeNewItem'])->name('stockin.newitem');
-        Route::post('/products/convert', [ProductController::class, 'convert'])->name('products.convert');
+        Route::post('/stockin', [StockInController::class, 'store'])->name('stockin.store');
 
         // ==================== PULLOUT ROUTES ====================
         Route::get('/pullout', [PullOutController::class, 'index'])->name('pullout');
-        Route::post('/pullout', [PullOutController::class, 'store'])->name('pullout.store');
-        Route::delete('/pullout/{id}', [PullOutController::class, 'destroy'])->name('pullout.destroy');
+    Route::post('/pullout', [PullOutController::class, 'store'])->name('pullout.store');
+    Route::get('/pullout/{pullOut}/edit', [PullOutController::class, 'edit'])->name('pullout.edit');
+    Route::put('/pullout/{pullOut}', [PullOutController::class, 'update'])->name('pullout.update');
+    Route::delete('/pullout/{pullOut}', [PullOutController::class, 'destroy'])->name('pullout.destroy');
 
         // ==================== CATEGORIES ====================
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
@@ -80,9 +80,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/transaction', fn() => view('admin.transaction'))->name('transaction');
 
         // ==================== INVENTORY REPORT ====================
-        // Main inventory report page (alias for admin.inventory)
-        Route::get('/inventory', [InventoryReportController::class, 'index'])
-            ->name('inventory');
+        Route::get('/inventory', fn() => view('admin.inventory'))->name('inventory');
+
         
         // ==================== REPORTS GROUP ====================
         Route::prefix('reports')->name('reports.')->group(function () {

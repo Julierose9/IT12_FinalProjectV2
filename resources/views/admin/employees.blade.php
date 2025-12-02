@@ -1006,7 +1006,7 @@
           <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
           <div class="user-details">
             <div class="user-name">{{ Auth::user()->name ?? 'Dora' }}</div>
-            <div class="user-role">{{ Auth::user()->role ?? 'Administrator' }}</div>
+            <div class="user-role">{{ Auth::user()->role ?? 'Admin' }}</div>
           </div>
           <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
         </button>
@@ -1071,10 +1071,7 @@
                     <input type="checkbox" id="role-cashier">
                     <label for="role-cashier">Cashier</label>
                   </div>
-                  <div class="filter-option">
-                    <input type="checkbox" id="role-manager">
-                    <label for="role-manager">Manager</label>
-                  </div>
+                 
                 </div>
               </div>
               
@@ -1149,7 +1146,7 @@
   @forelse($employees as $employee)
   <tr>
     <td>
-      <strong>EMP{{ str_pad($employee->EmployeeID, 3, '0', STR_PAD_LEFT) }}</strong>
+      <strong>{{ str_pad($employee->EmployeeID, 3, '0', STR_PAD_LEFT) }}</strong>
     </td>
     <td>
       <div class="d-flex align-items-center">
@@ -1259,15 +1256,10 @@
                             <input type="text" name="EmployeeContactNum" class="form-control" value="{{ old('EmployeeContactNum') }}" required>
                         </div>
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" name="EmployeeEmail" class="form-control" value="{{ old('EmployeeEmail') }}">
-                        </div>
-                        <div class="col-12 col-md-6">
                             <label class="form-label">Role <span class="text-danger">*</span></label>
                             <select name="Role" class="form-select" required>
                                 <option value="Cashier" {{ old('Role') == 'Cashier' ? 'selected' : '' }}>Cashier</option>
                                 <option value="Admin" {{ old('Role') == 'Admin' ? 'selected' : '' }}>Admin</option>
-                                <option value="Manager" {{ old('Role') == 'Manager' ? 'selected' : '' }}>Manager</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-6">
@@ -1301,7 +1293,7 @@
       </div>
       <div class="modal-body">
         <div class="row g-3">
-          <div class="col-12 col-md-6"><strong>Employee ID:</strong> EMP{{ str_pad($employee->EmployeeID, 3, '0', STR_PAD_LEFT) }}</div>
+          <div class="col-12 col-md-6"><strong>Employee ID:</strong> {{ str_pad($employee->EmployeeID, 3, '0', STR_PAD_LEFT) }}</div>
           <div class="col-12 col-md-6"><strong>Name:</strong> {{ $employee->EmployeeFName }} {{ $employee->EmployeeMName ? $employee->EmployeeMName . '.' : '' }} {{ $employee->EmployeeLName }}</div>
           <div class="col-12 col-md-6"><strong>Contact:</strong> {{ $employee->EmployeeContactNum ?? '—' }}</div>
           <div class="col-12 col-md-6">
@@ -1360,15 +1352,10 @@
                                 <input type="text" name="EmployeeContactNum" class="form-control" value="{{ old('EmployeeContactNum', $employee->EmployeeContactNum) }}" required>
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label">Email Address</label>
-                                <input type="email" name="EmployeeEmail" class="form-control" value="{{ old('EmployeeEmail', $employee->EmployeeEmail) }}">
-                            </div>
-                            <div class="col-12 col-md-6">
                                 <label class="form-label">Role <span class="text-danger">*</span></label>
                                 <select name="Role" class="form-select" required>
                                     <option value="Cashier" {{ old('Role', $employee->Role) == 'Cashier' ? 'selected' : '' }}>Cashier</option>
                                     <option value="Admin" {{ old('Role', $employee->Role) == 'Admin' ? 'selected' : '' }}>Admin</option>
-                                    <option value="Manager" {{ old('Role', $employee->Role) == 'Manager' ? 'selected' : '' }}>Manager</option>
                                 </select>
                             </div>
                             <div class="col-12 col-md-6">
@@ -1575,9 +1562,7 @@
       if (document.getElementById('role-cashier').checked) {
         currentFilters.roles.push('Cashier');
       }
-      if (document.getElementById('role-manager').checked) {
-        currentFilters.roles.push('Manager');
-      }
+     
     }
   }
   
@@ -1689,7 +1674,6 @@
     document.getElementById('role-all').checked = currentFilters.roles.includes('All Roles');
     document.getElementById('role-admin').checked = currentFilters.roles.includes('Admin');
     document.getElementById('role-cashier').checked = currentFilters.roles.includes('Cashier');
-    document.getElementById('role-manager').checked = currentFilters.roles.includes('Manager');
   }
   
   function filterEmployees() {

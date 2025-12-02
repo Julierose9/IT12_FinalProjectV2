@@ -35,27 +35,76 @@ class StockInController extends Controller
         ));
     }
     
-    public function storeForExisting(Request $request)
-    {
-        $request->validate([
-            'ProductID' => 'required|exists:products,ProductID',
-            'SupplierID' => 'required|exists:suppliers,SupplierID',
-            'Qty' => 'required|integer|min:1',
-            'ProdStatus' => 'required|in:Good,Damaged,Expired,Returned',
-            'DateRcvd' => 'required|date',
-        ]);
-        
+    public function store(Request $request)
+{
+    $request->validate([
+        'ProductID'       => 'required_without:newProductName|nullable|exists:products,ProductID',
+        'newProductName'  => 'required_if:ProductID,new|string|max:255',
+        'newSKUNumber'    => 'required_if:ProductID,new|unique:products,SKUNumber',
+        'SupplierID'      => 'required|exists:suppliers,SupplierID',
+        'Qty'             => 'required|integer|min:1',
+        'OriginalPrice'   => 'required|numeric|min:0',
+        'ProdStatus'      => 'required|in:Good,Damaged,Expired',
+        'DateRevd'        => 'required|date',
+        'ReorderLevel'    => 'nullable|integer|min:0',
+        'ExpirationDate' => 'nullable|date|after_or_equal:today',
+    ]);
+
+    DB::beginTransaction();
+    try {
+        $productId = $request->ProductID;
+
+        // If "Stock New Product" was selected
+        if ($request->ProductID === 'new') {
+            // Create new product
+            $product = Product::create([
+                'SKUNumber'       => $request->newSKUNumber,
+                'ProductName'     => $request->newProductName,
+                'ProductDescription' => $request->newDescription ?? null,
+                'CategoryID'      => $request->CategoryID ?? null,
+                'ReorderLevel'    => $request->ReorderLevel ?? 10,
+                'SupplierID'      => $request->SupplierID,
+                'ProductStatus'   => 'Active',
+            ]);
+
+            // Create pricing record
+            $markupRate = (($request->RetailPrice ?? 0) - $request->OriginalPrice) / $request->OriginalPrice * 100;
+
+            \App\Models\Pricing::create([
+                'ProductID'     => $product->ProductID,
+                'OriginalPrice' => $request->OriginalPrice,
+                'RetailPrice'   => $request->RetailPrice ?? ($request->OriginalPrice * 1.25),
+                'MarkupRate'    => round($markupRate, 2),
+                'EffectiveDate' => now(),
+                'IsActive'      => true,
+            ]);
+
+            $productId = $product->ProductID;
+        }
+
+        // Create StockIn record
         StockIn::create([
-            'ProductID' => $request->ProductID,
-            'SupplierID' => $request->SupplierID,
-            'Qty' => $request->Qty,
-            'ProdStatus' => $request->ProdStatus,
-            'DateRcvd' => $request->DateRcvd,
+            'ProductID'   => $productId,
+            'SupplierID'  => $request->SupplierID,
+            'Qty'         => $request->Qty,
+            'ProdStatus'  => $request->ProdStatus,
+            'DateRevd'    => $request->DateRevd,
+            'Remarks'     => $request->Remarks ?? null,
         ]);
-        
+
+        // Update product stock quantity
+        $product = Product::find($productId);
+        $product->increment('StockQty', $request->Qty);
+
+        DB::commit();
+
         return redirect()->route('admin.stockin')
-            ->with('success', 'Stock added successfully for existing product!');
+            ->with('success', 'Stock added successfully!');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Failed to add stock: ' . $e->getMessage())->withInput();
     }
+}
     
  // In StockInController - Alternative storeNewItem method without temp fields
 public function storeNewItem(Request $request)

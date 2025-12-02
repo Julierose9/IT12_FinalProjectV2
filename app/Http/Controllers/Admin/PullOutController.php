@@ -10,28 +10,42 @@ use Illuminate\Http\Request;
 
 class PullOutController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $pullOuts = PullOut::with(['product', 'employee'])
-                            ->orderBy('DatePullOut', 'desc')
-                            ->get();
-        
-        // Get products and employees for the dropdowns
+        $query = PullOut::with(['product', 'employee'])->orderBy('DatePullOut', 'desc');
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('PullOutID', 'like', "%{$search}%")
+                  ->orWhereHas('product', fn($p) => $p->where('ProdName', 'like', "%{$search}%"))
+                  ->orWhereHas('employee', fn($e) => $e->whereRaw("CONCAT(EmpFName, ' ', EmpLName) LIKE ?", ["%{$search}%"]));
+            });
+        }
+
+        // Filter by reason
+        if ($request->filled('reason')) {
+            $query->whereIn('PullOutReason', $request->reason);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('DatePullOut', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('DatePullOut', '<=', $request->date_to);
+        }
+
+        $pullOuts = $query->paginate(15)->withQueryString();
         $products = Product::all();
         $employees = Employee::all();
-        
+
         return view('admin.pullout', compact('pullOuts', 'products', 'employees'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        // Validate and store pullout data
         $validated = $request->validate([
             'ProductID' => 'required|exists:products,ProductID',
             'EmployeeID' => 'required|exists:employees,EmployeeID',
@@ -40,9 +54,8 @@ class PullOutController extends Controller
             'DatePullOut' => 'required|date',
         ]);
 
-        // Generate PullOutID
-        $pullOutId = 'PO-' . date('Ymd') . '-' . str_pad(PullOut::count() + 1, 3, '0', STR_PAD_LEFT);
-        
+        $pullOutId = 'PO-' . date('Ymd') . '-' . str_pad(PullOut::count() + 1, 4, '0', STR_PAD_LEFT);
+
         PullOut::create([
             'PullOutID' => $pullOutId,
             'ProductID' => $validated['ProductID'],
@@ -53,18 +66,48 @@ class PullOutController extends Controller
         ]);
 
         return redirect()->route('admin.pullout')
-            ->with('success', 'Pullout record created successfully!');
+            ->with('success', 'Pullout created successfully!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function edit(PullOut $pullOut)
     {
-        $pullOut = PullOut::findOrFail($id);
-        $pullOut->delete();
-        
+        $products = Product::all();
+        $employees = Employee::all();
+
+        return response()->json([
+            'pullOut' => $pullOut->load('product', 'employee'),
+            'products' => $products,
+            'employees' => $employees,
+        ]);
+    }
+
+    public function update(Request $request, PullOut $pullOut)
+    {
+        $validated = $request->validate([
+            'ProductID' => 'required|exists:products,ProductID',
+            'EmployeeID' => 'required|exists:employees,EmployeeID',
+            'Qty' => 'required|integer|min:1',
+            'Reason' => 'required|string',
+            'DatePullOut' => 'required|date',
+        ]);
+
+        $pullOut->update([
+            'ProductID' => $validated['ProductID'],
+            'EmployeeID' => $validated['EmployeeID'],
+            'PullOutQty' => $validated['Qty'],
+            'PullOutReason' => $validated['Reason'],
+            'DatePullOut' => $validated['DatePullOut'],
+        ]);
+
         return redirect()->route('admin.pullout')
-            ->with('success', 'Pullout record deleted successfully!');
+            ->with('success', 'Pullout updated successfully!');
+    }
+
+    public function destroy(PullOut $pullOut)
+    {
+        $pullOut->delete();
+
+        return redirect()->route('admin.pullout')
+            ->with('success', 'Pullout deleted successfully!');
     }
 }
