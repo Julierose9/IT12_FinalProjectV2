@@ -34,6 +34,11 @@ class User extends Authenticatable
         'Role' => 'string',
     ];
 
+    public function employee()
+{
+    return $this->belongsTo(Employee::class, 'EmployeeID', 'EmployeeID');
+}
+
     // CRITICAL: Tell Laravel to use 'email' as login field
     public function getAuthPassword()
     {

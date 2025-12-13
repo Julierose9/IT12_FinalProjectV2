@@ -19,6 +19,7 @@ return new class extends Migration
         $table->integer('Qty');
         $table->enum('ProdStatus', ['Received', 'Defective', 'Expired']);
         $table->date('DateRcvd');
+        $table->date('ExpirationDate');
 
         $table->timestamps();
 

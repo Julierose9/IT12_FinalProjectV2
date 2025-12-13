@@ -22,10 +22,10 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'SupplierName' => 'required|string|max:255|unique:suppliers,SupplierName',
-            'SupplierContactNo' => 'required|string|max:20',
-            'Address' => 'required|string|max:500',
-            'Status' => 'required|in:Active,Inactive,Pending',
+            'SupplierName' => 'required|string|max:255',
+            'SupplierContactNo' => 'required|string|size:12|regex:/^09\d{10}$/',
+            'Address' => 'required|string',
+            'Status' => 'required|in:Active,Inactive'
         ]);
 
         // Auto-generate SupplierID: SUP001, SUP002...
@@ -71,10 +71,10 @@ class SupplierController extends Controller
         }
     
         $request->validate([
-            'SupplierName' => 'required|string|max:255|unique:Suppliers,SupplierName,' . $id . ',SupplierID',
-            'SupplierContactNo' => 'required|string|max:20',
-            'Address' => 'required|string|max:500',
-            'Status' => 'required|in:Active,Inactive,Pending',
+            'SupplierName' => 'required|string|max:255',
+            'SupplierContactNo' => 'required|string|size:12|regex:/^09\d{10}$/',
+            'Address' => 'required|string',
+            'Status' => 'required|in:Active,Inactive'
         ]);
     
         DB::table('Suppliers')

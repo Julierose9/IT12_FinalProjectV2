@@ -22,8 +22,10 @@ return new class extends Migration
         $table->decimal('DiscountRate', 5, 2)->nullable();
         $table->decimal('DiscountAmount', 10, 2)->nullable();
         $table->decimal('GrandTotal', 10, 2);
-
+        
         $table->timestamps();
+
+        
 
         $table->foreign('EmployeeID')->references('EmployeeID')->on('employees');
     });

@@ -19,6 +19,12 @@
     }
     body { font-family: 'Poppins', sans-serif; background: var(--light-bg); padding-top: 0; }
 
+    /* Required field asterisk */
+    .form-label.required::after {
+      content: " *";
+      color: var(--danger-color);
+    }
+
     /* Sidebar */
     .sidebar {
       min-width: 220px; max-width: 220px; background: #fff;
@@ -53,134 +59,161 @@
     .content-wrap { margin-left: 240px; padding: 28px; transition: all 0.3s ease; }
     .topbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 22px; }
     .page-title-section h4 { margin-bottom: 4px; }
-           /* ========== USER SECTION STYLES ========== */
-           .user-section {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 16px;
-            min-width: 300px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .user-details {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .user-name {
-            font-weight: 600;
-            font-size: 1rem;
-            line-height: 1.2;
-        }
-        
-        .user-role {
-            color: var(--secondary-color);
-            font-size: 0.875rem;
-            line-height: 1.2;
-        }
-        
-        .user-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            object-fit: cover;
-        }
-        
-        /* User dropdown for sign out */
-        .user-dropdown {
-            position: relative;
-        }
-        
-        .user-dropdown-toggle {
-            background: none;
-            border: none;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 8px;
-            transition: background 0.2s;
-        }
-        
-        .user-dropdown-toggle:hover {
-            background: #f8f9fa;
-        }
-        
-        .user-dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 8px 0;
-            min-width: 150px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 1000;
-            margin-top: 8px;
-            display: none;
-        }
-        
-        .user-dropdown-item {
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #5b5f72;
-            text-decoration: none;
-            transition: background 0.2s;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: left;
-            cursor: pointer;
-        }
-        
-        .user-dropdown-item:hover {
-            background: #f8f9fa;
-            color: var(--primary-color);
-        }
-    /* Search & Filter - Left aligned version */
-    .filter-container {
+           
+    /* ========== USER SECTION STYLES ========== */
+    .user-section {
         display: flex;
         flex-direction: column;
+        align-items: flex-end;
+        gap: 16px;
+        min-width: 300px;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+    
+    .user-role {
+        color: var(--secondary-color);
+        font-size: 0.875rem;
+        line-height: 1.2;
+    }
+    
+    .user-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+    
+    /* User dropdown for sign out */
+    .user-dropdown {
+        position: relative;
+    }
+    
+    .user-dropdown-toggle {
+        background: none;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+    
+    .user-dropdown-toggle:hover {
+        background: #f8f9fa;
+    }
+    
+    .user-dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 8px 0;
+        min-width: 150px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        z-index: 1000;
+        margin-top: 8px;
+        display: none;
+    }
+    
+    .user-dropdown-item {
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
         gap: 8px;
+        color: #5b5f72;
+        text-decoration: none;
+        transition: background 0.2s;
+        border: none;
+        background: none;
         width: 100%;
+        text-align: left;
+        cursor: pointer;
+    }
+    
+    .user-dropdown-item:hover {
+        background: #f8f9fa;
+        color: var(--primary-color);
     }
 
+    /* ========== SEARCH & FILTER STYLES ========== */
     .search-filter-section {
         display: flex;
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
-    }
-
-    .search-input {
-        max-width: 400px;
+        justify-content: space-between;
         width: 100%;
-        min-width: 250px;
-        flex: 1;
     }
 
+    /* Filter container styling */
+    .filter-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        width: 100%;
+    }
+
+    /* Search and filter in one line */
+    .search-filter-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        flex-wrap: nowrap;
+    }
+
+    /* Search input takes available space */
+    .search-input {
+        flex: 1;
+        min-width: 250px;
+        max-width: 500px;
+    }
+
+    /* Filter dropdown styling */
+    .filter-dropdown {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    /* Filter toggle button */
     .filter-toggle {
         background: #fff;
         border: 1px solid #dee2e6;
         border-radius: 8px;
-        padding: 10px 12px;
+        padding: 10px 16px;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         cursor: pointer;
         white-space: nowrap;
-        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+
+    .filter-toggle:hover {
+        background: #f8f9fa;
+        border-color: #adb5bd;
     }
 
     .filter-toggle.active {
@@ -189,6 +222,7 @@
         border-color: var(--primary-color);
     }
 
+    /* Filter menu */
     .filter-menu {
         position: absolute;
         top: 100%;
@@ -196,9 +230,9 @@
         background: white;
         border: 1px solid #dee2e6;
         border-radius: 8px;
-        padding: 16px;
-        min-width: 240px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        min-width: 300px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         margin-top: 8px;
         display: none;
         z-index: 1000;
@@ -208,17 +242,100 @@
         display: block;
     }
 
-    .active-filters {
-        display: none;
+    .filter-section {
+        margin-bottom: 16px;
+    }
+    
+    .filter-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .filter-section-title {
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 8px;
+        color: var(--primary-color);
+    }
+    
+    .filter-options {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .filter-option {
+        display: flex;
+        align-items: center;
         gap: 8px;
-        flex-wrap: wrap;
-        width: 100%;
+        padding: 6px 0;
+        cursor: pointer;
+    }
+    
+    .filter-option input[type="checkbox"] {
+        margin: 0;
+    }
+    
+    .filter-option label {
+        cursor: pointer;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #eef2f7;
+        flex-wrap: nowrap;
+        justify-content: space-between;
     }
 
+    .btn-apply, .btn-clear {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-apply {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-apply:hover {
+        background: #2a2265;
+    }
+
+    .btn-clear {
+        background: var(--secondary-color);
+        color: white;
+    }
+
+    .btn-clear:hover {
+        background: #5a6268;
+    }
+
+    /* Active filter indicator */
+    .active-filters {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
     .active-filters.has-filters {
         display: flex;
     }
-
+    
     .filter-tag {
         background: #e9ecef;
         border: 1px solid #dee2e6;
@@ -229,12 +346,18 @@
         align-items: center;
         gap: 6px;
     }
-
+    
     .filter-tag-remove {
         background: none;
         border: none;
         cursor: pointer;
         color: var(--secondary-color);
+        padding: 0;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* Table */
@@ -243,8 +366,8 @@
       letter-spacing: 0.5px; padding: 12px 16px; white-space: nowrap; }
     .table td { padding: 16px; vertical-align: middle; border-color: #f1f3f4; }
     .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
-    .status-active { background: #e8f5e8; color: var(--success-color); }
-    .status-inactive { background: #f8f9fa; color: var(--danger-color); }
+    .status-active {  color: var(--success-color); }
+    .status-inactive { color: var(--danger-color); }
 
     /* Tabs */
     .nav-tabs .nav-link { color: #5b5f72; border: none; padding: 12px 20px; font-weight: 500; }
@@ -259,6 +382,31 @@
       .topbar { flex-direction: column; align-items: stretch; }
       .user-section, .filter-container { align-items: stretch; min-width: 100%; }
       .search-input { min-width: 100%; }
+      
+      .search-filter-row {
+          flex-wrap: wrap;
+      }
+      
+      .search-input {
+          max-width: 100%;
+          min-width: 100%;
+      }
+      
+      .filter-toggle {
+          width: 100%;
+          justify-content: center;
+      }
+      
+      .filter-menu {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 90%;
+          max-width: 400px;
+          max-height: 80vh;
+          overflow-y: auto;
+      }
     }
     @media (max-width: 575.98px) {
       .content-wrap { padding: 70px 8px 8px; }
@@ -291,12 +439,84 @@
         font-size: 0.85em;
         color: #6c757d;
     }
+    
+    /* Alert Styles */
+    .alert {
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #28a745;
+    }
+
+    .alert-danger {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #dc3545;
+    }
+
+    .alert-warning {
+      background: #fff3cd;
+      color: #856404;
+      border-left: 4px solid #ffc107;
+    }
+    
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border-left: 4px solid #17a2b8;
+    }
+.table td {
+    padding: 12px 16px;
+    vertical-align: top;
+    border-color: #f1f3f4;
+}
+
+.product-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2; 
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 2.8em; 
+    line-height: 1.4em;
+}
   </style>
 </head>
 <body>
 @php
     // Create empty collection if $recentStock doesn't exist
     $recentStock = $recentStock ?? collect([]);
+
+    // Get employee data
+    $user = Auth::user() ?? null;
+    $employeeName = 'Admin'; // Default
+    $employeeId = null;
+    
+    if ($user) {
+        // Check if user has an employee record
+        // Method 1: If user has employee relationship
+        if (isset($user->employee) && $user->employee) {
+            $employeeName = $user->employee->EmployeeName ?? 
+                           ($user->employee->EmployeeFName . ' ' . $user->employee->EmployeeLName) ?? 
+                           $user->name;
+            $employeeId = $user->employee->EmployeeID ?? null;
+        }
+        // Method 2: If user has direct employee fields
+        elseif (isset($user->EmployeeName)) {
+            $employeeName = $user->EmployeeName;
+            $employeeId = $user->EmployeeID ?? null;
+        }
+        // Method 3: Fallback to user's name
+        else {
+            $employeeName = $user->name ?? 'Admin';
+        }
+    }
 @endphp
 
 <!-- Mobile Toggle & Overlay -->
@@ -309,7 +529,7 @@
         <img src="{{ asset('images/logo_.png') }}" alt="Logo">
         <div class="brand-text">
             <div style="font-weight:600">Dora's Oshoppe</div>
-            <small class="text-muted">Gift Shop</small>
+            <small> Gift Shop</small>
         </div>
     </div>
 
@@ -385,15 +605,24 @@
 <!-- Main Content -->
 <main class="content-wrap" id="contentWrap">
     <!-- Top Header: Title + User (fixed) -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-    <h4 class="mb-0 fw-semibold">Products Management</h4>
+    <div class="topbar">
+      <div class="page-title-section">
+        <h4 class="mb-1">Products Management</h4>
+      </div>
 
-    <div class="user-dropdown">
+      <div class="user-section">
+        <!-- User Info Section with Dropdown -->
+        <div class="user-dropdown">
                 <button class="user-dropdown-toggle" id="userDropdownToggle">
                     <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
                     <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->Username ?? 'Dora' }}</div>
-                        <div class="user-role">{{ Auth::user()->Role ?? 'Administrator' }}</div>
+                        <div class="user-name">{{ $employeeName }}</div>
+                        <div class="user-role">
+                            @if($employeeId)
+                                 Admin
+                            
+                            @endif
+                        </div>
                     </div>
                     <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
                 </button>
@@ -407,65 +636,133 @@
                     </form>
                 </div>
             </div>
-  </div>
-
-  <!-- Tabs + Search Filter Row — perfectly aligned -->
-  <div class=" border-2 pb-2 mb-4">
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-      <!-- Tabs on the left -->
-      <ul class="nav nav-tabs mb-0" id="productsTabs" role="tablist">
-        <li class="nav-item">
-          <button class="nav-link active px-4 py-2 fw-medium" data-bs-toggle="tab" data-bs-target="#categories">
-            Categories
-          </button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link px-4 py-2 fw-medium" data-bs-toggle="tab" data-bs-target="#products">
-            Products
-          </button>
-        </li>
-      </ul>
-
-      <!-- Search + Filter on the right -->
-      <div class="d-flex align-items-center gap-3">
-        <div class="input-group" style="width: 320px;">
-          <span class="input-group-text bg-white border-end-0">
-            <i class="fas fa-search text-muted"></i>
-          </span>
-          <input type="text" class="form-control border-start-0" placeholder="Search products..." id="searchInput">
-        </div>
-
-        <div class="filter-dropdown position-relative">
-          <button class="btn btn-outline-secondary d-flex align-items-center gap-2 filter-toggle" id="filterToggle">
-            <i class="fas fa-filter"></i>  <span>Filter</span>
-            <i class="fas fa-chevron-down small"></i>
-          </button>
-
-          <div class="filter-menu position-absolute end-0 mt-2 bg-white border rounded-3 shadow-lg p-3" id="filterMenu"
-               style="width:280px; display:none; z-index:1050;">
-            <h6 class="fw-bold mb-3">Filter by Category</h6>
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="cat-all" checked>
-              <label class="form-check-label small" for="cat-all">All Categories</label>
+            
+        
+        <!-- Search and Filter Section -->
+        <div class="filter-container">
+          <div class="search-filter-section">
+            <div class="input-group search-input">
+              <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+              <input class="form-control" placeholder="Search products..." id="searchInput" />
             </div>
-            @foreach($categories as $cat)
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="cat-{{ $cat->CategoryID }}">
-              <label class="form-check-label small" for="cat-{{ $cat->CategoryID }}">{{ $cat->CategoryName }}</label>
+            
+            <div class="filter-dropdown">
+              <button class="filter-toggle" id="filterToggle">
+                <i class="fas fa-filter"></i>
+                <span>Filter</span>
+                <i class="fas fa-chevron-down ms-1" style="font-size: 0.8rem;"></i>
+              </button>
+              
+              <div class="filter-menu" id="filterMenu" style="display: none;">
+                <!-- Category Filter -->
+                <div class="filter-section">
+                  <div class="filter-section-title">Filter by Category</div>
+                  <div class="filter-options">
+                    <div class="filter-option">
+                      <input type="checkbox" id="cat-all" checked>
+                      <label for="cat-all">All Categories</label>
+                    </div>
+                    @foreach($categories as $cat)
+                    <div class="filter-option">
+                      <input type="checkbox" id="cat-{{ $cat->CategoryID }}">
+                      <label for="cat-{{ $cat->CategoryID }}">{{ $cat->CategoryName }}</label>
+                    </div>
+                    @endforeach
+                  </div>
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="filter-section">
+                  <div class="filter-section-title">Filter by Status</div>
+                  <div class="filter-options">
+                    <div class="filter-option">
+                      <input type="checkbox" id="status-all" checked>
+                      <label for="status-all">All Status</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="checkbox" id="status-active">
+                      <label for="status-active">Active</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="checkbox" id="status-inactive">
+                      <label for="status-inactive">Inactive</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="filter-actions">
+                  <button class="btn-apply" id="applyFilters">Apply Filters</button>
+                  <button class="btn-clear" id="clearFilters">Reset Filters</button>
+                </div>
+              </div>
             </div>
-            @endforeach
-            <hr class="my-3">
-            <div >
-              <button class="btn btn-primary btn-sm flex-fill" id="applyFilters">Apply</button>
-              <button class="btn btn-outline-secondary btn-sm flex-fill" id="clearFilters">Clear</button>
-            </div>
+          </div>
+          
+          <!-- Active Filters Display -->
+          <div class="active-filters" id="activeFilters">
+            <!-- Filter tags will be dynamically added here -->
           </div>
         </div>
       </div>
     </div>
-  </div>
 
- 
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+      <div class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>{!! session('success') !!}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
+    @if(session('error'))
+      <div class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
+    @if(session('warning'))
+      <div class="alert alert-warning alert-dismissible fade show">
+        <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
+    @if(session('info'))
+      <div class="alert alert-info alert-dismissible fade show">
+        <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
+    @if($errors->any())
+      <div class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i>Please fix the following errors:
+        <ul class="mb-0 mt-2">
+          @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
+  <!-- Tabs -->
+  <div class="mb-4">
+    <ul class="nav nav-tabs" id="productsTabs" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active px-4 py-2 fw-medium" data-bs-toggle="tab" data-bs-target="#categories">
+          Categories
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link px-4 py-2 fw-medium" data-bs-toggle="tab" data-bs-target="#products">
+          Products
+        </button>
+      </li>
+    </ul>
+  </div>
 
   <div class="tab-content">
     <!-- Categories Tab -->
@@ -478,14 +775,13 @@
           </div>
           <div class="table-responsive">
             <table class="table table-hover">
-              <thead><tr><th>Category ID</th><th>Name</th><th>Products</th><th>Created</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Category ID</th><th>Name</th><th>Products</th><th>Actions</th></tr></thead>
               <tbody id="categoriesTableBody">
                 @foreach($categories as $category)
                 <tr data-category="{{ $category->CategoryName }}">
                   <td><strong>{{ $category->CategoryID }}</strong></td>
                   <td><div style="font-weight:600">{{ $category->CategoryName }}</div></td>
                   <td><span class="badge bg-primary">{{ $category->products_count ?? 0 }}</span></td>
-                  <td><small class="text-muted">{{ $category->created_at->format('M d, Y') }}</small></td>
                   <td>
                     <button class="btn btn-sm btn-outline-primary edit-category" data-bs-toggle="modal" data-bs-target="#editCategoryModal"
                       data-id="{{ $category->CategoryID }}" data-name="{{ $category->CategoryName }}"><i class="fas fa-pencil"></i></button>
@@ -502,98 +798,118 @@
     </div>
 
     {{-- Products Tab --}}
-    <div class="tab-pane fade" id="products" role="tabpanel">
-      {{-- Products Table --}}
-      <div class="card table-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="card-title mb-0">Product List</h5>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-              <i class="fas fa-plus me-2"></i>Add New Product
-            </button>
-          </div>
+<div class="tab-pane fade" id="products" role="tabpanel">
+  {{-- Products Table --}}
+  <div class="card table-card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="card-title mb-0">Product List</h5>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+          <i class="fas fa-plus me-2"></i>Add New Product
+        </button>
+      </div>
 
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Product ID</th>
-                  <th>Product Name</th>
-                  <th>SKU Number</th>
-                  <th>Category</th>
-                  <th>Supplier</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="productsTableBody">
-                @foreach($products as $product)
-                <tr>
-                  <td>
-                    <strong>{{ $product->ProductID }}</strong>
-                  </td>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div>
-                        <div style="font-weight:600">{{ $product->ProductName }}</div>
-                        <small class="text-muted">{{ Str::limit($product->ProductDescription, 30) }}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <strong>#{{ $product->SKUNumber }}</strong>
-                  </td>
-                  <td>
-                    <span class="badge bg-light text-dark">{{ $product->category->CategoryName ?? 'Uncategorized' }}</span>
-                  </td>
-                  <td>
-                    <small class="text-muted">{{ $product->supplier->SupplierName ?? 'N/A' }}</small>
-                  </td>
-                  <td>
-                    @if($product->ProductStatus === 'Inactive')
-                      <span class="status-badge status-inactive">Inactive</span>
-                    @else
-                      <span class="status-badge status-active">Active</span>
-                    @endif
-                  </td>
-                  <td>
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-primary edit-product" 
-                              data-bs-toggle="modal" 
-                              data-bs-target="#editProductModal"
-                              data-product-id="{{ $product->ProductID }}"
-                              data-product-name="{{ $product->ProductName }}"
-                              data-product-description="{{ $product->ProductDescription }}"
-                              data-category-id="{{ $product->CategoryID }}"
-                              data-supplier-id="{{ $product->SupplierID }}"
-                              data-sku-number="{{ $product->SKUNumber }}"
-                              data-product-status="{{ $product->ProductStatus }}">
-                        <i class="fas fa-pencil"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-danger delete-product" 
-                              data-bs-toggle="modal" 
-                              data-bs-target="#deleteProductModal"
-                              data-product-id="{{ $product->ProductID }}"
-                              data-product-name="{{ $product->ProductName }}">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-
-          {{-- Simple product count --}}
-          <div class="d-flex justify-content-between align-items-center mt-4">
-            <div class="text-muted">
-              Total: {{ count($products) }} product(s)
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>SKU Number</th>
+              <th>Category</th>
+              <th>Supplier</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+<tbody id="productsTableBody">
+    @foreach($products as $product)
+    {{-- Check if this is an actual product and not a summary/total object --}}
+    @if(!is_string($product) && !is_array($product))
+    <tr>
+        <td><strong>{{ $product->ProductID ?? $product->product_id ?? 'N/A' }}</strong></td>
+        <td>
+        <div>
+        <div style="font-weight:600">{{ $product->ProductName ?? $product->product_name ?? 'N/A' }}</div>
+        @if(isset($product->ProductDescription) || isset($product->product_description))
+            @php
+                $description = $product->ProductDescription ?? $product->product_description ?? '';
+                $shortDescription = strlen($description) > 100 ? substr($description, 0, 100) . '...' : $description;
+            @endphp
+            <div class="product-description text-muted small mt-1">
+                {{ $shortDescription }}
             </div>
-          </div>
+        @endif
+    </div>
+</td>
+        <td><strong>{{ $product->SKUNumber ?? $product->sku_number ?? 'N/A' }}</strong></td>
+        <td>
+            <span class="badge bg-light text-dark">{{ $product->category->CategoryName ?? $product->category_name ?? 'Uncategorized' }}</span>
+        </td>
+        <td>
+            <small class="text-muted">{{ $product->supplier->SupplierName ?? $product->supplier_name ?? 'N/A' }}</small>
+        </td>
+        <td>
+            @php
+                $status = $product->ProductStatus ?? $product->product_status ?? 'Active';
+            @endphp
+            @if(strtolower($status) === 'inactive')
+            <span class="status-badge status-inactive">Inactive</span>
+            @else
+            <span class="status-badge status-active">Active</span>
+            @endif
+        </td>
+        <td>
+            <div class="btn-group">
+                @php
+                    $productId = $product->ProductID ?? $product->product_id ?? null;
+                    $productName = $product->ProductName ?? $product->product_name ?? '';
+                    $productDescription = $product->ProductDescription ?? $product->product_description ?? '';
+                    $categoryId = $product->CategoryID ?? $product->category_id ?? '';
+                    $supplierId = $product->SupplierID ?? $product->supplier_id ?? '';
+                    $skuNumber = $product->SKUNumber ?? $product->sku_number ?? '';
+                    $productStatus = $product->ProductStatus ?? $product->product_status ?? 'Active';
+                @endphp
+                
+                @if($productId)
+                <button class="btn btn-sm btn-outline-primary edit-product" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#editProductModal"
+                        data-product-id="{{ $productId }}"
+                        data-product-name="{{ $productName }}"
+                        data-product-description="{{ $productDescription }}"
+                        data-category-id="{{ $categoryId }}"
+                        data-supplier-id="{{ $supplierId }}"
+                        data-sku-number="{{ $skuNumber }}"
+                        data-product-status="{{ $productStatus }}">
+                    <i class="fas fa-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger delete-product" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#deleteProductModal"
+                        data-product-id="{{ $productId }}"
+                        data-product-name="{{ $productName }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+                @endif
+            </div>
+        </td>
+    </tr>
+    @endif
+    @endforeach
+</tbody>
+        </table>
+      </div>
+
+      {{-- Simple product count --}}
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted">
+          Total: {{ $products->count() ?? count($products) }} product(s)
         </div>
       </div>
     </div>
+  </div>
+</div>
   </div>
 
 </main>
@@ -608,96 +924,97 @@
       </div>
       
       <div class="modal-body">
-      <form action="{{ route('admin.products.store') }}" method="POST" id="addProductForm">
-    @csrf
-    
-    
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label">Product ID</label>
-                <div class="id-info">
-                    <div class="text-muted">Auto-generated </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="ProductName" class="form-label">Product Name *</label>
-                <input type="text" class="form-control" id="ProductName" name="ProductName" required>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="CategoryID" class="form-label">Category *</label>
-                <select class="form-select" id="CategoryID" name="CategoryID" required>
-                    <option value="">Select Category</option>
-                    @foreach($categories as $category)
-                    <option value="{{ $category->CategoryID }}" data-prefix="{{ $category->CategoryPrefix ?? substr(strtoupper($category->CategoryName), 0, 3) }}">
-                        {{ $category->CategoryName }}
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="SupplierID" class="form-label">Supplier *</label>
+        <form action="{{ route('admin.products.store') }}" method="POST" id="addProductForm">
+          @csrf
+          
+          <!-- Row 1: Supplier and Category -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="SupplierID" class="form-label required">Supplier</label>
                 <select class="form-select" id="SupplierID" name="SupplierID" required>
-                    <option value="">Select Supplier</option>
-                    @foreach($suppliers as $supplier)
-                    <option value="{{ $supplier->SupplierID }}">
-                        {{ $supplier->SupplierName }}
-                        @if($supplier->ContactNumber)
-                        ({{ $supplier->ContactNumber }})
-                        @endif
-                    </option>
-                    @endforeach
+                  <option value="">Select Supplier</option>
+                  @foreach($suppliers as $supplier)
+                  <option value="{{ $supplier->SupplierID }}">
+                    {{ $supplier->SupplierName }}
+                    @if($supplier->ContactNumber)
+                      ({{ $supplier->ContactNumber }})
+                    @endif
+                  </option>
+                  @endforeach
                 </select>
+              </div>
             </div>
-        </div>
-    </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="CategoryID" class="form-label required">Category</label>
+                <select class="form-select" id="CategoryID" name="CategoryID" required>
+                  <option value="">Select Category</option>
+                  @foreach($categories as $category)
+                  <option value="{{ $category->CategoryID }}" data-prefix="{{ $category->CategoryPrefix ?? substr(strtoupper($category->CategoryName), 0, 3) }}">
+                    {{ $category->CategoryName }}
+                  </option>
+                  @endforeach
+                </select>
+              </div>
+            </div>
+          </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label class="form-label">SKU Preview</label>
+          <!-- Row 2: Product Name and SKU Preview -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="ProductName" class="form-label required">Product Name</label>
+                <input type="text" class="form-control" id="ProductName" name="ProductName" required
+                       placeholder="Enter product name">
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">SKU Number</label>
                 <div class="form-control" style="background-color: #f8f9fa;">
-                    <div id="skuPreview" class="text-muted">Select a category to preview SKU</div>
+                  <div id="skuPreview" class="text-muted">Select a category to preview SKU</div>
                 </div>
-                <small class="text-muted">Auto-generated based on category prefix</small>
+                <small class="text-muted">Auto-generated based on category</small>
+              </div>
             </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="ProductStatus" class="form-label">Status *</label>
+          </div>
+
+          <!-- Row 3: Description -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="mb-3">
+                <label for="ProductDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="ProductDescription" name="ProductDescription" 
+                          rows="3" placeholder="Enter product description (optional)"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 4: Status and Product ID Info -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="ProductStatus" class="form-label required">Status</label>
                 <select class="form-select" id="ProductStatus" name="ProductStatus" required>
-                    <option value="Active" selected>Active</option>
-                    <option value="Inactive">Inactive</option>
+                  <option value="Active" selected>Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
+              </div>
             </div>
-        </div>
-    </div>
+            
+           
+          </div>
 
-    <div class="mb-3">
-        <label for="ProductDescription" class="form-label">Description</label>
-        <textarea class="form-control" id="ProductDescription" name="ProductDescription" rows="3"></textarea>
-    </div>
-
-    <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">
-            <i></i>Create Product
-          </button>
-        </div>
-</form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>Create Product
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -715,17 +1032,25 @@
         @csrf
         @method('PUT')
         <div class="modal-body">
+          <!-- Row 1: Supplier and Category -->
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="edit_ProductName" class="form-label">Product Name *</label>
-                <input type="text" class="form-control" id="edit_ProductName" name="ProductName" required>
+                <label for="edit_SupplierID" class="form-label required">Supplier</label>
+                <select class="form-select" id="edit_SupplierID" name="SupplierID" required>
+                  <option value="">Select Supplier</option>
+                  @foreach($suppliers as $supplier)
+                  <option value="{{ $supplier->SupplierID }}">
+                    {{ $supplier->SupplierName }}
+                  </option>
+                  @endforeach
+                </select>
               </div>
             </div>
             
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="edit_CategoryID" class="form-label">Category *</label>
+                <label for="edit_CategoryID" class="form-label required">Category</label>
                 <select class="form-select" id="edit_CategoryID" name="CategoryID" required>
                   <option value="">Select Category</option>
                   @foreach($categories as $category)
@@ -736,44 +1061,44 @@
             </div>
           </div>
 
+          <!-- Row 2: Product Name and SKU Number -->
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="edit_SKUNumber" class="form-label">SKU Number</label>
+                <label for="edit_ProductName" class="form-label required">Product Name</label>
+                <input type="text" class="form-control" id="edit_ProductName" name="ProductName" required>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">SKU Number</label>
                 <div class="form-control" style="background-color: #f8f9fa;">
                   <strong id="edit_SKUNumber_display"></strong>
                 </div>
                 <input type="hidden" id="edit_SKUNumber" name="SKUNumber">
               </div>
             </div>
-            
-            <div class="col-md-6">
+          </div>
+
+          <!-- Row 3: Description -->
+          <div class="row">
+            <div class="col-md-12">
               <div class="mb-3">
-                <label for="edit_ProductStatus" class="form-label">Status *</label>
-                <select class="form-select" id="edit_ProductStatus" name="ProductStatus" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
+                <label for="edit_ProductDescription" class="form-label">Description</label>
+                <textarea class="form-control" id="edit_ProductDescription" name="ProductDescription" rows="3"></textarea>
               </div>
             </div>
           </div>
 
-          <div class="mb-3">
-            <label for="edit_ProductDescription" class="form-label">Description</label>
-            <textarea class="form-control" id="edit_ProductDescription" name="ProductDescription" rows="3"></textarea>
-          </div>
-
+          <!-- Row 4: Status and Product ID -->
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="edit_SupplierID" class="form-label">Supplier *</label>
-                <select class="form-select" id="edit_SupplierID" name="SupplierID" required>
-                  <option value="">Select Supplier</option>
-                  @foreach($suppliers as $supplier)
-                  <option value="{{ $supplier->SupplierID }}">
-                    {{ $supplier->SupplierName }}
-                  </option>
-                  @endforeach
+                <label for="edit_ProductStatus" class="form-label required">Status</label>
+                <select class="form-select" id="edit_ProductStatus" name="ProductStatus" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
@@ -810,17 +1135,17 @@
         </div>
         <div class="modal-body">
           <div class="mb-3">
-                <label class="form-label">Category ID</label>
-                <div class="id-info">
-                    <div class="text-muted">Auto-generated </div>
-                </div>
+            <label class="form-label">Category ID</label>
+            <div class="id-info">
+              <div class="text-muted">Auto-generated </div>
+            </div>
+          </div>
           
-            <label class="form-label">Category Name <span class="text-danger">*</span></label>
+          <div class="mb-3">
+            <label class="form-label required">Category Name</label>
             <input type="text" name="CategoryName" class="form-control" required 
                    placeholder="e.g., Toys, Gifts, Decorations" value="{{ old('CategoryName') }}">
           </div>
-
-         
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -845,17 +1170,16 @@
         @csrf
         @method('PUT')
         <div class="modal-body">
-        <div class="mb-3">
-            <label for="edit_CategoryID" class="form-label">Category ID </label>
+          <div class="mb-3">
+            <label for="edit_CategoryID" class="form-label">Category ID</label>
             <div class="id-info">
-                    <div class="text-muted">Category ID cannot be changed </div>
-                </div>
+              <div class="text-muted">Category ID cannot be changed</div>
+            </div>
           </div>
           <div class="mb-3">
-            <label for="edit_CategoryName" class="form-label">Category Name *</label>
+            <label for="edit_CategoryName" class="form-label required">Category Name</label>
             <input type="text" class="form-control" id="edit_CategoryName" name="CategoryName" required>
           </div>
-        
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -940,59 +1264,278 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-   // User dropdown functionality
-   document.getElementById('userDropdownToggle')?.addEventListener('click', function(e) {
-    e.stopPropagation();
-    const menu = document.getElementById('userDropdownMenu');
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-  });
+    // User dropdown functionality
+    document.getElementById('userDropdownToggle')?.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('userDropdownMenu');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
 
-  // Close dropdown when clicking outside
-  document.addEventListener('click', function() {
-    document.getElementById('userDropdownMenu').style.display = 'none';
-  });
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function() {
+        document.getElementById('userDropdownMenu').style.display = 'none';
+    });
 
     // ========== FILTER DROPDOWN ==========
     const filterToggle = document.getElementById('filterToggle');
     const filterMenu = document.getElementById('filterMenu');
-
-    filterToggle?.addEventListener('click', function (e) {
+    const activeFilters = document.getElementById('activeFilters');
+    const searchInput = document.getElementById('searchInput');
+    const productsTableBody = document.getElementById('productsTableBody');
+    
+    // Store current filters
+    let currentFilters = {
+        categories: [],
+        status: [],
+        search: ''
+    };
+    
+    // Filter toggle
+    filterToggle?.addEventListener('click', function(e) {
         e.stopPropagation();
-        filterMenu.style.display = filterMenu.style.display === 'block' ? 'none' : 'block';
-        filterToggle.classList.toggle('active');
+        const isVisible = filterMenu.style.display === 'block';
+        filterMenu.style.display = isVisible ? 'none' : 'block';
+        filterToggle.classList.toggle('active', !isVisible);
     });
-
-    // Close filter when clicking outside
-    document.addEventListener('click', function () {
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function() {
         filterMenu.style.display = 'none';
         filterToggle.classList.remove('active');
     });
-
-    // Prevent closing when clicking inside filter menu
-    filterMenu?.addEventListener('click', function (e) {
+    
+    // Prevent closing when clicking inside the filter menu
+    filterMenu?.addEventListener('click', function(e) {
         e.stopPropagation();
     });
     
     // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('keyup', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#productsTableBody tr');
-            
-            rows.forEach(row => {
-                const productName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                const sku = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                const productId = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                
-                if (productName.includes(searchTerm) || sku.includes(searchTerm) || productId.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+    searchInput?.addEventListener('input', function() {
+        currentFilters.search = this.value.toLowerCase();
+        filterProducts();
+    });
+    
+    // Apply filters
+    document.getElementById('applyFilters')?.addEventListener('click', function() {
+        filterMenu.style.display = 'none';
+        filterToggle.classList.remove('active');
+        
+        // Update current filters based on selections
+        updateCurrentFilters();
+        
+        // Update active filters display
+        updateActiveFilters();
+        
+        // Filter products
+        filterProducts();
+    });
+    
+    // Clear filters
+    document.getElementById('clearFilters')?.addEventListener('click', function() {
+        // Clear all checkboxes
+        document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
         });
+        
+        // Set default values
+        document.getElementById('cat-all').checked = true;
+        document.getElementById('status-all').checked = true;
+        
+        // Clear search
+        searchInput.value = '';
+        
+        // Update current filters to defaults
+        currentFilters = {
+            categories: [],
+            status: [],
+            search: ''
+        };
+        
+        // Update active filters
+        updateActiveFilters();
+        
+        // Reset product display
+        filterProducts();
+    });
+    
+    function updateCurrentFilters() {
+        // Update categories
+        currentFilters.categories = [];
+        if (document.getElementById('cat-all').checked) {
+            // If "All Categories" is checked, collect all category names
+            @foreach($categories as $cat)
+                currentFilters.categories.push('{{ $cat->CategoryName }}');
+            @endforeach
+        } else {
+            // Collect selected categories
+            @foreach($categories as $cat)
+                if (document.getElementById('cat-{{ $cat->CategoryID }}').checked) {
+                    currentFilters.categories.push('{{ $cat->CategoryName }}');
+                }
+            @endforeach
+        }
+        
+        // Update status
+        currentFilters.status = [];
+        if (document.getElementById('status-all').checked) {
+            currentFilters.status.push('Active', 'Inactive');
+        } else {
+            if (document.getElementById('status-active').checked) {
+                currentFilters.status.push('Active');
+            }
+            if (document.getElementById('status-inactive').checked) {
+                currentFilters.status.push('Inactive');
+            }
+        }
     }
+    
+    function updateActiveFilters() {
+        // Clear existing filter tags
+        activeFilters.innerHTML = '';
+        
+        // Check if we have any non-default filters
+        const hasCustomFilters = 
+            currentFilters.categories.length !== {{ count($categories) }} ||
+            currentFilters.status.length !== 2 ||
+            currentFilters.search !== '';
+        
+        if (!hasCustomFilters) {
+            // No custom filters applied, hide the active filters section
+            activeFilters.classList.remove('has-filters');
+            return;
+        }
+        
+        // Show active filters section
+        activeFilters.classList.add('has-filters');
+        
+        // Add category filter tags if not all are selected
+        if (currentFilters.categories.length !== {{ count($categories) }}) {
+            currentFilters.categories.forEach(category => {
+                const categoryTag = createFilterTag(`Category: ${category}`, `category-${category.toLowerCase().replace(' ', '-')}`);
+                activeFilters.appendChild(categoryTag);
+            });
+        }
+        
+        // Add status filter tags if not all are selected
+        if (currentFilters.status.length !== 2) {
+            currentFilters.status.forEach(status => {
+                const statusTag = createFilterTag(`Status: ${status}`, `status-${status.toLowerCase()}`);
+                activeFilters.appendChild(statusTag);
+            });
+        }
+        
+        // Add search filter tag if not empty
+        if (currentFilters.search !== '') {
+            const searchTag = createFilterTag(`Search: "${currentFilters.search}"`, 'search');
+            activeFilters.appendChild(searchTag);
+        }
+    }
+    
+    function createFilterTag(text, filterType) {
+        const tag = document.createElement('div');
+        tag.className = 'filter-tag';
+        
+        const span = document.createElement('span');
+        span.textContent = text;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'filter-tag-remove';
+        removeBtn.setAttribute('data-filter', filterType);
+        removeBtn.innerHTML = '×';
+        removeBtn.addEventListener('click', function() {
+            removeFilter(filterType);
+        });
+        
+        tag.appendChild(span);
+        tag.appendChild(removeBtn);
+        
+        return tag;
+    }
+    
+    function removeFilter(filterType) {
+        // Remove the specific filter and update the UI
+        if (filterType.startsWith('category-')) {
+            const filterName = filterType.replace('category-', '').replace('-', ' ');
+            const index = currentFilters.categories.indexOf(
+                filterName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+            );
+            if (index > -1) {
+                currentFilters.categories.splice(index, 1);
+            }
+        } else if (filterType.startsWith('status-')) {
+            const filterName = filterType.replace('status-', '');
+            const index = currentFilters.status.indexOf(
+                filterName.charAt(0).toUpperCase() + filterName.slice(1)
+            );
+            if (index > -1) {
+                currentFilters.status.splice(index, 1);
+            }
+        } else if (filterType === 'search') {
+            currentFilters.search = '';
+            searchInput.value = '';
+        }
+        
+        // Update the checkboxes to reflect the change
+        updateFilterInputs();
+        
+        // Update active filters display
+        updateActiveFilters();
+        
+        // Refresh product display
+        filterProducts();
+    }
+    
+    function updateFilterInputs() {
+        // Update category checkboxes
+        document.getElementById('cat-all').checked = currentFilters.categories.length === {{ count($categories) }};
+        
+        // Update status checkboxes
+        document.getElementById('status-all').checked = currentFilters.status.length === 2;
+        document.getElementById('status-active').checked = currentFilters.status.includes('Active');
+        document.getElementById('status-inactive').checked = currentFilters.status.includes('Inactive');
+    }
+    
+    function filterProducts() {
+        const rows = productsTableBody.getElementsByTagName('tr');
+        let visibleCount = 0;
+        
+        for (let row of rows) {
+            const productName = row.cells[1].textContent.toLowerCase();
+            const productId = row.cells[0].textContent.toLowerCase();
+            const category = row.cells[3].textContent.trim();
+            const status = row.cells[5].textContent.trim();
+            
+            // Check search filter
+            const searchMatch = currentFilters.search === '' || 
+                               productName.includes(currentFilters.search) || 
+                               productId.includes(currentFilters.search);
+            
+            // Check category filter
+            const categoryMatch = currentFilters.categories.length === 0 || 
+                                 currentFilters.categories.includes(category);
+            
+            // Check status filter
+            const statusMatch = currentFilters.status.length === 0 || 
+                               currentFilters.status.includes(status);
+            
+            // Show/hide row based on filters
+            if (searchMatch && categoryMatch && statusMatch) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+        
+        // Update total count if needed
+        const totalCountElement = document.querySelector('.text-muted');
+        if (totalCountElement) {
+            totalCountElement.textContent = `Total: ${visibleCount} product(s)`;
+        }
+    }
+    
+    // Initialize filtering on page load
+    filterProducts();
     
     // Edit Product Modal
     const editProductButtons = document.querySelectorAll('.edit-product');
@@ -1046,57 +1589,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // SKU Preview functionality
-    const categorySelect = document.getElementById('CategoryID');
-    const skuPreview = document.getElementById('skuPreview');
-    
-    if (categorySelect && skuPreview) {
-        categorySelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const prefix = selectedOption.dataset.prefix;
-            
-            if (prefix) {
-                skuPreview.innerHTML = ` (Auto-generated)`;
-            } else {
-                skuPreview.textContent = 'Select a category to preview SKU';
-            }
-        });
-    }
-    
-    // Auto-capitalize SKU prefix in category forms
-    document.getElementById('CategoryPrefix')?.addEventListener('input', function() {
-        this.value = this.value.toUpperCase().substring(0, 3);
-    });
-
-    document.getElementById('edit_CategoryPrefix')?.addEventListener('input', function() {
-        this.value = this.value.toUpperCase().substring(0, 3);
+    document.getElementById('CategoryID')?.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const prefix = selected.dataset.prefix || selected.text.substring(0,3).toUpperCase();
+        document.getElementById('skuPreview').textContent = prefix + 'XXXX';
     });
     
-    // Show success/error messages
-    @if(session('success'))
-        showAlert('success', '{{ session('success') }}');
-    @endif
-    
-    @if(session('error'))
-        showAlert('error', '{{ session('error') }}');
-    @endif
-    
-    function showAlert(type, message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.style.position = 'fixed';
-        alertDiv.style.top = '20px';
-        alertDiv.style.right = '20px';
-        alertDiv.style.zIndex = '1050';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(alertDiv);
-        
+    // Auto-hide alerts after 5 seconds (like in employees page)
+    document.querySelectorAll('.alert').forEach(alert => {
         setTimeout(() => {
-            alertDiv.remove();
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
         }, 5000);
-    }
+    });
 });
 </script>
 </body>

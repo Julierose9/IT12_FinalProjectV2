@@ -4,110 +4,166 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PullOut;
+use App\Models\StockIn;
 use App\Models\Product;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PullOutController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = PullOut::with(['product', 'employee'])->orderBy('DatePullOut', 'desc');
-
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('PullOutID', 'like', "%{$search}%")
-                  ->orWhereHas('product', fn($p) => $p->where('ProdName', 'like', "%{$search}%"))
-                  ->orWhereHas('employee', fn($e) => $e->whereRaw("CONCAT(EmpFName, ' ', EmpLName) LIKE ?", ["%{$search}%"]));
+        // Get all pullouts with relationships
+        $pullOuts = PullOut::with(['product.supplier', 'employee'])
+            ->orderBy('DatePullOut', 'desc')
+            ->get();
+        
+        // Get products with available stock
+        $products = Product::with(['supplier', 'category', 'pricing'])
+            ->whereHas('stockIns', function($query) {
+                $query->where('ProdStatus', 'Received');
+            })
+            ->get()
+            ->map(function ($product) {
+                // Calculate total stock in quantity for this product
+                $totalStockIn = StockIn::where('ProductID', $product->ProductID)
+                    ->where('ProdStatus', 'Received')
+                    ->sum('Qty');
+                
+                // Calculate total pulled out quantity for this product by ProductID
+                $pulledOutQty = PullOut::where('ProductID', $product->ProductID)
+                    ->sum('PullOutQty');
+                
+                $product->available_qty = $totalStockIn - $pulledOutQty;
+                $product->total_stock_in = $totalStockIn;
+                $product->total_pulled_out = $pulledOutQty;
+                return $product;
+            })
+            ->filter(function ($product) {
+                return $product->available_qty > 0;
             });
-        }
-
-        // Filter by reason
-        if ($request->filled('reason')) {
-            $query->whereIn('PullOutReason', $request->reason);
-        }
-
-        // Filter by date range
-        if ($request->filled('date_from')) {
-            $query->whereDate('DatePullOut', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('DatePullOut', '<=', $request->date_to);
-        }
-
-        $pullOuts = $query->paginate(15)->withQueryString();
-        $products = Product::all();
-        $employees = Employee::all();
-
+        
+        // Get active employees
+        $employees = Employee::where('EmployeeStatus', 'Active')->get();
+        
         return view('admin.pullout', compact('pullOuts', 'products', 'employees'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'ProductID' => 'required|exists:products,ProductID',
+        $request->validate([
+            'SKUNumber' => 'required|exists:products,SKUNumber',
             'EmployeeID' => 'required|exists:employees,EmployeeID',
-            'Qty' => 'required|integer|min:1',
-            'Reason' => 'required|string',
+            'PullOutQty' => 'required|integer|min:1',
+            'PullOutReason' => 'required|in:Damaged,Expired,Returned to supplier',
+            'PullOutType' => 'required|string',
             'DatePullOut' => 'required|date',
         ]);
 
-        $pullOutId = 'PO-' . date('Ymd') . '-' . str_pad(PullOut::count() + 1, 4, '0', STR_PAD_LEFT);
-
-        PullOut::create([
-            'PullOutID' => $pullOutId,
-            'ProductID' => $validated['ProductID'],
-            'EmployeeID' => $validated['EmployeeID'],
-            'PullOutQty' => $validated['Qty'],
-            'PullOutReason' => $validated['Reason'],
-            'DatePullOut' => $validated['DatePullOut'],
-        ]);
-
-        return redirect()->route('admin.pullout')
-            ->with('success', 'Pullout created successfully!');
+        try {
+            DB::beginTransaction();
+            
+            // Get the product by SKU
+            $product = Product::where('SKUNumber', $request->SKUNumber)->firstOrFail();
+            
+            // Calculate total stock in quantity for this product
+            $totalStockIn = StockIn::where('ProductID', $product->ProductID)
+                ->where('ProdStatus', 'Received')
+                ->sum('Qty');
+            
+            // Calculate total already pulled out quantity for this product by ProductID
+            $pulledOutQty = PullOut::where('ProductID', $product->ProductID)
+                ->sum('PullOutQty');
+            $availableQty = $totalStockIn - $pulledOutQty;
+            
+            // Validate quantity
+            if ($request->PullOutQty > $availableQty) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Pullout quantity exceeds available stock. Available: ' . $availableQty);
+            }
+            
+            // Generate PullOutID
+            $lastPullOut = PullOut::orderBy('PullOutID', 'desc')->first();
+            $lastId = $lastPullOut ? intval(substr($lastPullOut->PullOutID, 2)) : 0;
+            $pullOutId = 'PO' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+            
+            // Create pullout record using ProductID (converted from SKUNumber)
+            $pullOut = PullOut::create([
+                'PullOutID' => $pullOutId,
+                'ProductID' => $product->ProductID,
+                'EmployeeID' => $request->EmployeeID,
+                'PullOutQty' => $request->PullOutQty,
+                'PullOutReason' => $request->PullOutReason,
+                'PullOutType' => $request->PullOutType,
+                'DatePullOut' => $request->DatePullOut,
+            ]);
+            
+            // Update product stock quantity
+            $product->StockQty -= $request->PullOutQty;
+            $product->save();
+            
+            DB::commit();
+            
+            return redirect()->route('admin.pullout.index')
+                ->with('success', 'Pullout record added successfully! Stock has been deducted.');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error adding pullout: ' . $e->getMessage());
+        }
     }
 
-    public function edit(PullOut $pullOut)
+    public function show($id)
     {
-        $products = Product::all();
-        $employees = Employee::all();
-
+        $pullOut = PullOut::with(['product.supplier', 'product.category', 'product.pricing', 'employee'])
+            ->findOrFail($id);
+            
         return response()->json([
-            'pullOut' => $pullOut->load('product', 'employee'),
-            'products' => $products,
-            'employees' => $employees,
+            'success' => true,
+            'data' => $pullOut,
+            'product_name' => $pullOut->product->ProductName ?? 'N/A',
+            'sku' => $pullOut->product->SKUNumber ?? 'N/A',
+            'employee_name' => $pullOut->employee->EmpFName . ' ' . $pullOut->employee->EmpLName ?? 'N/A',
+            'formatted_date' => \Carbon\Carbon::parse($pullOut->DatePullOut)->format('M d, Y'),
         ]);
     }
 
-    public function update(Request $request, PullOut $pullOut)
+    public function destroy($id)
     {
-        $validated = $request->validate([
-            'ProductID' => 'required|exists:products,ProductID',
-            'EmployeeID' => 'required|exists:employees,EmployeeID',
-            'Qty' => 'required|integer|min:1',
-            'Reason' => 'required|string',
-            'DatePullOut' => 'required|date',
-        ]);
-
-        $pullOut->update([
-            'ProductID' => $validated['ProductID'],
-            'EmployeeID' => $validated['EmployeeID'],
-            'PullOutQty' => $validated['Qty'],
-            'PullOutReason' => $validated['Reason'],
-            'DatePullOut' => $validated['DatePullOut'],
-        ]);
-
-        return redirect()->route('admin.pullout')
-            ->with('success', 'Pullout updated successfully!');
-    }
-
-    public function destroy(PullOut $pullOut)
-    {
-        $pullOut->delete();
-
-        return redirect()->route('admin.pullout')
-            ->with('success', 'Pullout deleted successfully!');
+        try {
+            DB::beginTransaction();
+            
+            $pullOut = PullOut::findOrFail($id);
+            
+            // Restore product stock quantity
+            $product = Product::find($pullOut->ProductID);
+            if ($product) {
+                $product->StockQty += $pullOut->PullOutQty;
+                $product->save();
+            }
+            
+            // Delete pullout record
+            $pullOut->delete();
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Pullout record deleted successfully! Stock has been restored.'
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting pullout: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

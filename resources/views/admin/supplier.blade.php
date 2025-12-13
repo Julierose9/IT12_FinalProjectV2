@@ -24,7 +24,6 @@
             padding-top: 0;
         }
 
-        /* ========== SIDEBAR STYLES ========== */
         .sidebar { 
             min-width: 220px; 
             max-width: 220px; 
@@ -138,7 +137,6 @@
             background: #a8a8a8;
         }
         
-        /* Dropdown menu styling */
         .nav .nav-link.dropdown-toggle::after {
             float: right;
             margin-top: 6px;
@@ -151,14 +149,12 @@
             padding-left: 8px;
         }
         
-        /* Submenu items styling */
         .nav .nav.flex-column.ms-3 .nav-link {
             padding: 10px 12px;
             font-size: 0.9rem;
             border-radius: 6px;
         }
 
-        /* Mobile sidebar toggle */
         .sidebar-toggle {
             display: none;
             position: fixed;
@@ -187,7 +183,6 @@
             margin-left: 0;
         }
 
-        /* ========== TOPBAR STYLES ========== */
         .topbar { 
             background: transparent; 
             display: flex; 
@@ -209,7 +204,6 @@
             min-width: 250px;
         }
 
-        /* ========== USER SECTION STYLES ========== */
         .user-section {
             display: flex;
             flex-direction: column;
@@ -249,7 +243,6 @@
             object-fit: cover;
         }
         
-        /* User dropdown for sign out */
         .user-dropdown {
             position: relative;
         }
@@ -305,7 +298,6 @@
             color: var(--primary-color);
         }
 
-       /* ========== FILTER & SEARCH STYLES ========== */
 .search-filter-section {
     display: flex;
     align-items: center;
@@ -315,7 +307,6 @@
     width: 100%;
 }
 
-/* Filter container styling */
 .filter-container {
     display: flex;
     flex-direction: column;
@@ -324,7 +315,6 @@
     width: 100%;
 }
 
-/* Search and filter in one line */
 .search-filter-row {
     display: flex;
     align-items: center;
@@ -333,20 +323,17 @@
     flex-wrap: nowrap;
 }
 
-/* Search input takes available space */
 .search-input {
     flex: 1;
     min-width: 250px;
     max-width: 500px;
 }
 
-/* Filter dropdown styling */
 .filter-dropdown {
     position: relative;
     flex-shrink: 0;
 }
 
-/* Filter toggle button */
 .filter-toggle {
     background: #fff;
     border: 1px solid #dee2e6;
@@ -371,7 +358,6 @@
     border-color: var(--primary-color);
 }
 
-/* Filter menu */
 .filter-menu {
     position: absolute;
     top: 100%;
@@ -391,7 +377,6 @@
     display: block;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .search-filter-row {
         flex-wrap: wrap;
@@ -498,7 +483,6 @@
             background: #5a6268;
         }
 
-        /* Active filter indicator */
         .active-filters {
             display: none;
             align-items: center;
@@ -537,7 +521,6 @@
             justify-content: center;
         }
 
-        /* Container for search/filter and active filters */
         .filter-container {
             display: flex;
             flex-direction: column;
@@ -547,7 +530,6 @@
             width: 100%;
         }
 
-        /* ========== TABLE STYLES ========== */
         .table-card {
             border-radius: 12px;
             border: none;
@@ -587,12 +569,7 @@
         .status-inactive {
             color: var(--danger-color);
         }
-        
-        .status-pending {
-            color: var(--warning-color);
-        }
 
-        /* Action buttons in table */
         .action-buttons {
             display: flex;
             gap: 4px;
@@ -604,7 +581,6 @@
             font-size: 0.8rem;
         }
 
-        /* ========== MODAL STYLES ========== */
         .modal-header {
             border-bottom: 1px solid #eef2f7;
             padding: 20px 24px;
@@ -620,8 +596,6 @@
             color: var(--primary-color);
         }
 
-        /* ========== RESPONSIVE DESIGN ========== */
-        /* Large devices (desktops, less than 1200px) */
         @media (max-width: 1199.98px) {
             .sidebar {
                 min-width: 200px;
@@ -634,7 +608,6 @@
             }
         }
 
-        /* Medium devices (tablets, less than 992px) */
         @media (max-width: 991.98px) {
             .sidebar { 
                 position: fixed;
@@ -716,7 +689,6 @@
                 justify-content: center;
             }
 
-            /* Table responsive improvements */
             .table-responsive {
                 border-radius: 8px;
             }
@@ -738,7 +710,6 @@
             }
         }
 
-        /* Small devices (landscape phones, less than 768px) */
         @media (max-width: 767.98px) {
             .content-wrap {
                 padding: 70px 12px 12px;
@@ -771,7 +742,6 @@
                 min-width: 250px;
             }
 
-            /* Stack filter and search on very small screens */
             .search-filter-section {
                 flex-direction: column;
             }
@@ -781,16 +751,14 @@
                 width: 100%;
             }
 
-            /* Hide less important columns */
-            .table th:nth-child(4), /* Address column */
+            .table th:nth-child(4),
             .table td:nth-child(4),
-            .table th:nth-child(5), /* Products column */
+            .table th:nth-child(5), 
             .table td:nth-child(5) {
                 display: none;
             }
         }
 
-        /* Extra small devices (portrait phones, less than 576px) */
         @media (max-width: 575.98px) {
             .content-wrap {
                 padding: 70px 8px 8px;
@@ -834,14 +802,12 @@
                 margin-bottom: 4px;
             }
 
-            /* Hide more columns on very small screens */
-            .table th:nth-child(3), /* Contact column */
+            .table th:nth-child(3), 
             .table td:nth-child(3) {
                 display: none;
             }
         }
 
-        /* Print styles */
         @media print {
             .sidebar,
             .topbar .user-section,
@@ -861,7 +827,6 @@
             }
         }
 
-        /* Dark overlay for mobile sidebar */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -879,13 +844,37 @@
     </style>
 </head>
 <body>
+@php
+    // Get employee data
+    $user = Auth::user() ?? null;
+    $employeeName = 'Admin'; // Default
+    $employeeId = null;
+    
+    if ($user) {
+        // Check if user has an employee record
+        // Method 1: If user has employee relationship
+        if (isset($user->employee) && $user->employee) {
+            $employeeName = $user->employee->EmployeeName ?? 
+                           ($user->employee->EmployeeFName . ' ' . $user->employee->EmployeeLName) ?? 
+                           $user->name;
+            $employeeId = $user->employee->EmployeeID ?? null;
+        }
+        // Method 2: If user has direct employee fields
+        elseif (isset($user->EmployeeName)) {
+            $employeeName = $user->EmployeeName;
+            $employeeId = $user->EmployeeID ?? null;
+        }
+        // Method 3: Fallback to user's name
+        else {
+            $employeeName = $user->name ?? 'Admin';
+        }
+    }
+@endphp
 
-<!-- Mobile Sidebar Toggle -->
 <button class="sidebar-toggle" id="sidebarToggle">
     <i class="fas fa-bars"></i>
 </button>
 
-<!-- Sidebar Overlay for Mobile -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 {{-- Sidebar --}}
@@ -976,13 +965,17 @@
         </div>
 
         <div class="user-section">
-            <!-- User Info Section with Dropdown -->
-            <div class="user-dropdown">
+        <div class="user-dropdown">
                 <button class="user-dropdown-toggle" id="userDropdownToggle">
                     <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
                     <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->Username ?? 'Dora' }}</div>
-                        <div class="user-role">{{ Auth::user()->Role ?? 'Administrator' }}</div>
+                        <div class="user-name">{{ $employeeName }}</div>
+                        <div class="user-role">
+                            @if($employeeId)
+                                 Admin
+                            
+                            @endif
+                        </div>
                     </div>
                     <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
                 </button>
@@ -997,17 +990,14 @@
                 </div>
             </div>
             
-            <!-- Filter Container with Search/Filter and Active Filters -->
+            
             <div class="filter-container">
-                <!-- Search and Filter Section -->
                 <div class="search-filter-section">
-                    <!-- Search Bar -->
                     <div class="input-group search-input">
                         <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
                         <input type="text" class="form-control" placeholder="Search suppliers..." id="searchInput">
                     </div>
                     
-                    <!-- Filter Dropdown -->
                     <div class="filter-dropdown">
                         <button class="filter-toggle" id="filterToggle">
                             <i class="fas fa-filter"></i>
@@ -1031,10 +1021,6 @@
                                     <div class="filter-option">
                                         <input type="checkbox" id="status-inactive">
                                         <label for="status-inactive">Inactive</label>
-                                    </div>
-                                    <div class="filter-option">
-                                        <input type="checkbox" id="status-pending">
-                                        <label for="status-pending">Pending</label>
                                     </div>
                                 </div>
                             </div>
@@ -1083,6 +1069,23 @@
         </div>
     @endif
 
+    {{-- Warning Alert for Inactive Suppliers with Products --}}
+    @php
+        $inactiveSuppliersWithProducts = collect($suppliers)->filter(function($supplier) {
+            return $supplier->Status === 'Inactive' && ($supplier->products_count ?? 0) > 0;
+        });
+    @endphp
+    
+    @if($inactiveSuppliersWithProducts->count() > 0)
+        <div class="alert alert-warning alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Warning:</strong> {{ $inactiveSuppliersWithProducts->count() }} 
+            supplier{{ $inactiveSuppliersWithProducts->count() > 1 ? 's are' : ' is' }} 
+            marked as Inactive but still have products associated. These products cannot be ordered.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     {{-- Suppliers Table --}}
     <div class="card table-card">
         <div class="card-body">
@@ -1116,7 +1119,12 @@
                                 <div class="fw-600">{{ $supplier->SupplierName }}</div>
                                 <small class="text-muted">Supplier</small>
                             </td>
-                            <td>{{ $supplier->SupplierContactNo }}</td>
+                            <td>
+                                {{ $supplier->SupplierContactNo }}
+                                @if($supplier->Status === 'Inactive' && ($supplier->products_count ?? 0) > 0)
+                                    <br><small class="text-danger"><i class="fas fa-exclamation-circle"></i> Products restricted</small>
+                                @endif
+                            </td>
                             <td>
                                 <div class="text-truncate" style="max-width: 200px;" title="{{ $supplier->Address }}">
                                     {{ $supplier->Address }}
@@ -1126,7 +1134,7 @@
                                 <strong class="text-primary">{{ $supplier->products_count ?? 0 }}</strong>
                             </td>
                             <td>
-                                <span class="status-badge {{ $supplier->Status === 'Active' ? 'status-active' : ($supplier->Status === 'Inactive' ? 'status-inactive' : 'status-pending') }}">
+                                <span class="status-badge {{ $supplier->Status === 'Active' ? 'status-active' : 'status-inactive' }}">
                                     {{ $supplier->Status }}
                                 </span>
                             </td>
@@ -1168,7 +1176,7 @@
 {{-- ADD SUPPLIER MODAL --}}
 <div class="modal fade" id="addSupplierModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <form action="{{ route('admin.supplier.store') }}" method="POST">
+        <form action="{{ route('admin.supplier.store') }}" method="POST" id="addSupplierForm">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -1186,7 +1194,13 @@
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-                            <input type="text" name="SupplierContactNo" class="form-control {{ $errors->has('SupplierContactNo') ? 'is-invalid' : '' }}" value="{{ old('SupplierContactNo') }}" required>
+                            <input type="text" name="SupplierContactNo" class="form-control {{ $errors->has('SupplierContactNo') ? 'is-invalid' : '' }}" 
+                                   value="{{ old('SupplierContactNo') }}" 
+                                   pattern="[0-9]{12}" 
+                                   maxlength="12"
+                                   placeholder=""
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12)"
+                                   required>
                             @if($errors->has('SupplierContactNo'))
                                 <div class="invalid-feedback">{{ $errors->first('SupplierContactNo') }}</div>
                             @endif
@@ -1199,12 +1213,17 @@
                             @endif
                         </div>
                         <div class="col-12 col-md-6">
-                            <label class="form-label">Status</label>
-                            <select name="Status" class="form-select">
-                                <option value="Pending" selected>Pending</option>
-                                <option value="Active">Active</option>
+                            <label class="form-label">Status <span class="text-danger">*</span></label>
+                            <select name="Status" class="form-select" required>
+                                <option value="Active" selected>Active</option>
                                 <option value="Inactive">Inactive</option>
                             </select>
+                            <div class="mt-2">
+                                <div class="alert alert-info" id="inactiveWarning" style="display: none;">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <small>Inactive suppliers cannot have products ordered from them.</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1235,9 +1254,14 @@
                         <div class="col-12 col-md-6"><strong>Address:</strong> {{ $supplier->Address ?? '—' }}</div>
                         <div class="col-12 col-md-6"><strong>Products Supplied:</strong> <strong class="text-primary">{{ $supplier->products_count ?? 0 }}</strong> product{{ ($supplier->products_count ?? 0) != 1 ? 's' : '' }}</div>
                         <div class="col-12 col-md-6"><strong>Status:</strong>
-                            <span class="status-badge {{ $supplier->Status === 'Active' ? 'status-active' : ($supplier->Status === 'Inactive' ? 'status-inactive' : 'status-pending') }}">
+                            <span class="status-badge {{ $supplier->Status === 'Active' ? 'status-active' : 'status-inactive' }}">
                                 {{ $supplier->Status }}
                             </span>
+                            @if($supplier->Status === 'Inactive' && ($supplier->products_count ?? 0) > 0)
+                                <div class="text-danger mt-1">
+                                    <i class="fas fa-exclamation-triangle"></i> Products cannot be ordered from this supplier
+                                </div>
+                            @endif
                         </div>
                         <div class="col-12 col-md-6"><strong>Date Added:</strong> {{ \Carbon\Carbon::parse($supplier->created_at)->format('M d, Y h:i A') }}</div>
                         <div class="col-12 col-md-6"><strong>Last Updated:</strong> {{ \Carbon\Carbon::parse($supplier->updated_at)->format('M d, Y h:i A') }}</div>
@@ -1253,7 +1277,7 @@
     {{-- EDIT MODAL --}}
     <div class="modal fade" id="editModal{{ $supplier->id }}" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <form action="{{ route('admin.supplier.update', $supplier->SupplierID) }}" method="POST">
+            <form action="{{ route('admin.supplier.update', $supplier->SupplierID) }}" method="POST" id="editForm{{ $supplier->id }}">
                 @csrf
                 @method('PUT')
                 <div class="modal-content">
@@ -1274,10 +1298,16 @@
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Contact Number <span class="text-danger">*</span></label>
                                 <input type="text" name="SupplierContactNo" class="form-control {{ $errors->has('SupplierContactNo') ? 'is-invalid' : '' }}"
-                                       value="{{ old('SupplierContactNo', $supplier->SupplierContactNo) }}" required>
+                                       value="{{ old('SupplierContactNo', $supplier->SupplierContactNo) }}" 
+                                       pattern="[0-9]{12}" 
+                                       maxlength="12"
+                                       placeholder="09XXXXXXXXX"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12)"
+                                       required>
                                 @if($errors->has('SupplierContactNo'))
                                     <div class="invalid-feedback">{{ $errors->first('SupplierContactNo') }}</div>
                                 @endif
+                                <small class="text-muted">Must be exactly 12 digits (e.g., 091234567890)</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address <span class="text-danger">*</span></label>
@@ -1287,12 +1317,17 @@
                                 @endif
                             </div>
                             <div class="col-12 col-md-6">
-                                <label class="form-label">Status</label>
-                                <select name="Status" class="form-select">
+                                <label class="form-label">Status <span class="text-danger">*</span></label>
+                                <select name="Status" class="form-select" required onchange="showInactiveWarningEdit(this, {{ $supplier->products_count ?? 0 }})">
                                     <option value="Active" {{ $supplier->Status == 'Active' ? 'selected' : '' }}>Active</option>
                                     <option value="Inactive" {{ $supplier->Status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                                    <option value="Pending" {{ $supplier->Status == 'Pending' ? 'selected' : '' }}>Pending</option>
                                 </select>
+                                <div class="mt-2">
+                                    <div class="alert alert-warning" id="inactiveWarningEdit{{ $supplier->id }}" style="display: {{ $supplier->Status == 'Inactive' && ($supplier->products_count ?? 0) > 0 ? 'block' : 'none' }};">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <small>This supplier has {{ $supplier->products_count ?? 0 }} product(s). If set to Inactive, these products cannot be ordered.</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1322,6 +1357,12 @@
                             <strong>{{ $supplier->SupplierName }}</strong><br>
                             <small>{{ $supplier->SupplierID }}</small>
                         </div>
+                        @if(($supplier->products_count ?? 0) > 0)
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                This supplier has {{ $supplier->products_count ?? 0 }} product(s). Deleting this supplier will affect those products.
+                            </div>
+                        @endif
                         <p class="text-danger"><strong>This action cannot be undone.</strong></p>
                     </div>
                     <div class="modal-footer">
@@ -1477,9 +1518,6 @@
             if (document.getElementById('status-inactive').checked) {
                 currentFilters.status.push('Inactive');
             }
-            if (document.getElementById('status-pending').checked) {
-                currentFilters.status.push('Pending');
-            }
         }
         
         // Update products
@@ -1601,7 +1639,6 @@
         document.getElementById('status-all').checked = currentFilters.status.includes('All Status');
         document.getElementById('status-active').checked = currentFilters.status.includes('Active');
         document.getElementById('status-inactive').checked = currentFilters.status.includes('Inactive');
-        document.getElementById('status-pending').checked = currentFilters.status.includes('Pending');
         
         // Update products checkboxes
         document.getElementById('products-all').checked = currentFilters.products.includes('All Suppliers');
@@ -1674,6 +1711,101 @@
             const bsAlert = new bootstrap.Alert(alert);
             bsAlert.close();
         }, 5000);
+    });
+
+    // Show/hide inactive supplier warning in add modal
+    document.querySelector('select[name="Status"]').addEventListener('change', function() {
+        const warning = document.getElementById('inactiveWarning');
+        if (this.value === 'Inactive') {
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
+        }
+    });
+
+    // Show/hide inactive supplier warning in edit modal
+    function showInactiveWarningEdit(selectElement, productsCount) {
+        const supplierId = selectElement.closest('form').id.replace('editForm', '');
+        const warning = document.getElementById('inactiveWarningEdit' + supplierId);
+        
+        if (selectElement.value === 'Inactive' && productsCount > 0) {
+            warning.style.display = 'block';
+        } else {
+            warning.style.display = 'none';
+        }
+    }
+
+    // Form validation for contact number
+    const addSupplierForm = document.getElementById('addSupplierForm');
+    if (addSupplierForm) {
+        addSupplierForm.addEventListener('submit', function(event) {
+            const contactInput = document.querySelector('input[name="SupplierContactNo"]');
+            const contactValue = contactInput.value;
+            
+            // Check if contact number is exactly 12 digits
+            if (contactValue.length !== 12 || !/^\d{12}$/.test(contactValue)) {
+                event.preventDefault();
+                contactInput.classList.add('is-invalid');
+                contactInput.nextElementSibling.textContent = 'Contact number must be exactly 12 digits.';
+                contactInput.focus();
+            }
+        });
+    }
+
+    // Add validation for edit forms
+    document.querySelectorAll('[id^="editForm"]').forEach(form => {
+        form.addEventListener('submit', function(event) {
+            const contactInput = this.querySelector('input[name="SupplierContactNo"]');
+            const contactValue = contactInput.value;
+            
+            // Check if contact number is exactly 12 digits
+            if (contactValue.length !== 12 || !/^\d{12}$/.test(contactValue)) {
+                event.preventDefault();
+                contactInput.classList.add('is-invalid');
+                if (!contactInput.nextElementSibling.classList.contains('text-muted')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.textContent = 'Contact number must be exactly 12 digits.';
+                    contactInput.parentNode.insertBefore(errorDiv, contactInput.nextElementSibling);
+                } else {
+                    contactInput.nextElementSibling.nextElementSibling.textContent = 'Contact number must be exactly 12 digits.';
+                }
+                contactInput.focus();
+            }
+        });
+    });
+
+    // Format contact number input to show "+63" or "09" format
+    document.querySelectorAll('input[name="SupplierContactNo"]').forEach(input => {
+        input.addEventListener('input', function() {
+            // Remove non-numeric characters
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            // Ensure it starts with 09 (Philippines mobile format)
+            if (this.value.length > 0 && !this.value.startsWith('09')) {
+                // If it starts with 9, add 0 at the beginning
+                if (this.value.startsWith('9')) {
+                    this.value = '0' + this.value;
+                }
+                // If it starts with 63, convert to 09 format
+                else if (this.value.startsWith('63')) {
+                    this.value = '0' + this.value.substring(2);
+                }
+            }
+            
+            // Limit to 12 digits
+            if (this.value.length > 12) {
+                this.value = this.value.substring(0, 12);
+            }
+        });
+        
+        input.addEventListener('blur', function() {
+            if (this.value.length > 0 && this.value.length !== 12) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
     });
 </script>
 </body>

@@ -9,23 +9,28 @@ class Product extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'SKUNumber';
+    protected $primaryKey = 'ProductID';
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
-        'SKUNumber',
+        'ProductID',
         'ProductName',
         'ProductDescription',
-        'ReorderLevel',
-        'ProductStatus',
+        'CategoryID',
         'SupplierID',
-        'CategoryID'
+        'SKUNumber',
+        'ProductStatus',
+        'StockQty',      // Make sure this is included
+        'ReorderLevel',  // Make sure this is included
     ];
 
-    protected $casts = [
-        'ReorderLevel' => 'integer'
-    ];
+    public function pricing()
+    {
+        return $this->hasOne(Pricing::class, 'ProductID', 'ProductID')
+                    ->where('IsActive', true)
+                    ->latest('EffectiveDate');
+    }
 
     // Relationship with Category
     public function category()
@@ -39,55 +44,29 @@ class Product extends Model
         return $this->belongsTo(Supplier::class, 'SupplierID', 'SupplierID');
     }
 
-    // Relationship with Pricing
-    public function pricing()
+    // Relationship with StockIn (for stock history)
+    public function stockIns()
     {
-        return $this->hasOne(Pricing::class, 'ProductID', 'SKUNumber')->where('IsActive', true);
+        return $this->hasMany(StockIn::class, 'ProductID', 'ProductID');
     }
 
-    // Accessor for current price
-    public function getCurrentPriceAttribute()
+    // Calculate current stock from stock-in records
+    public function getCurrentStockAttribute()
     {
-        return $this->pricing ? $this->pricing->RetailPrice : 0;
-    }
-
-    // Accessor for cost price
-    public function getCostPriceAttribute()
-    {
-        return $this->pricing ? $this->pricing->OriginalPrice : 0;
+        return $this->stockIns()->where('ProdStatus', '!=', 'Cancelled')->sum('Qty');
     }
 
     // Accessor for stock status
     public function getStockStatusAttribute()
     {
-        // You might need to calculate current stock from inventory transactions
-        $currentStock = $this->calculateCurrentStock();
+        $currentStock = $this->current_stock;
         
         if ($currentStock <= 0) {
             return 'Out of Stock';
-        } elseif ($currentStock <= $this->ReorderLevel) {
+        } elseif ($currentStock <= 10) {
             return 'Low Stock';
         } else {
             return 'In Stock';
         }
-    }
-
-    // Calculate current stock (you'll need to implement this based on your inventory system)
-    private function calculateCurrentStock()
-    {
-        // This is a placeholder - implement based on your stock_in, stock_out tables
-        return 0; // Default value
-    }
-
-    // Accessor for profit margin
-    public function getProfitMarginAttribute()
-    {
-        $cost = $this->cost_price;
-        $retail = $this->current_price;
-        
-        if ($cost > 0 && $retail > 0) {
-            return (($retail - $cost) / $cost) * 100;
-        }
-        return 0;
     }
 }

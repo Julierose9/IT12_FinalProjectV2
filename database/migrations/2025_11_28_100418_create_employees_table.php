@@ -9,18 +9,16 @@ return new class extends Migration
     public function up()
     {
         Schema::create('employees', function (Blueprint $table) {
-            // Auto-incrementing BIG INT ID (standard Laravel way)
-            $table->id(); // creates `id` BIGINT UNSIGNED AUTO_INCREMENT
-
-            // Custom formatted employee code (e.g., EMP001, EMP042)
-            $table->string('EmployeeID', 10)->unique(); // This will be "EMP001"
+            $table->id(); 
+            $table->string('EmployeeID', 10)->unique(); 
 
             $table->string('EmployeeFName', 50);
             $table->string('EmployeeLName', 50);
             $table->string('EmployeeMName', 1)->nullable();
             $table->string('EmployeeContactNum', 20);
-            $table->enum('Role', ['Admin', 'Cashier', 'Manager']);
+            $table->enum('Role', ['Admin', 'Cashier', 'Sales Person']);
             $table->enum('EmployeeStatus', ['Active', 'Inactive', 'On Leave'])->default('Active');
+            $table->timestamp('removed_at')->nullable(); 
             $table->timestamps();
         });
     }

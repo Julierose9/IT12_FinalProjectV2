@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PullOut extends Model
 {
+    use HasFactory;
+    
     protected $table = 'pull_out';
     protected $primaryKey = 'PullOutID';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = false; // Add this line - IMPORTANT!
+    protected $keyType = 'string'; // Add this line - IMPORTANT!
+    public $timestamps = true;
     
     protected $fillable = [
-        'PullOutID',
+        'PullOutID', // Add this to fillable
         'EmployeeID',
         'ProductID',
         'PullOutQty',
@@ -22,23 +25,19 @@ class PullOut extends Model
         'DatePullOut'
     ];
     
-    
-   
-    protected $dates = ['DatePullOut'];
-    
     /**
-     * Get the employee associated with the pullout.
+     * Get the product associated with the pullout
      */
-    public function employee(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class, 'EmployeeID', 'EmployeeID');
-    }
-    
-    /**
-     * Get the product associated with the pullout.
-     */
-    public function product(): BelongsTo
+    public function product()
     {
         return $this->belongsTo(Product::class, 'ProductID', 'ProductID');
     }
-}
+    
+    /**
+     * Get the employee associated with the pullout
+     */
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'EmployeeID', 'EmployeeID');
+    }
+}   

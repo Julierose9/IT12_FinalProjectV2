@@ -3,66 +3,115 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pullouts | Dora's Oshopee</title>
-
-  <!-- Bootstrap + FontAwesome + Poppins -->
+  <title>Pullouts | Dora's Oshoppe</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: 'Poppins', sans-serif; background:#f5f7fb; }
+    :root {
+      --primary-color: #3b3183;
+      --secondary-color: #6c757d;
+      --success-color: #23b07a;
+      --danger-color: #e05252;
+      --warning-color: #f08a24;
+      --light-bg: #f5f7fb;
+      --card-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    body { 
+      font-family: 'Poppins', sans-serif; 
+      background: var(--light-bg);
+      padding-top: 0;
+    }
+
     .sidebar { 
       min-width: 220px; 
       max-width: 220px; 
       background: #fff; 
-      border-right:1px solid #eef2f7; 
-      height:100vh; 
-      position:fixed; 
-      top:0; 
-      left:0; 
-      padding:22px;
+      border-right: 1px solid #eef2f7; 
+      height: 100vh; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      padding: 22px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: all 0.3s ease;
+      z-index: 1000;
     }
-    .brand { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-shrink: 0; }
-    .brand img { width:80px; height:auto; }
+
+    .sidebar.collapsed {
+      min-width: 70px;
+      max-width: 70px;
+    }
+
+    .sidebar.collapsed .brand-text,
+    .sidebar.collapsed .nav-link span:not(.fa),
+    .sidebar.collapsed .nav-link .fa-chevron-down {
+      display: none;
+    }
+
+    .sidebar.collapsed .brand {
+      justify-content: center;
+    }
+
+    .sidebar.collapsed .nav-link {
+      justify-content: center;
+      text-align: center;
+    }
+
+    .sidebar.collapsed .nav-link i {
+      margin-right: 0;
+    }
+
+    .brand { 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      margin-bottom: 18px; 
+      flex-shrink: 0; 
+    }
+
+    .brand img { 
+      width: 40px; 
+      height: 40px;
+      object-fit: contain;
+    }
+
+    .brand-text {
+      flex: 1;
+    }
+
     .sidebar .nav-link { 
-      color:#5b5f72; 
-      padding:10px 8px; 
-      border-radius:10px; 
+      color: #5b5f72; 
+      padding: 12px 8px; 
+      border-radius: 10px; 
       font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
     }
-    .sidebar .nav-link.active { background:#efeaff; color:#3b3183; font-weight:600; }
-    .sidebar .nav-link:hover { background:#f8f9fa; }
-    .content-wrap { margin-left:240px; padding:28px; }
-    .topbar { 
-      background:transparent; 
-      display:flex; 
-      gap:16px; 
-      align-items:flex-start; 
-      justify-content:space-between; 
-      margin-bottom:22px; 
+
+    .sidebar .nav-link.active { 
+      background: #efeaff; 
+      color: var(--primary-color); 
+      font-weight: 600; 
     }
-    .search-input { 
-      max-width: 400px; 
-      width: 100%; 
-      min-width: 300px;
+
+    .sidebar .nav-link:hover { 
+      background: #f8f9fa; 
+      transform: translateX(2px);
     }
-    .stat-card { border-radius:12px; }
-    .stat-icon { 
-        width:44px; 
-        height:44px; 
-        border-radius:10px; 
-        display:flex; 
-        align-items:center; 
-        justify-content:center; 
-        flex-shrink: 0;
+
+    .sidebar .nav-link i { 
+      width: 20px;
+      margin-right: 10px;
+      text-align: center;
     }
-    .card-small { border-radius:12px; }
-    
-    /* Scrollable sidebar navigation */
+
     .sidebar-nav {
       flex: 1;
       overflow-y: auto;
@@ -70,7 +119,6 @@
       margin-top: 18px;
     }
     
-    /* Custom scrollbar for sidebar */
     .sidebar-nav::-webkit-scrollbar {
       width: 4px;
     }
@@ -89,10 +137,10 @@
       background: #a8a8a8;
     }
     
-    /* Dropdown menu styling */
     .nav .nav-link.dropdown-toggle::after {
       float: right;
       margin-top: 6px;
+      margin-left: auto;
     }
     
     .nav .nav.flex-column.ms-3 {
@@ -101,19 +149,60 @@
       padding-left: 8px;
     }
     
-    /* Submenu items styling */
     .nav .nav.flex-column.ms-3 .nav-link {
-      padding: 8px 12px;
-      font-size: 0.95rem;
+      padding: 10px 12px;
+      font-size: 0.9rem;
       border-radius: 6px;
     }
-    
-    /* Updated user info styling - Picture left, text right */
+
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1001;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .content-wrap { 
+      margin-left: 240px; 
+      padding: 28px;
+      transition: all 0.3s ease;
+    }
+
+    .content-wrap.expanded {
+      margin-left: 0;
+    }
+
+    .topbar { 
+      background: transparent; 
+      display: flex; 
+      gap: 16px; 
+      align-items: flex-start; 
+      justify-content: space-between; 
+      margin-bottom: 22px; 
+      flex-wrap: wrap;
+    }
+
+    .page-title-section {
+      flex: 1;
+      min-width: 250px;
+    }
+
     .user-section {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       gap: 16px;
+      min-width: 300px;
     }
     
     .user-info {
@@ -135,7 +224,7 @@
     }
     
     .user-role {
-      color: #6c757d;
+      color: var(--secondary-color);
       font-size: 0.875rem;
       line-height: 1.2;
     }
@@ -147,7 +236,6 @@
       object-fit: cover;
     }
     
-    /* User dropdown for sign out */
     .user-dropdown {
       position: relative;
     }
@@ -200,46 +288,69 @@
     
     .user-dropdown-item:hover {
       background: #f8f9fa;
-      color: #3b3183;
+      color: var(--primary-color);
     }
     
-    /* Search and filter section */
     .search-filter-section {
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      width: 100%;
     }
-    
-    /* Filter dropdown styling */
+
+    .filter-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .search-filter-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      flex-wrap: nowrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 250px;
+      max-width: 500px;
+    }
+
     .filter-dropdown {
       position: relative;
+      flex-shrink: 0;
     }
-    
+
     .filter-toggle {
       background: #fff;
       border: 1px solid #dee2e6;
       border-radius: 8px;
-      padding: 10px 12px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      color: #5b5f72;
-      transition: all 0.2s;
+      gap: 8px;
       cursor: pointer;
-      min-width: 100px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
     }
-    
+
     .filter-toggle:hover {
       background: #f8f9fa;
-      border-color: #c1c1c1;
+      border-color: #adb5bd;
     }
-    
+
     .filter-toggle.active {
-      background: #3b3183;
+      background: var(--primary-color);
       color: white;
-      border-color: #3b3183;
+      border-color: var(--primary-color);
     }
-    
+
     .filter-menu {
       position: absolute;
       top: 100%;
@@ -247,14 +358,18 @@
       background: white;
       border: 1px solid #dee2e6;
       border-radius: 8px;
-      padding: 16px;
-      min-width: 220px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      z-index: 1000;
+      padding: 20px;
+      min-width: 300px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
       margin-top: 8px;
       display: none;
+      z-index: 1000;
     }
-    
+
+    .filter-menu.show {
+      display: block;
+    }
+
     .filter-section {
       margin-bottom: 16px;
     }
@@ -267,7 +382,7 @@
       font-weight: 600;
       font-size: 0.875rem;
       margin-bottom: 8px;
-      color: #3b3183;
+      color: var(--primary-color);
     }
     
     .filter-options {
@@ -284,8 +399,7 @@
       cursor: pointer;
     }
     
-    .filter-option input[type="checkbox"],
-    .filter-option input[type="radio"] {
+    .filter-option input[type="checkbox"] {
       margin: 0;
     }
     
@@ -293,24 +407,6 @@
       cursor: pointer;
       font-size: 0.875rem;
       margin: 0;
-    }
-    
-    .date-inputs {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    
-    .date-input {
-      flex: 1;
-    }
-    
-    .date-input input {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-      font-size: 0.875rem;
     }
     
     .filter-actions {
@@ -336,7 +432,7 @@
     }
 
     .btn-apply {
-      background: #3b3183;
+      background: var(--primary-color);
       color: white;
     }
 
@@ -345,7 +441,7 @@
     }
 
     .btn-clear {
-      background: #6c757d;
+      background: var(--secondary-color);
       color: white;
     }
 
@@ -353,59 +449,11 @@
       background: #5a6268;
     }
 
-    /* Active filter indicator - UPDATED */
-    .active-filters {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      width: 100%;
-      justify-content: flex-end;
-    }
-    
-    .active-filters.has-filters {
-      display: flex;
-    }
-    
-    .filter-tag {
-      background: #e9ecef;
-      border: 1px solid #dee2e6;
-      border-radius: 16px;
-      padding: 4px 12px;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .filter-tag-remove {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #6c757d;
-      padding: 0;
-      width: 16px;
-      height: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* UPDATED: Container for search/filter and active filters */
-    .filter-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
-      margin-top: 20px;
-    }
-
-    /* Table styling */
     .table-card {
       border-radius: 12px;
       border: none;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
     }
     
     .table th {
@@ -416,6 +464,7 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       padding: 12px 16px;
+      white-space: nowrap;
     }
     
     .table td {
@@ -425,26 +474,36 @@
     }
     
     .status-badge {
-      padding: 0;
-      border-radius: 0;
+      padding: 6px 12px;
+      border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 500;
-      background-color: transparent !important;
-  }
+      white-space: nowrap;
+    }
+    
+    .status-damaged {
+      color: var(--danger-color);
+    }
+    
+    .status-expired {
+      color: var(--warning-color);
+    }
 
-  .status-damaged {
-      color: #e05252;
-  }
+    .status-return {
+      color: var(--success-color);
+    }
 
-  .status-expired {
-      color: #f08a24;
-  }
+    .action-buttons {
+      display: flex;
+      gap: 4px;
+      flex-wrap: nowrap;
+    }
 
-  .status-return {
-      color: #23b07a;
-  }
+    .action-buttons .btn {
+      padding: 6px 8px;
+      font-size: 0.8rem;
+    }
 
-    /* Modal styling */
     .modal-header {
       border-bottom: 1px solid #eef2f7;
       padding: 20px 24px;
@@ -457,21 +516,36 @@
     
     .modal-title {
       font-weight: 600;
-      color: #3b3183;
+      color: var(--primary-color);
     }
 
-    @media (max-width: 991px) {
+    .form-label.required::after {
+      content: " *";
+      color: var(--danger-color);
+    }
+
+    @media (max-width: 991.98px) {
       .sidebar { 
-        position:relative; 
-        width:100%; 
-        height:auto; 
-        max-height: 80vh;
-        border-right:none; 
-        padding:12px 16px; 
-        display:flex; 
-        overflow:auto; 
+        position: fixed;
+        transform: translateX(-100%);
+        z-index: 1000;
+        width: 280px;
+        max-width: 280px;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
       }
-      .content-wrap { margin-left:0; padding:16px; }
+      
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .sidebar-toggle {
+        display: flex;
+      }
+
+      .content-wrap { 
+        margin-left: 0; 
+        padding: 70px 16px 16px;
+      }
       
       .topbar {
         flex-direction: column;
@@ -479,8 +553,14 @@
         gap: 20px;
       }
       
+      .page-title-section {
+        min-width: 100%;
+        text-align: center;
+      }
+      
       .user-section {
         align-items: stretch;
+        min-width: 100%;
       }
       
       .search-filter-section {
@@ -489,18 +569,18 @@
       }
       
       .search-input {
-        min-width: 250px;
+        min-width: 100%;
         max-width: 100%;
       }
       
       .filter-menu {
         right: auto;
         left: 0;
-        min-width: 220px;
+        min-width: 280px;
       }
       
       .filter-toggle {
-        min-width: 90px;
+        min-width: 120px;
       }
       
       .user-dropdown-menu {
@@ -511,17 +591,239 @@
       .filter-container {
         align-items: stretch;
       }
-      
-      .active-filters {
-        justify-content: flex-start;
+
+      .user-dropdown {
+        width: 100%;
       }
+
+      .user-dropdown-toggle {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .table-responsive {
+        border-radius: 8px;
+      }
+
+      .table th,
+      .table td {
+        padding: 12px 8px;
+        font-size: 0.9rem;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .action-buttons .btn {
+        padding: 4px 6px;
+        font-size: 0.75rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .content-wrap {
+        padding: 70px 12px 12px;
+      }
+
+      .topbar {
+        margin-bottom: 16px;
+      }
+
+      .table-card .card-body {
+        padding: 16px;
+      }
+
+      .table th,
+      .table td {
+        padding: 10px 6px;
+        font-size: 0.85rem;
+      }
+
+      .modal-dialog {
+        margin: 20px auto;
+      }
+
+      .filter-menu {
+        min-width: 250px;
+      }
+
+      .search-filter-section {
+        flex-direction: column;
+      }
+
+      .search-input,
+      .filter-toggle {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .content-wrap {
+        padding: 70px 8px 8px;
+      }
+
+      .sidebar {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .table-responsive {
+        font-size: 0.8rem;
+      }
+
+      .table th,
+      .table td {
+        padding: 8px 4px;
+      }
+
+      .modal-dialog {
+        margin: 10px auto;
+      }
+
+      .modal-body .row {
+        margin-left: -8px;
+        margin-right: -8px;
+      }
+
+      .modal-body .col-md-6 {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    .alert {
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .alert-danger {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .alert-warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      color: #dee2e6;
+      margin-bottom: 16px;
+    }
+    
+    .empty-state h5 {
+      color: #6c757d;
+      margin-bottom: 8px;
+    }
+    
+    .empty-state p {
+      color: #adb5bd;
+      margin-bottom: 0;
+    }
+
+    .stock-info-card {
+      background-color: #f8f9fa;
+      border-left: 4px solid var(--primary-color);
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+    
+    .stock-info-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    
+    .stock-info-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .stock-info-label {
+      color: #6c757d;
+      font-size: 0.875rem;
+    }
+    
+    .stock-info-value {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+    
+    .low-stock-warning {
+      color: var(--danger-color);
+      font-size: 0.875rem;
+      margin-top: 4px;
     }
   </style>
 </head>
 <body>
+@php
+    // Get employee data
+    $user = Auth::user() ?? null;
+    $employeeName = 'Admin'; // Default
+    $employeeId = null;
+    
+    if ($user) {
+        // Check if user has an employee record
+        // Method 1: If user has employee relationship
+        if (isset($user->employee) && $user->employee) {
+            $employeeName = $user->employee->EmployeeName ?? 
+                           ($user->employee->EmployeeFName . ' ' . $user->employee->EmployeeLName) ?? 
+                           $user->name;
+            $employeeId = $user->employee->EmployeeID ?? null;
+        }
+        // Method 2: If user has direct employee fields
+        elseif (isset($user->EmployeeName)) {
+            $employeeName = $user->EmployeeName;
+            $employeeId = $user->EmployeeID ?? null;
+        }
+        // Method 3: Fallback to user's name
+        else {
+            $employeeName = $user->name ?? 'Admin';
+        }
+    }
+@endphp
+<button class="sidebar-toggle" id="sidebarToggle">
+  <i class="fas fa-bars"></i>
+</button>
 
-{{-- Sidebar --}}
-{{-- Sidebar --}}
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <aside class="sidebar" id="sidebar">
   <div class="brand">
     <img src="{{ asset('images/logo_.png') }}" alt="Logo">
@@ -546,7 +848,7 @@
         <i class="fas fa-archive"></i>
         <span>Records</span>
       </a>
-      <div class="collapse show" id="recordsSubmenu">
+      <div class="collapse" id="recordsSubmenu">
         <div class="nav flex-column ms-3">
           <a class="nav-link" href="{{ route('admin.supplier') }}">
             <i class="fas fa-truck"></i>
@@ -563,7 +865,7 @@
         </div>
       </div>
 
-      <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#transactionsSubmenu">
+      <a class="nav-link dropdown-toggle active" href="#" data-bs-toggle="collapse" data-bs-target="#transactionsSubmenu">
         <i class="fas fa-exchange-alt"></i>
         <span>Inventory</span>
       </a>
@@ -600,669 +902,906 @@
   </div>
 </aside>
 
-  {{-- Content --}}
-  <main class="content-wrap">
-    {{-- Topbar --}}
-    <div class="topbar">
-      <div class="d-flex align-items-center gap-3">
-        <h4 class="mb-0">Pullouts Management</h4>
-      </div>
+<main class="content-wrap" id="contentWrap">
+  <div class="topbar">
+    <div class="page-title-section">
+      <h4 class="mb-1">Pullouts Management</h4>
+    </div>
 
-      <div class="user-section">
-        <!-- User Info Section with Dropdown -->
-        <div class="user-dropdown">
-          <button class="user-dropdown-toggle" id="userDropdownToggle">
-            <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
-            <div class="user-details">
-              <div class="user-name">Dora</div>
-              <div class="user-role">Admin</div>
+    <div class="user-section">
+    <div class="user-dropdown">
+                <button class="user-dropdown-toggle" id="userDropdownToggle">
+                    <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">{{ $employeeName }}</div>
+                        <div class="user-role">
+                            @if($employeeId)
+                                 Admin
+                            
+                            @endif
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+                </button>
+                
+                <div class="user-dropdown-menu" id="userDropdownMenu">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="user-dropdown-item">
+                            <i class="fas fa-sign-out-alt me-2"></i> Sign Out
+                        </button>
+                    </form>
+                </div>
             </div>
-            <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
-          </button>
+      
+      <div class="filter-container">
+        <div class="search-filter-section">
+          <div class="input-group search-input">
+            <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+            <input class="form-control" placeholder="Search pullout records..." id="searchInput" />
+          </div>
           
-          <div class="user-dropdown-menu" id="userDropdownMenu">
-            <form method="POST" action="{{ route('logout') }}">
-              @csrf
-              <button type="submit" class="user-dropdown-item">
-                <i class="fas fa-sign-out-alt me-2"></i> Sign Out
-              </button>
-            </form>
+          <div class="filter-dropdown">
+            <button class="filter-toggle" id="filterToggle">
+              <i class="fas fa-filter"></i>
+              <span>Filter</span>
+              <i class="fas fa-chevron-down ms-1" style="font-size: 0.8rem;"></i>
+            </button>
+            
+            <div class="filter-menu" id="filterMenu" style="display: none;">
+              <div class="filter-section">
+                <div class="filter-section-title">Pullout Reason</div>
+                <div class="filter-options">
+                  <div class="filter-option">
+                    <input type="checkbox" id="reason-damaged" checked>
+                    <label for="reason-damaged">Damaged</label>
+                  </div>
+                  <div class="filter-option">
+                    <input type="checkbox" id="reason-expired" checked>
+                    <label for="reason-expired">Expired</label>
+                  </div>
+                  <div class="filter-option">
+                    <input type="checkbox" id="reason-return" checked>
+                    <label for="reason-return">Return to Supplier</label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="filter-section">
+                <div class="filter-section-title">Time Period</div>
+                <div class="filter-options">
+                  <div class="filter-option">
+                    <input type="radio" name="timePeriod" id="period-today">
+                    <label for="period-today">Today</label>
+                  </div>
+                  <div class="filter-option">
+                    <input type="radio" name="timePeriod" id="period-week" checked>
+                    <label for="period-week">This Week</label>
+                  </div>
+                  <div class="filter-option">
+                    <input type="radio" name="timePeriod" id="period-month">
+                    <label for="period-month">This Month</label>
+                  </div>
+                  <div class="filter-option">
+                    <input type="radio" name="timePeriod" id="period-custom">
+                    <label for="period-custom">Custom Range</label>
+                  </div>
+                </div>
+                <div class="date-inputs" id="customDateRange" style="display: none;">
+                  <div class="date-input">
+                    <input type="date" id="dateFrom" placeholder="From Date">
+                  </div>
+                  <div class="date-input">
+                    <input type="date" id="dateTo" placeholder="To Date">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="filter-actions">
+                <button class="btn-apply" id="applyFilters">Apply Filters</button>
+                <button class="btn-clear" id="clearFilters">Reset Filters</button>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <!-- Filter Container with Search/Filter and Active Filters -->
-        <div class="filter-container">
-          <!-- Search and Filter Section -->
-          <div class="search-filter-section">
-            <!-- Expanded Search Bar -->
-            <div class="input-group search-input">
-              <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
-              <input class="form-control" placeholder="Search pullout records..." />
+      </div>
+    </div>
+  </div>
+
+  @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+      <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  @endif
+
+  @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  @endif
+
+  @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+      <i class="fas fa-exclamation-circle me-2"></i>Please fix the following errors:
+      <ul class="mb-0 mt-2">
+        @foreach($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  @endif
+
+  <div class="card table-card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h5 class="card-title mb-0">Pullout Records</h5>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPulloutModal">
+          <i class="fas fa-plus me-2"></i>New Pullout
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Pullout ID</th>
+              <th>Product</th>
+              <th>Employee</th>
+              <th>Quantity</th>
+              <th>Reason</th>
+              <th>Type</th>
+              <th>Date Pulled Out</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pulloutTableBody">
+            @php
+              $pullOuts = isset($pullOuts) ? $pullOuts : collect([]);
+            @endphp
+
+            @forelse($pullOuts as $pullOut)
+            <tr data-reason="{{ $pullOut->PullOutReason }}">
+              <td><strong>{{ $pullOut->PullOutID }}</strong></td>
+              <td>
+                <div style="font-weight:600">{{ $pullOut->product->ProductName ?? 'N/A' }}</div>
+                <div class="text-muted small">SKU: {{ $pullOut->product->SKUNumber ?? '' }}</div>
+                <div class="text-muted small">ID: {{ $pullOut->ProductID ?? '' }}</div>
+              </td>
+              <td>
+                <div style="font-weight:600">{{ $pullOut->employee->EmpFName ?? 'N/A' }} {{ $pullOut->employee->EmpLName ?? '' }}</div>
+                <div class="text-muted small">{{ $pullOut->employee->EmployeeID ?? '' }}</div>
+              </td>
+              <td>
+                <div style="font-weight:600" class="text-danger">-{{ $pullOut->PullOutQty }}</div>
+              </td>
+<td>
+  <div class="text small">{{ $pullOut->PullOutReason ?? 'N/A' }}</div>
+</td>
+<td>
+  @if($pullOut->PullOutType == 'Damaged')
+    <span class="status-badge status-damaged">Damaged</span>
+  @elseif($pullOut->PullOutType == 'Expired')
+    <span class="status-badge status-expired">Expired</span>
+  @elseif($pullOut->PullOutType == 'Return')
+    <span class="status-badge status-return">Returned</span>
+  @else
+    <span class="badge bg-secondary">{{ $pullOut->PullOutType }}</span>
+  @endif
+</td>
+              <td>
+                <span class="text small">{{ $pullOut->PullOutType ?? 'N/A' }}</span>
+              </td>
+              <td>
+                <div class="text-muted small">{{ \Carbon\Carbon::parse($pullOut->DatePullOut)->format('M d, Y') }}</div>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-sm btn-outline-primary view-pullout-btn" 
+                          data-id="{{ $pullOut->PullOutID }}"
+                          data-product-name="{{ $pullOut->product->ProductName ?? 'N/A' }}"
+                          data-sku="{{ $pullOut->product->SKUNumber ?? '' }}"
+                          data-product-id="{{ $pullOut->ProductID }}"
+                          data-employee-name="{{ ($pullOut->employee->EmpFName ?? 'N/A') . ' ' . ($pullOut->employee->EmpLName ?? '') }}"
+                          data-employee-id="{{ $pullOut->EmployeeID }}"
+                          data-qty="{{ $pullOut->PullOutQty }}"
+                          data-reason="{{ $pullOut->PullOutReason }}"
+                          data-type="{{ $pullOut->PullOutType }}"
+                          data-date="{{ \Carbon\Carbon::parse($pullOut->DatePullOut)->format('M d, Y') }}"
+                          title="View">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger delete-pullout-btn" 
+                          data-id="{{ $pullOut->PullOutID }}"
+                          data-product="{{ $pullOut->product->ProductName ?? 'N/A' }}"
+                          data-qty="{{ $pullOut->PullOutQty }}"
+                          data-reason="{{ $pullOut->PullOutReason }}"
+                          title="Delete">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            @empty
+            <tr>
+              <td colspan="8" class="text-center py-5">
+                <div class="empty-state">
+                  <i class="fas fa-box-open fa-2x mb-3"></i>
+                  <h5>No pullout records found</h5>
+                  <p class="mb-0">Add your first pullout record using the "New Pullout" button</p>
+                </div>
+              </td>
+            </tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted">
+          <i class="fas fa-list me-2"></i>Total: <span id="totalCount">{{ count($pullOuts) }}</span> record{{ count($pullOuts) !== 1 ? 's' : '' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal fade" id="addPulloutModal" tabindex="-1" aria-labelledby="addPulloutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addPulloutModalLabel">New Pullout</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ route('admin.pullout.store') }}" method="POST" id="pulloutForm">
+        @csrf
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="SKUNumber" class="form-label required">Product </label>
+                <select class="form-select" id="SKUNumber" name="SKUNumber" required onchange="updateStockInfo(this.value)">
+                  <option value="">Select Product</option>
+                  @if(isset($products) && count($products) > 0)
+                    @foreach($products as $product)
+                      <option value="{{ $product->SKUNumber }}" 
+                        data-product-id="{{ $product->ProductID }}"
+                        data-product-name="{{ $product->ProductName ?? 'N/A' }}"
+                        data-sku="{{ $product->SKUNumber ?? 'N/A' }}"
+                        data-available-qty="{{ $product->available_qty ?? 0 }}"
+                        data-current-stock="{{ $product->StockQty ?? 0 }}"
+                        data-supplier="{{ $product->supplier->SupplierName ?? 'N/A' }}"
+                        data-retail-price="{{ $product->pricing->RetailPrice ?? 0 }}"
+                        data-original-price="{{ $product->pricing->OriginalPrice ?? 0 }}"
+                        data-category="{{ $product->category->CategoryName ?? 'N/A' }}">
+                        {{ $product->SKUNumber }} - {{ $product->ProductName }} (Available: {{ $product->available_qty ?? 0 }})
+                      </option>
+                    @endforeach
+                  @else
+                    <option value="" disabled>No products with available stock</option>
+                  @endif
+                </select>
+                <small class="text-muted">Select product by SKU and Name</small>
+              </div>
             </div>
             
-            <!-- Relevant Filter Dropdown -->
-            <div class="filter-dropdown">
-              <button class="filter-toggle" id="filterToggle">
-                <i class="fas fa-filter"></i>
-                <i class="fas fa-chevron-down ms-1" style="font-size: 0.8rem;"></i>
-              </button>
-              
-              <div class="filter-menu" id="filterMenu" style="display: none;">
-                <!-- Time Period Filter -->
-                <div class="filter-section">
-                  <div class="filter-section-title">Time Period</div>
-                  <div class="filter-options">
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-today">
-                      <label for="period-today">Today</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-week" checked>
-                      <label for="period-week">This Week</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-month">
-                      <label for="period-month">This Month</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-custom">
-                      <label for="period-custom">Custom Range</label>
-                    </div>
-                  </div>
-                  <div class="date-inputs" id="customDateRange" style="display: none;">
-                    <div class="date-input">
-                      <input type="date" id="dateFrom" placeholder="From Date">
-                    </div>
-                    <div class="date-input">
-                      <input type="date" id="dateTo" placeholder="To Date">
-                    </div>
-                  </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="EmployeeID" class="form-label required">Employee </label>
+                <select class="form-select" id="EmployeeID" name="EmployeeID" required>
+                  <option value="">Select Employee</option>
+                  @if(isset($employees) && count($employees) > 0)
+                    @foreach($employees as $employee)
+                      <option value="{{ $employee->EmployeeID }}">
+                        {{ $employee->EmployeeFName ?? $employee->EmpFName }} {{ $employee->EmployeeLName ?? $employee->EmpLName }} ({{ $employee->EmployeeID }})
+                      </option>
+                    @endforeach
+                  @endif
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="PullOutQty" class="form-label required">Quantity </label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="PullOutQty" name="PullOutQty" min="1" required oninput="validateQuantity(this)">
+                  <span class="input-group-text">units</span>
                 </div>
-                
-                <!-- Reason Filters -->
-                <div class="filter-section">
-                  <div class="filter-section-title">Pullout Reason</div>
-                  <div class="filter-options">
-                    <div class="filter-option">
-                      <input type="checkbox" id="reason-damaged" checked>
-                      <label for="reason-damaged">Damaged</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="checkbox" id="reason-expired" checked>
-                      <label for="reason-expired">Expired</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="checkbox" id="reason-return" checked>
-                      <label for="reason-return">Return</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="checkbox" id="reason-quality" checked>
-                      <label for="reason-quality">Quality Control</label>
-                    </div>
-                  </div>
+                <small class="text-muted">Maximum available: <span id="maxAvailableQty">0</span> units</small>
+                <div class="text-danger mt-1" id="quantityError" style="display: none;">
+                  <i class="fas fa-exclamation-circle"></i> Cannot exceed available quantity
                 </div>
-                
-                <!-- Product Category Filters -->
-                <div class="filter-section">
-                  <div class="filter-section-title">Product Categories</div>
-                  <div class="filter-options">
-                    <div class="filter-option">
-                      <input type="checkbox" id="category-all" checked>
-                      <label for="category-all">All Categories</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="checkbox" id="category-beauty">
-                      <label for="category-beauty">Beauty & Cosmetics</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="checkbox" id="category-clothing">
-                      <label for="category-clothing">Clothing</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="checkbox" id="category-accessories">
-                      <label for="category-accessories">Accessories</label>
-                    </div>
+              </div>
+            </div>
+            
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label for="PullOutReason" class="form-label required">Reason (Description) </label>
+                <input type="text" class="form-control" id="PullOutReason" name="PullOutReason" 
+                       placeholder="e.g., Product damaged during handling, Expired goods, Return to supplier" 
+                       required maxlength="255">
+                <small class="text-muted">Describe why the product is being pulled out</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="PullOutType" class="form-label required">Pullout Type </label>
+                <select class="form-select" id="PullOutType" name="PullOutType" required>
+                  <option value="">Select Type</option>
+                  <option value="Damaged">Damaged</option>
+                  <option value="Expired">Expired</option>
+                  <option value="Return">Return to Supplier</option>
+                  <option value="Theft">Theft/Loss</option>
+                  <option value="Quality Control">Quality Control</option>
+                  <option value="Other">Other</option>
+                </select>
+                <small class="text-muted">Select the category of pullout</small>
+              </div>
+            </div>
+            
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label for="DatePullOut" class="form-label required">Date Pulled Out </label>
+                <input type="date" class="form-control" id="DatePullOut" name="DatePullOut" value="{{ date('Y-m-d') }}" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3" id="stockInfoCard" style="display: none;">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Product Information</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block">Product Name</small>
+                    <strong id="displayProductName">-</strong>
                   </div>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="filter-actions">
-                  <button class="btn-apply" id="applyFilters">Apply Filters</button>
-                  <button class="btn-clear" id="clearFilters">Reset Filters</button>
+                  <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block">SKU Number</small>
+                    <strong id="displaySKU">-</strong>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block">Category</small>
+                    <strong id="displayCategory">-</strong>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block">Available Quantity</small>
+                    <strong id="displayAvailableQty" class="text-primary">0</strong>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block">Current Stock in System</small>
+                    <strong id="displayCurrentStock" class="text-info">0</strong>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block">Supplier</small>
+                    <strong id="displaySupplier">-</strong>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block">Cost Price</small>
+                    <strong id="displayCostPrice">₱0.00</strong>
+                  </div>
+                  <div class="col-md-6 mb-2">
+                    <small class="text-muted d-block">Retail Price</small>
+                    <strong id="displayRetailPrice">₱0.00</strong>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           
-          <!-- Active Filters Display - NOW POSITIONED BELOW SEARCH/FILTER -->
-          <div class="active-filters" id="activeFilters">
-            <!-- Filter tags will be dynamically added here -->
+          <div class="alert alert-warning py-2" id="stockWarning" style="display: none;">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="stockWarningText"></span>
           </div>
         </div>
-      </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitPulloutBtn">Pullout</button>
+        </div>
+      </form>
     </div>
-
-    {{-- Pullouts Table --}}
-    <div class="card table-card">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h5 class="card-title mb-0">Pullout Records</h5>
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPulloutModal">
-            <i class="fas fa-plus me-2"></i>New Pullout
-          </button>
-        </div>
-
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Pullout ID</th>
-                <th>Product</th>
-                <th>Employee</th>
-                <th>Quantity</th>
-                <th>Reason</th>
-                <th>Date Pulled Out</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-@php
-    $pullOuts = isset($pullOuts) ? $pullOuts : collect([]);
-@endphp
-
-@forelse($pullOuts as $pullOut)
-<tr>
-    <td>
-        <strong>#{{ $pullOut->PullOutID }}</strong>
-    </td>
-    <td>
-        <div class="d-flex align-items-center">
-            <div>
-                <div style="font-weight:600">{{ $pullOut->product->ProdName ?? 'N/A' }}</div>
-                <small class="text-muted">{{ $pullOut->product->ProdID ?? '' }}</small>
-            </div>
-        </div>
-    </td>
-    <td>
-        <div style="font-weight:600">{{ $pullOut->employee->EmpFName ?? 'N/A' }} {{ $pullOut->employee->EmpLName ?? '' }}</div>
-        <small class="text-muted">{{ $pullOut->employee->EmpID ?? '' }}</small>
-    </td>
-    <td>
-        <div style="font-weight:600" class="text-danger">-{{ $pullOut->PullOutQty }}</div>
-    </td>
-    <td>
-        @if($pullOut->PullOutReason === 'Damaged during handling')
-            <span class="status-badge status-damaged">Damaged</span>
-        @elseif($pullOut->PullOutReason === 'Expired products')
-            <span class="status-badge status-expired">Expired</span>
-        @else
-            <span class="status-badge status-return">Return</span>
-        @endif
-    </td>
-    <td>
-        <small class="text-muted">{{ \Carbon\Carbon::parse($pullOut->DatePullOut)->format('M d, Y') }}</small>
-    </td>
-    <td>
-        <div class="btn-group">
-            <button class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-eye"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    </td>
-</tr>
-@empty
-<tr>
-    <td colspan="7" class="text-center">No pullout records found</td>
-</tr>
-@endforelse
-</tbody>
-          </table>
-        </div>
-
-        {{-- Simple count --}}
-        <div class="d-flex justify-content-between align-items-center mt-4">
-          <div class="text-muted">
-            Total: {{ count($pullOuts) }} record(s)
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  {{-- Add Pullout Modal --}}
-  <div class="modal fade" id="addPulloutModal" tabindex="-1" aria-labelledby="addPulloutModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addPulloutModalLabel">New Pullout</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <form action="{{ route('admin.pullout.store') }}" method="POST">
-    @csrf
-    <div class="modal-body">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="ProductID" class="form-label">Product *</label>
-                    <select class="form-select" id="ProductID" name="ProductID" required>
-                        <option value="">Select Product</option>
-                        @foreach($products as $product)
-                        <option value="{{ $product->ProductID }}">{{ $product->ProductName }} ({{ $product->ProductID }})</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="EmployeeID" class="form-label">Employee *</label>
-                    <select class="form-select" id="EmployeeID" name="EmployeeID" required>
-                        <option value="">Select Employee</option>
-                        @foreach($employees as $employee)
-                        <option value="{{ $employee->EmployeeID }}">{{ $employee->EmpFName }} {{ $employee->EmpLName }} ({{ $employee->EmployeeID }})</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="Qty" class="form-label">Quantity *</label>
-                    <input type="number" class="form-control" id="Qty" name="Qty" min="1" required>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="Reason" class="form-label">Reason *</label>
-                    <select class="form-select" id="Reason" name="Reason" required>
-                        <option value="Damaged during handling">Damaged</option>
-                        <option value="Expired products">Expired</option>
-                        <option value="Customer return - defective">Customer Return</option>
-                        <option value="Quality control rejection">Quality Control</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="mb-3">
-                    <label for="DatePullOut" class="form-label">Date Pulled Out *</label>
-                    <input type="date" class="form-control" id="DatePullOut" name="DatePullOut" value="{{ date('Y-m-d') }}" required>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" class="btn btn-primary">Add Pullout</button>
-    </div>
-</form>
-{{-- Edit Pullout Modal --}}
-<div class="modal fade" id="editPulloutModal" tabindex="-1" aria-labelledby="editPulloutModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editPulloutModalLabel">Edit Pullout</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="editPulloutForm" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Product *</label>
-                                <select class="form-select" name="ProductID" required>
-                                    <option value="">Select Product</option>
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->ProductID }}">{{ $product->ProdName }} ({{ $product->ProductID }})</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Employee *</label>
-                                <select class="form-select" name="EmployeeID" required>
-                                    <option value="">Select Employee</option>
-                                    @foreach($employees as $employee)
-                                        <option value="{{ $employee->EmployeeID }}">{{ $employee->EmpFName }} {{ $employee->EmpLName }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Quantity *</label>
-                                <input type="number" class="form-control" name="Qty" min="1" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Reason *</label>
-                                <select class="form-select" name="Reason" required>
-                                    <option value="Damaged during handling">Damaged</option>
-                                    <option value="Expired products">Expired</option>
-                                    <option value="Customer return - defective">Customer Return</option>
-                                    <option value="Quality control rejection">Quality Control</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Date Pulled Out *</label>
-                                <input type="date" class="form-control" name="DatePullOut" required>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Pullout</button>
-                </div>
-            </form>
-        </div>
-    </div>
+  </div>
 </div>
+
+<div class="modal fade" id="viewPulloutModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pullout Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label"><strong>Pullout ID</strong></label>
+            <div class="form-control bg-light" id="viewPulloutID">-</div>
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label"><strong>Date Pulled Out</strong></label>
+            <div class="form-control bg-light" id="viewDatePullOut">-</div>
+          </div>
+          
+          <div class="col-md-12">
+            <label class="form-label"><strong>Product Information</strong></label>
+            <div class="card bg-light">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Product Name</small>
+                    <strong id="viewProductName">-</strong>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">SKU Number</small>
+                    <strong id="viewSKU">-</strong>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Product ID</small>
+                    <strong id="viewProductID">-</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-12">
+            <label class="form-label"><strong>Employee Information</strong></label>
+            <div class="card bg-light">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Employee Name</small>
+                    <strong id="viewEmployeeName">-</strong>
+                  </div>
+                  <div class="col-md-6">
+                    <small class="text-muted d-block">Employee ID</small>
+                    <strong id="viewEmployeeID">-</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <label class="form-label"><strong>Quantity</strong></label>
+            <div class="form-control bg-light text-danger" id="viewPullOutQty">-</div>
+          </div>
+          
+          <div class="col-md-4">
+  <label class="form-label"><strong>Type</strong></label>
+  <div class="form-control bg-light" id="viewPullOutType">-</div>
+</div>
+
+<div class="col-md-8">
+  <label class="form-label"><strong>Reason (Description)</strong></label>
+  <div class="form-control bg-light" id="viewPullOutReason">-</div>
+</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Filter functionality
-    const filterToggle = document.getElementById('filterToggle');
-    const filterMenu = document.getElementById('filterMenu');
-    const activeFilters = document.getElementById('activeFilters');
-    const customDateRange = document.getElementById('customDateRange');
+<div class="modal fade" id="deletePulloutModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-danger">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+          <h5>Are you sure you want to delete this pullout?</h5>
+          <p class="text-muted">This action will restore the stock quantity and cannot be undone.</p>
+        </div>
+        <div class="card bg-light">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <small class="text-muted d-block">Pullout ID</small>
+                <strong id="deletePulloutID">-</strong>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted d-block">Product</small>
+                <strong id="deleteProductName">-</strong>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted d-block">Quantity</small>
+                <strong id="deletePullOutQty">-</strong>
+              </div>
+              <div class="col-md-6">
+                <small class="text-muted d-block">Reason</small>
+                <strong id="deletePullOutReason">-</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Pullout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const contentWrap = document.getElementById('contentWrap');
+
+  sidebarToggle.addEventListener('click', function() {
+    sidebar.classList.toggle('mobile-open');
+    sidebarOverlay.classList.toggle('active');
+    document.body.style.overflow = sidebar.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+
+  sidebarOverlay.addEventListener('click', function() {
+    sidebar.classList.remove('mobile-open');
+    sidebarOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  });
+
+  document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+    link.addEventListener('click', function() {
+      if (window.innerWidth < 992) {
+        sidebar.classList.remove('mobile-open');
+        sidebarOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+  });
+
+  function updateStockInfo(sku) {
+    const skuSelect = document.getElementById('SKUNumber');
+    const selectedOption = skuSelect.options[skuSelect.selectedIndex];
+    const stockInfoCard = document.getElementById('stockInfoCard');
+    const stockWarning = document.getElementById('stockWarning');
     
-    // User dropdown functionality
-    const userDropdownToggle = document.getElementById('userDropdownToggle');
-    const userDropdownMenu = document.getElementById('userDropdownMenu');
+    if (selectedOption.value) {
+        stockInfoCard.style.display = 'block';
+        
+        document.getElementById('displayProductName').textContent = selectedOption.dataset.productName || '-';
+        document.getElementById('displaySKU').textContent = selectedOption.dataset.sku || '-';
+        document.getElementById('displayCategory').textContent = selectedOption.dataset.category || '-';
+        
+        const availableQty = parseInt(selectedOption.dataset.availableQty) || 0;
+        const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
+        
+        document.getElementById('displayAvailableQty').textContent = availableQty;
+        document.getElementById('displayCurrentStock').textContent = currentStock;
+        document.getElementById('displaySupplier').textContent = selectedOption.dataset.supplier || '-';
+        
+        const costPrice = parseFloat(selectedOption.dataset.originalPrice) || 0;
+        const retailPrice = parseFloat(selectedOption.dataset.retailPrice) || 0;
+        document.getElementById('displayCostPrice').textContent = '₱' + costPrice.toFixed(2);
+        document.getElementById('displayRetailPrice').textContent = '₱' + retailPrice.toFixed(2);
+        
+        document.getElementById('maxAvailableQty').textContent = availableQty;
+        document.getElementById('PullOutQty').value = '';
+        document.getElementById('quantityError').style.display = 'none';
+        document.getElementById('submitPulloutBtn').disabled = false;
+        
+        if (availableQty < 10) {
+            stockWarning.style.display = 'block';
+            document.getElementById('stockWarningText').textContent = `Low stock warning! Only ${availableQty} units available.`;
+        } else {
+            stockWarning.style.display = 'none';
+        }
+    } else {
+        stockInfoCard.style.display = 'none';
+        stockWarning.style.display = 'none';
+        document.getElementById('maxAvailableQty').textContent = '0';
+    }
+  }
+
+  function validateQuantity(input) {
+    const quantity = parseInt(input.value) || 0;
+    const maxQty = parseInt(document.getElementById('maxAvailableQty').textContent) || 0;
+    const quantityError = document.getElementById('quantityError');
+    const submitBtn = document.getElementById('submitPulloutBtn');
     
-    // Store current filters
-    let currentFilters = {
-      timePeriod: 'This Week',
-      reasons: ['Damaged', 'Expired', 'Return', 'Quality Control'],
-      categories: ['All Categories']
+    if (quantity > maxQty) {
+        quantityError.style.display = 'block';
+        submitBtn.disabled = true;
+    } else if (quantity <= 0) {
+        quantityError.style.display = 'block';
+        quantityError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Quantity must be greater than 0';
+        submitBtn.disabled = true;
+    } else {
+        quantityError.style.display = 'none';
+        submitBtn.disabled = false;
+    }
+  }
+
+  const filterToggle = document.getElementById('filterToggle');
+  const filterMenu = document.getElementById('filterMenu');
+  const searchInput = document.getElementById('searchInput');
+  const pulloutTableBody = document.getElementById('pulloutTableBody');
+  const totalCount = document.getElementById('totalCount');
+  
+  const userDropdownToggle = document.getElementById('userDropdownToggle');
+  const userDropdownMenu = document.getElementById('userDropdownMenu');
+  
+  let currentFilters = {
+    reasons: ['Damaged', 'Expired', 'Returned to supplier'],
+    search: ''
+  };
+  
+  filterToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const isVisible = filterMenu.style.display === 'block';
+    filterMenu.style.display = isVisible ? 'none' : 'block';
+    filterToggle.classList.toggle('active', !isVisible);
+  });
+  
+  userDropdownToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const isVisible = userDropdownMenu.style.display === 'block';
+    userDropdownMenu.style.display = isVisible ? 'none' : 'block';
+  });
+  
+  document.addEventListener('click', function() {
+    filterMenu.style.display = 'none';
+    filterToggle.classList.remove('active');
+    userDropdownMenu.style.display = 'none';
+  });
+  
+  filterMenu.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+  
+  userDropdownMenu.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+  
+  document.querySelectorAll('input[name="timePeriod"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      if (this.id === 'period-custom') {
+        document.getElementById('customDateRange').style.display = 'flex';
+      } else {
+        document.getElementById('customDateRange').style.display = 'none';
+      }
+    });
+  });
+  
+  searchInput.addEventListener('input', function() {
+    currentFilters.search = this.value.toLowerCase();
+    filterPullouts();
+  });
+  
+  document.getElementById('applyFilters').addEventListener('click', function() {
+    filterMenu.style.display = 'none';
+    filterToggle.classList.remove('active');
+    
+    updateCurrentFilters();
+    
+    filterPullouts();
+  });
+  
+  document.getElementById('clearFilters').addEventListener('click', function() {
+    document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    
+    document.getElementById('reason-damaged').checked = true;
+    document.getElementById('reason-expired').checked = true;
+    document.getElementById('reason-return').checked = true;
+    document.getElementById('period-week').checked = true;
+    
+    document.getElementById('customDateRange').style.display = 'none';
+    
+    searchInput.value = '';
+    
+    currentFilters = {
+      reasons: ['Damaged', 'Expired', 'Returned to supplier'],
+      search: ''
     };
     
-    // Filter toggle
-    filterToggle.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const isVisible = filterMenu.style.display === 'block';
-      filterMenu.style.display = isVisible ? 'none' : 'block';
-      filterToggle.classList.toggle('active', !isVisible);
-    });
+    filterPullouts();
+  });
+  
+  function updateCurrentFilters() {
+    currentFilters.reasons = [];
+    if (document.getElementById('reason-damaged').checked) {
+      currentFilters.reasons.push('Damaged');
+    }
+    if (document.getElementById('reason-expired').checked) {
+      currentFilters.reasons.push('Expired');
+    }
+    if (document.getElementById('reason-return').checked) {
+      currentFilters.reasons.push('Returned to supplier');
+    }
+  }
+  
+  function filterPullouts() {
+    const rows = pulloutTableBody.getElementsByTagName('tr');
+    let visibleCount = 0;
     
-    // User dropdown toggle
-    userDropdownToggle.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const isVisible = userDropdownMenu.style.display === 'block';
-      userDropdownMenu.style.display = isVisible ? 'none' : 'block';
-    });
-    
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function() {
-      filterMenu.style.display = 'none';
-      filterToggle.classList.remove('active');
-      userDropdownMenu.style.display = 'none';
-    });
-    
-    // Prevent closing when clicking inside the filter menu
-    filterMenu.addEventListener('click', function(e) {
-      e.stopPropagation();
-    });
-    
-    // Prevent closing when clicking inside the user dropdown
-    userDropdownMenu.addEventListener('click', function(e) {
-      e.stopPropagation();
-    });
-    
-    // Show/hide custom date range
-    document.querySelectorAll('input[name="timePeriod"]').forEach(radio => {
-      radio.addEventListener('change', function() {
-        if (this.id === 'period-custom') {
-          customDateRange.style.display = 'flex';
-        } else {
-          customDateRange.style.display = 'none';
-        }
-      });
-    });
-    
-    // Apply filters
-    document.getElementById('applyFilters').addEventListener('click', function() {
-      filterMenu.style.display = 'none';
-      filterToggle.classList.remove('active');
+    for (let row of rows) {
+      if (row.style.display === 'none') continue;
       
-      // Update current filters based on selections
-      updateCurrentFilters();
+      const text = row.textContent.toLowerCase();
+      const reason = row.getAttribute('data-reason');
       
-      // Update active filters display
-      updateActiveFilters();
+      const searchMatch = currentFilters.search === '' || text.includes(currentFilters.search);
       
-      // Here you would typically refresh pullout data based on filters
-      console.log('Filters applied - refreshing pullout data...');
-    });
-    
-    // Clear filters
-    document.getElementById('clearFilters').addEventListener('click', function() {
-      // Clear all checkboxes and radios
-      document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(checkbox => {
-        checkbox.checked = false;
-      });
+      const reasonMatch = currentFilters.reasons.includes(reason);
       
-      // Set default values
-      document.getElementById('period-today').checked = false;
-      document.getElementById('period-week').checked = true;
-      document.getElementById('period-month').checked = false;
-      document.getElementById('reason-damaged').checked = true;
-      document.getElementById('reason-expired').checked = true;
-      document.getElementById('reason-return').checked = true;
-      document.getElementById('reason-quality').checked = true;
-      document.getElementById('category-all').checked = true;
-      
-      // Hide custom date range
-      customDateRange.style.display = 'none';
-      
-      // Update current filters to defaults
-      currentFilters = {
-        timePeriod: 'This Week',
-        reasons: ['Damaged', 'Expired', 'Return', 'Quality Control'],
-        categories: ['All Categories']
-      };
-      
-      // Update active filters
-      updateActiveFilters();
-    });
-    
-    function updateCurrentFilters() {
-      // Update time period
-      if (document.getElementById('period-today').checked) {
-        currentFilters.timePeriod = 'Today';
-      } else if (document.getElementById('period-week').checked) {
-        currentFilters.timePeriod = 'This Week';
-      } else if (document.getElementById('period-month').checked) {
-        currentFilters.timePeriod = 'This Month';
-      } else if (document.getElementById('period-custom').checked) {
-        const fromDate = document.getElementById('dateFrom').value;
-        const toDate = document.getElementById('dateTo').value;
-        currentFilters.timePeriod = `Custom: ${fromDate} to ${toDate}`;
-      }
-      
-      // Update reasons
-      currentFilters.reasons = [];
-      if (document.getElementById('reason-damaged').checked) {
-        currentFilters.reasons.push('Damaged');
-      }
-      if (document.getElementById('reason-expired').checked) {
-        currentFilters.reasons.push('Expired');
-      }
-      if (document.getElementById('reason-return').checked) {
-        currentFilters.reasons.push('Return');
-      }
-      if (document.getElementById('reason-quality').checked) {
-        currentFilters.reasons.push('Quality Control');
-      }
-      
-      // Update categories
-      currentFilters.categories = [];
-      if (document.getElementById('category-all').checked) {
-        currentFilters.categories.push('All Categories');
+      if (searchMatch && reasonMatch) {
+        row.style.display = '';
+        visibleCount++;
       } else {
-        if (document.getElementById('category-beauty').checked) {
-          currentFilters.categories.push('Beauty & Cosmetics');
-        }
-        if (document.getElementById('category-clothing').checked) {
-          currentFilters.categories.push('Clothing');
-        }
-        if (document.getElementById('category-accessories').checked) {
-          currentFilters.categories.push('Accessories');
-        }
+        row.style.display = 'none';
       }
     }
     
-    function updateActiveFilters() {
-      // Clear existing filter tags
-      activeFilters.innerHTML = '';
-      
-      // Check if we have any non-default filters
-      const hasCustomFilters = 
-        currentFilters.timePeriod !== 'This Week' ||
-        currentFilters.reasons.length < 4 ||
-        currentFilters.categories.length !== 1 || 
-        currentFilters.categories[0] !== 'All Categories';
-      
-      if (!hasCustomFilters) {
-        // No custom filters applied, hide the active filters section
-        activeFilters.classList.remove('has-filters');
-        return;
-      }
-      
-      // Show active filters section
-      activeFilters.classList.add('has-filters');
-      
-      // Add time period filter tag if not default
-      if (currentFilters.timePeriod !== 'This Week') {
-        const timeTag = createFilterTag(`Time: ${currentFilters.timePeriod}`, 'timePeriod');
-        activeFilters.appendChild(timeTag);
-      }
-      
-      // Add reason filter tags if not all are selected
-      if (currentFilters.reasons.length < 4) {
-        currentFilters.reasons.forEach(reason => {
-          const reasonTag = createFilterTag(reason, `reason-${reason.toLowerCase().replace(' ', '-')}`);
-          activeFilters.appendChild(reasonTag);
+    totalCount.textContent = visibleCount;
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('DatePullOut').value = new Date().toISOString().split('T')[0];
+    
+    const skuSelect = document.getElementById('SKUNumber');
+    if (skuSelect) {
+        skuSelect.addEventListener('change', function() {
+            updateStockInfo(this.value);
         });
-      }
-      
-      // Add category filter tags if not "All Categories"
-      if (currentFilters.categories.length > 0 && 
-          (currentFilters.categories.length > 1 || currentFilters.categories[0] !== 'All Categories')) {
-        currentFilters.categories.forEach(category => {
-          const categoryTag = createFilterTag(category, `category-${category.toLowerCase().replace(' & ', '-').replace(' ', '-')}`);
-          activeFilters.appendChild(categoryTag);
-        });
-      }
     }
     
-    function createFilterTag(text, filterType) {
-      const tag = document.createElement('div');
-      tag.className = 'filter-tag';
+    const qtyInput = document.getElementById('PullOutQty');
+    if (qtyInput) {
+        qtyInput.addEventListener('input', function() {
+            validateQuantity(this);
+        });
+    }
+    
+    filterPullouts();
+  });
+
+  window.addEventListener('resize', function() {
+    if (window.innerWidth >= 992) {
+      sidebar.classList.remove('mobile-open');
+      sidebarOverlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+
+  document.querySelectorAll('.alert').forEach(alert => {
+    setTimeout(() => {
+      const bsAlert = new bootstrap.Alert(alert);
+      bsAlert.close();
+    }, 5000);
+  });
+
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.view-pullout-btn')) {
+      const btn = e.target.closest('.view-pullout-btn');
       
-      const span = document.createElement('span');
-      span.textContent = text;
+      document.getElementById('viewPulloutID').textContent = btn.getAttribute('data-id');
+      document.getElementById('viewDatePullOut').textContent = btn.getAttribute('data-date');
+      document.getElementById('viewProductName').textContent = btn.getAttribute('data-product-name');
+      document.getElementById('viewSKU').textContent = btn.getAttribute('data-sku');
+      document.getElementById('viewProductID').textContent = btn.getAttribute('data-product-id');
+      document.getElementById('viewEmployeeName').textContent = btn.getAttribute('data-employee-name');
+      document.getElementById('viewEmployeeID').textContent = btn.getAttribute('data-employee-id');
+      document.getElementById('viewPullOutQty').textContent = `-${btn.getAttribute('data-qty')}`;
+      document.getElementById('viewPullOutReason').textContent = btn.getAttribute('data-reason');
+      document.getElementById('viewPullOutType').textContent = btn.getAttribute('data-type');
       
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'filter-tag-remove';
-      removeBtn.setAttribute('data-filter', filterType);
-      removeBtn.innerHTML = '×';
-      removeBtn.addEventListener('click', function() {
-        removeFilter(filterType);
+      const viewModal = new bootstrap.Modal(document.getElementById('viewPulloutModal'));
+      viewModal.show();
+    }
+    
+    if (e.target.closest('.delete-pullout-btn')) {
+      const btn = e.target.closest('.delete-pullout-btn');
+      const pulloutId = btn.getAttribute('data-id');
+      const productName = btn.getAttribute('data-product');
+      const qty = btn.getAttribute('data-qty');
+      const reason = btn.getAttribute('data-reason');
+      
+      document.getElementById('deletePulloutID').textContent = pulloutId;
+      document.getElementById('deleteProductName').textContent = productName;
+      document.getElementById('deletePullOutQty').textContent = `-${qty}`;
+      document.getElementById('deletePullOutReason').textContent = reason;
+      
+      const deleteModal = new bootstrap.Modal(document.getElementById('deletePulloutModal'));
+      deleteModal.show();
+      
+      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      const originalText = confirmDeleteBtn.innerHTML;
+      
+      const newConfirmBtn = confirmDeleteBtn.cloneNode(true);
+      confirmDeleteBtn.parentNode.replaceChild(newConfirmBtn, confirmDeleteBtn);
+      
+      newConfirmBtn.addEventListener('click', function() {
+        newConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+        newConfirmBtn.disabled = true;
+        
+        fetch(`/admin/pullout/${pulloutId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAlert('success', data.message);
+            
+            const row = btn.closest('tr');
+            row.style.transition = 'opacity 0.3s';
+            row.style.opacity = '0';
+            
+            setTimeout(() => {
+              row.remove();
+              
+              const totalRows = document.querySelectorAll('#pulloutTableBody tr').length;
+              document.getElementById('totalCount').textContent = totalRows;
+              
+              deleteModal.hide();
+              
+              newConfirmBtn.innerHTML = originalText;
+              newConfirmBtn.disabled = false;
+              
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }, 300);
+          } else {
+            showAlert('error', data.message);
+            newConfirmBtn.innerHTML = originalText;
+            newConfirmBtn.disabled = false;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showAlert('error', 'Error deleting pullout. Please try again.');
+          newConfirmBtn.innerHTML = originalText;
+          newConfirmBtn.disabled = false;
+        });
       });
       
-      tag.appendChild(span);
-      tag.appendChild(removeBtn);
-      
-      return tag;
+      document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        newConfirmBtn.click();
+      });
     }
-    
-    function removeFilter(filterType) {
-      // Remove the specific filter and update the UI
-      if (filterType === 'timePeriod') {
-        document.getElementById('period-week').checked = true;
-        currentFilters.timePeriod = 'This Week';
-      } else if (filterType.startsWith('reason-')) {
-        const filterName = filterType.replace('reason-', '').replace('-', ' ');
-        const index = currentFilters.reasons.indexOf(
-          filterName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-        );
-        if (index > -1) {
-          currentFilters.reasons.splice(index, 1);
-        }
-      } else if (filterType.startsWith('category-')) {
-        const filterName = filterType.replace('category-', '').replace('-', ' ');
-        const index = currentFilters.categories.indexOf(
-          filterName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-        );
-        if (index > -1) {
-          currentFilters.categories.splice(index, 1);
-        }
-      }
-      
-      // Update the checkboxes/radios to reflect the change
-      updateFilterInputs();
-      
-      // Update active filters display
-      updateActiveFilters();
-      
-      // Here you would typically refresh pullout data
-      console.log('Filter removed - refreshing pullout data...');
-    }
-    
-    function updateFilterInputs() {
-      // Update time period radio
-      if (currentFilters.timePeriod === 'Today') {
-        document.getElementById('period-today').checked = true;
-      } else if (currentFilters.timePeriod === 'This Week') {
-        document.getElementById('period-week').checked = true;
-      } else if (currentFilters.timePeriod === 'This Month') {
-        document.getElementById('period-month').checked = true;
-      }
-      
-      // Update reason checkboxes
-      document.getElementById('reason-damaged').checked = currentFilters.reasons.includes('Damaged');
-      document.getElementById('reason-expired').checked = currentFilters.reasons.includes('Expired');
-      document.getElementById('reason-return').checked = currentFilters.reasons.includes('Return');
-      document.getElementById('reason-quality').checked = currentFilters.reasons.includes('Quality Control');
-      
-      // Update category checkboxes
-      document.getElementById('category-all').checked = currentFilters.categories.includes('All Categories');
-      document.getElementById('category-beauty').checked = currentFilters.categories.includes('Beauty & Cosmetics');
-      document.getElementById('category-clothing').checked = currentFilters.categories.includes('Clothing');
-      document.getElementById('category-accessories').checked = currentFilters.categories.includes('Accessories');
-    }
-    
-    // Initialize Bootstrap collapse for submenus
-    var transactionsCollapse = new bootstrap.Collapse(document.getElementById('transactionsSubmenu'), {
-      toggle: false
-    });
-    
-    var reportsCollapse = new bootstrap.Collapse(document.getElementById('reportsSubmenu'), {
-      toggle: false
-    });
+  });
 
-    // Auto-set today's date
-    document.getElementById('DatePullOut').value = new Date().toISOString().split('T')[0];
-  </script>
+  function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+      <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle me-2"></i>
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const topbar = document.querySelector('.topbar');
+    topbar.parentNode.insertBefore(alertDiv, topbar.nextSibling);
+    
+    setTimeout(() => {
+      const bsAlert = new bootstrap.Alert(alertDiv);
+      bsAlert.close();
+    }, 5000);
+  }
+</script>
 </body>
 </html>

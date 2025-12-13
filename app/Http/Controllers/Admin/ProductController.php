@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\Pricing;
 use App\Models\Category;
 use App\Models\Supplier;
-use App\Models\StockIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -15,107 +13,105 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['category', 'supplier', 'pricing'])
-            ->orderBy('ProductName')
+        $products = Product::with(['category', 'supplier'])
+            ->orderBy('ProductID')
             ->get();
 
         $categories = Category::withCount('products')->get();
         $suppliers = Supplier::all();
-        
-        // Show recent stock-ins with their products
-        $recentStock = StockIn::with(['product', 'supplier'])
-            ->orderBy('DateRcvd', 'desc')
-            ->limit(10)
-            ->get();
 
         return view('admin.products', compact(
-            'products', 
-            'categories', 
-            'suppliers',
-            'recentStock'
+            'products',
+            'categories',
+            'suppliers'
         ));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'SKUNumber' => 'required|unique:products,SKUNumber',
-            'ProductName' => 'required|string|max:255',
+            'ProductName'        => 'required|string|max:255',
             'ProductDescription' => 'nullable|string',
-            'CategoryID' => 'nullable|exists:categories,CategoryID',
-            'ReorderLevel' => 'required|integer|min:0',
-            'SupplierID' => 'required|exists:suppliers,SupplierID',
-            'ProductStatus' => 'required|in:Active,Inactive',
-            'OriginalPrice' => 'required|numeric|min:0',
-            'RetailPrice' => 'required|numeric|min:0',
-            'initial_quantity' => 'nullable|integer|min:0',
+            'CategoryID'         => 'required|exists:categories,CategoryID',
+            'SupplierID'         => 'required|exists:suppliers,SupplierID',
+            'ProductStatus'      => 'required|in:Active,Inactive',
         ]);
 
         DB::beginTransaction();
         try {
+            // Generate ProductID: e.g., "PROD0001" (WITHOUT DASH)
+            $lastProduct = Product::orderByDesc('ProductID')->first();
+            
+            if ($lastProduct) {
+                // Extract number from ProductID (handles PROD0001 format)
+                if (preg_match('/PROD(\d+)/', $lastProduct->ProductID, $matches)) {
+                    $nextNumber = (int)$matches[1] + 1;
+                } else {
+                    $nextNumber = 1;
+                }
+            } else {
+                $nextNumber = 1;
+            }
+            
+            $productID = 'PROD' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            
+            // Generate SKU based on category
+            $category = Category::findOrFail($request->CategoryID);
+            $prefix = strtoupper(substr($category->CategoryName, 0, 3));
+            
+            // Find the last SKU for this category prefix
+            $lastSKU = Product::where('SKUNumber', 'LIKE', $prefix . '-%')
+                ->orderByDesc('SKUNumber')
+                ->first();
+            
+            if ($lastSKU) {
+                // Extract number from SKU (e.g., BEA-0001 -> 1)
+                if (preg_match('/-(\d+)$/', $lastSKU->SKUNumber, $matches)) {
+                    $nextSKUNumber = (int)$matches[1] + 1;
+                } else {
+                    $nextSKUNumber = 1;
+                }
+            } else {
+                $nextSKUNumber = 1;
+            }
+            
+            $skuNumber = $prefix  . str_pad($nextSKUNumber, 4, '0', STR_PAD_LEFT);
+
+            // Check if SKU already exists (safety check)
+            $existingSKU = Product::where('SKUNumber', $skuNumber)->first();
+            if ($existingSKU) {
+                // If SKU exists, increment until we find a unique one
+                $counter = $nextSKUNumber;
+                do {
+                    $counter++;
+                    $skuNumber = $prefix . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+                } while (Product::where('SKUNumber', $skuNumber)->exists());
+            }
+
             // Create Product
             $product = Product::create([
-                'SKUNumber' => $request->SKUNumber,
-                'ProductName' => $request->ProductName,
+                'ProductID'          => $productID,
+                'SKUNumber'          => $skuNumber,
+                'ProductName'        => $request->ProductName,
                 'ProductDescription' => $request->ProductDescription,
-                'CategoryID' => $request->CategoryID,
-                'ReorderLevel' => $request->ReorderLevel,
-                'SupplierID' => $request->SupplierID,
-                'ProductStatus' => $request->ProductStatus
+                'CategoryID'         => $request->CategoryID,
+                'SupplierID'         => $request->SupplierID,
+                'ProductStatus'      => $request->ProductStatus,
             ]);
-
-            // Create Pricing
-            Pricing::create([
-                'ProductID' => $request->SKUNumber,
-                'OriginalPrice' => $request->OriginalPrice,
-                'RetailPrice' => $request->RetailPrice,
-                'MarkupRate' => (($request->RetailPrice - $request->OriginalPrice) / $request->OriginalPrice) * 100,
-                'EffectiveDate' => now(),
-                'IsActive' => true
-            ]);
-
-            // Create initial stock record if quantity provided
-            if ($request->filled('initial_quantity') && $request->initial_quantity > 0) {
-                StockIn::create([
-                    'StockInID' => 'STK-' . time(),
-                    'ProductID' => $request->SKUNumber,
-                    'SupplierID' => $request->SupplierID,
-                    'Qty' => $request->initial_quantity,
-                    'ProdStatus' => 'Received',
-                    'DateRcvd' => now(),
-                ]);
-            }
 
             DB::commit();
 
-            $message = 'Product created successfully!';
-            if ($request->filled('initial_quantity')) {
-                $message .= ' Initial stock added.';
-            }
-
             return redirect()->route('admin.products')
-                ->with('success', $message);
+                ->with('success', "Product created successfully! Product ID: <strong>{$productID}</strong>, SKU: <strong>{$skuNumber}</strong>");
+
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Product creation failed: ' . $e->getMessage());
+
             return redirect()->back()
-                ->with('error', 'Error creating product: ' . $e->getMessage())
+                ->with('error', 'Failed to create product: ' . $e->getMessage())
                 ->withInput();
         }
-    }
-
-    public function show($id)
-    {
-        $product = Product::with(['category', 'supplier', 'pricing'])->findOrFail($id);
-        return response()->json($product);
-    }
-
-    public function edit($id)
-    {
-        $product = Product::with('pricing')->findOrFail($id);
-        $categories = Category::all();
-        $suppliers = Supplier::all();
-
-        return view('admin.partials.edit-product-form', compact('product', 'categories', 'suppliers'));
     }
 
     public function update(Request $request, $id)
@@ -123,29 +119,27 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $request->validate([
-            'ProductName' => 'required|string|max:255',
+            'ProductName'        => 'required|string|max:255',
             'ProductDescription' => 'nullable|string',
-            'CategoryID' => 'nullable|exists:categories,CategoryID',
-            'ReorderLevel' => 'required|integer|min:0',
-            'SupplierID' => 'nullable|exists:suppliers,SupplierID',
-            'ProductStatus' => 'required|in:Active,Inactive'
+            'CategoryID'         => 'required|exists:categories,CategoryID',
+            'SupplierID'         => 'required|exists:suppliers,SupplierID',
+            'ProductStatus'      => 'required|in:Active,Inactive',
         ]);
 
         try {
             $product->update([
-                'ProductName' => $request->ProductName,
-                'ProductDescription' => $request->ProductDescription,
-                'CategoryID' => $request->CategoryID,
-                'ReorderLevel' => $request->ReorderLevel,
-                'SupplierID' => $request->SupplierID,
-                'ProductStatus' => $request->ProductStatus
+                'ProductName'       => $request->ProductName,
+                'ProductDescription'=> $request->ProductDescription,
+                'CategoryID'        => $request->CategoryID,
+                'SupplierID'        => $request->SupplierID,
+                'ProductStatus'     => $request->ProductStatus,
             ]);
 
             return redirect()->route('admin.products')
                 ->with('success', 'Product updated successfully!');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Error updating product: ' . $e->getMessage())
+                ->with('error', 'Failed to update product: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -155,19 +149,13 @@ class ProductController extends Controller
         DB::beginTransaction();
         try {
             $product = Product::findOrFail($id);
-            
-            // Check if product has stock records
-            $hasStock = StockIn::where('ProductID', $id)->exists();
-            
-            if ($hasStock) {
+
+            // Check if product has any stock records
+            if ($product->stockIns()->exists()) {
                 return redirect()->back()
-                    ->with('error', 'Cannot delete product. It has stock records. Delete stock records first.');
+                    ->with('error', 'Cannot delete product. It has stock records. Please remove stock records first in the Stock In module.');
             }
-            
-            // Delete associated pricing records
-            Pricing::where('ProductID', $id)->delete();
-            
-            // Delete the product
+
             $product->delete();
 
             DB::commit();
@@ -179,90 +167,5 @@ class ProductController extends Controller
             return redirect()->back()
                 ->with('error', 'Error deleting product: ' . $e->getMessage());
         }
-    }
-
-    public function updatePricing(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:products,SKUNumber',
-            'retail_price' => 'required|numeric|min:0',
-            'original_price' => 'required|numeric|min:0'
-        ]);
-
-        DB::beginTransaction();
-        try {
-            // Deactivate old pricing
-            Pricing::where('ProductID', $request->product_id)
-                ->update(['IsActive' => false]);
-
-            // Create new pricing
-            Pricing::create([
-                'ProductID' => $request->product_id,
-                'OriginalPrice' => $request->original_price,
-                'RetailPrice' => $request->retail_price,
-                'MarkupRate' => (($request->retail_price - $request->original_price) / $request->original_price) * 100,
-                'EffectiveDate' => now(),
-                'IsActive' => true
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('admin.products')
-                ->with('success', 'Product pricing updated successfully!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Error updating pricing: ' . $e->getMessage());
-        }
-    }
-
-    public function updateSinglePricing(Request $request, $id)
-    {
-        $request->validate([
-            'retail_price' => 'required|numeric|min:0',
-            'original_price' => 'required|numeric|min:0'
-        ]);
-
-        DB::beginTransaction();
-        try {
-            // Deactivate old pricing
-            Pricing::where('ProductID', $id)
-                ->update(['IsActive' => false]);
-
-            // Create new pricing
-            Pricing::create([
-                'ProductID' => $id,
-                'OriginalPrice' => $request->original_price,
-                'RetailPrice' => $request->retail_price,
-                'MarkupRate' => (($request->retail_price - $request->original_price) / $request->original_price) * 100,
-                'EffectiveDate' => now(),
-                'IsActive' => true
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('admin.products')
-                ->with('success', 'Product pricing updated successfully!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Error updating pricing: ' . $e->getMessage());
-        }
-    }
-
-    public function search(Request $request)
-    {
-        $searchTerm = $request->get('search');
-        
-        $products = Product::with(['category', 'supplier', 'pricing'])
-            ->when($searchTerm, function($query) use ($searchTerm) {
-                $query->where('ProductName', 'like', "%{$searchTerm}%")
-                    ->orWhere('ProductDescription', 'like', "%{$searchTerm}%")
-                    ->orWhere('SKUNumber', 'like', "%{$searchTerm}%");
-            })
-            ->orderBy('ProductName')
-            ->get();
-
-        return response()->json($products);
     }
 }

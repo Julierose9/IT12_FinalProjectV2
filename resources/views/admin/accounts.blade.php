@@ -24,7 +24,6 @@
             padding-top: 0;
         }
 
-        /* ========== SIDEBAR STYLES ========== */
         .sidebar { 
             min-width: 220px; 
             max-width: 220px; 
@@ -111,7 +110,6 @@
             text-align: center;
         }
 
-        /* Scrollable sidebar navigation */
         .sidebar-nav {
             flex: 1;
             overflow-y: auto;
@@ -119,7 +117,6 @@
             margin-top: 18px;
         }
         
-        /* Custom scrollbar for sidebar */
         .sidebar-nav::-webkit-scrollbar {
             width: 4px;
         }
@@ -138,7 +135,6 @@
             background: #a8a8a8;
         }
         
-        /* Dropdown menu styling */
         .nav .nav-link.dropdown-toggle::after {
             float: right;
             margin-top: 6px;
@@ -151,14 +147,12 @@
             padding-left: 8px;
         }
         
-        /* Submenu items styling */
         .nav .nav.flex-column.ms-3 .nav-link {
             padding: 10px 12px;
             font-size: 0.9rem;
             border-radius: 6px;
         }
 
-        /* Mobile sidebar toggle */
         .sidebar-toggle {
             display: none;
             position: fixed;
@@ -176,7 +170,6 @@
             font-size: 1.2rem;
         }
 
-        /* ========== CONTENT AREA ========== */
         .content-wrap { 
             margin-left: 240px; 
             padding: 28px;
@@ -187,7 +180,6 @@
             margin-left: 0;
         }
 
-        /* ========== TOPBAR STYLES ========== */
         .topbar { 
             background: transparent; 
             display: flex; 
@@ -209,7 +201,6 @@
             min-width: 250px;
         }
 
-        /* ========== USER SECTION STYLES ========== */
         .user-section {
             display: flex;
             flex-direction: column;
@@ -249,7 +240,6 @@
             object-fit: cover;
         }
         
-        /* User dropdown for sign out */
         .user-dropdown {
             position: relative;
         }
@@ -305,7 +295,6 @@
             color: var(--primary-color);
         }
 
-        /* ========== FILTER & SEARCH STYLES ========== */
 .search-filter-section {
     display: flex;
     align-items: center;
@@ -315,7 +304,6 @@
     width: 100%;
 }
 
-/* Filter container styling */
 .filter-container {
     display: flex;
     flex-direction: column;
@@ -324,7 +312,6 @@
     width: 100%;
 }
 
-/* Search and filter in one line */
 .search-filter-row {
     display: flex;
     align-items: center;
@@ -333,20 +320,17 @@
     flex-wrap: nowrap;
 }
 
-/* Search input takes available space */
 .search-input {
     flex: 1;
     min-width: 250px;
     max-width: 500px;
 }
 
-/* Filter dropdown styling */
 .filter-dropdown {
     position: relative;
     flex-shrink: 0;
 }
 
-/* Filter toggle button */
 .filter-toggle {
     background: #fff;
     border: 1px solid #dee2e6;
@@ -371,7 +355,6 @@
     border-color: var(--primary-color);
 }
 
-/* Filter menu */
 .filter-menu {
     position: absolute;
     top: 100%;
@@ -391,7 +374,6 @@
     display: block;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .search-filter-row {
         flex-wrap: wrap;
@@ -498,7 +480,6 @@
             background: #5a6268;
         }
 
-        /* Active filter indicator */
         .active-filters {
             display: none;
             align-items: center;
@@ -537,7 +518,6 @@
             justify-content: center;
         }
 
-        /* Container for search/filter and active filters */
         .filter-container {
             display: flex;
             flex-direction: column;
@@ -547,7 +527,6 @@
             width: 100%;
         }
 
-        /* ========== TABLE STYLES ========== */
         .table-card {
             border-radius: 12px;
             border: none;
@@ -604,7 +583,6 @@
             color: #1a73e8;
         }
 
-        /* Action buttons in table */
         .action-buttons {
             display: flex;
             gap: 4px;
@@ -616,7 +594,6 @@
             font-size: 0.8rem;
         }
 
-        /* ========== MODAL STYLES ========== */
         .modal-header {
             border-bottom: 1px solid #eef2f7;
             padding: 20px 24px;
@@ -632,8 +609,6 @@
             color: var(--primary-color);
         }
 
-        /* ========== RESPONSIVE DESIGN ========== */
-        /* Large devices (desktops, less than 1200px) */
         @media (max-width: 1199.98px) {
             .sidebar {
                 min-width: 200px;
@@ -646,7 +621,6 @@
             }
         }
 
-        /* Medium devices (tablets, less than 992px) */
         @media (max-width: 991.98px) {
             .sidebar { 
                 position: fixed;
@@ -728,7 +702,6 @@
                 justify-content: center;
             }
 
-            /* Table responsive improvements */
             .table-responsive {
                 border-radius: 8px;
             }
@@ -750,7 +723,6 @@
             }
         }
 
-        /* Small devices (landscape phones, less than 768px) */
         @media (max-width: 767.98px) {
             .content-wrap {
                 padding: 70px 12px 12px;
@@ -784,7 +756,6 @@
                 min-width: 250px;
             }
 
-            /* Stack filter and search on very small screens */
             .search-filter-section {
                 flex-direction: column;
             }
@@ -794,16 +765,14 @@
                 width: 100%;
             }
 
-            /* Hide less important columns */
-            .table th:nth-child(3), /* Employee column */
+            .table th:nth-child(3), 
             .table td:nth-child(3),
-            .table th:nth-child(6), /* Last Login column */
+            .table th:nth-child(6), 
             .table td:nth-child(6) {
                 display: none;
             }
         }
 
-        /* Extra small devices (portrait phones, less than 576px) */
         @media (max-width: 575.98px) {
             .content-wrap {
                 padding: 70px 8px 8px;
@@ -847,14 +816,12 @@
                 margin-bottom: 4px;
             }
 
-            /* Hide more columns on very small screens */
-            .table th:nth-child(2), /* Email column */
+            .table th:nth-child(2),
             .table td:nth-child(2) {
                 display: none;
             }
         }
 
-        /* Print styles */
         @media print {
             .sidebar,
             .topbar .user-section,
@@ -874,7 +841,6 @@
             }
         }
 
-        /* Dark overlay for mobile sidebar */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -889,16 +855,56 @@
         .sidebar-overlay.active {
             display: block;
         }
+
+        select option:disabled {
+            color: #6c757d;
+            background-color: #f8f9fa;
+        }
+
+        .readonly-field {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
+@php
+    // Get employee data
+    $user = Auth::user() ?? null;
+    $employeeName = 'Admin'; // Default
+    $employeeId = null;
+    
+    if ($user) {
+        // Check if user has an employee record
+        // Method 1: If user has employee relationship
+        if (isset($user->employee) && $user->employee) {
+            $employeeName = $user->employee->EmployeeName ?? 
+                           ($user->employee->EmployeeFName . ' ' . $user->employee->EmployeeLName) ?? 
+                           $user->name;
+            $employeeId = $user->employee->EmployeeID ?? null;
+        }
+        // Method 2: If user has direct employee fields
+        elseif (isset($user->EmployeeName)) {
+            $employeeName = $user->EmployeeName;
+            $employeeId = $user->EmployeeID ?? null;
+        }
+        // Method 3: Fallback to user's name
+        else {
+            $employeeName = $user->name ?? 'Admin';
+        }
+    }
+@endphp
 
-<!-- Mobile Sidebar Toggle -->
+
 <button class="sidebar-toggle" id="sidebarToggle">
     <i class="fas fa-bars"></i>
 </button>
 
-<!-- Sidebar Overlay for Mobile -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 {{-- Sidebar --}}
@@ -989,13 +995,17 @@
         </div>
 
         <div class="user-section">
-            <!-- User Info Section with Dropdown -->
             <div class="user-dropdown">
                 <button class="user-dropdown-toggle" id="userDropdownToggle">
                     <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
                     <div class="user-details">
-                        <div class="user-name">{{ Auth::user()->Username ?? 'Dora' }}</div>
-                        <div class="user-role">{{ Auth::user()->Role ?? 'Administrator' }}</div>
+                        <div class="user-name">{{ $employeeName }}</div>
+                        <div class="user-role">
+                            @if($employeeId)
+                                 Admin
+                            
+                            @endif
+                        </div>
                     </div>
                     <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
                 </button>
@@ -1010,17 +1020,13 @@
                 </div>
             </div>
             
-            <!-- Filter Container with Search/Filter and Active Filters -->
             <div class="filter-container">
-                <!-- Search and Filter Section -->
                 <div class="search-filter-section">
-                    <!-- Search Bar -->
                     <div class="input-group search-input">
                         <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
                         <input type="text" class="form-control" placeholder="Search accounts..." id="searchInput">
                     </div>
                     
-                    <!-- Filter Dropdown -->
                     <div class="filter-dropdown">
                         <button class="filter-toggle" id="filterToggle">
                             <i class="fas fa-filter"></i>
@@ -1029,7 +1035,6 @@
                         </button>
                         
                         <div class="filter-menu" id="filterMenu" style="display: none;">
-                            <!-- Role Filters -->
                             <div class="filter-section">
                                 <div class="filter-section-title">Account Role</div>
                                 <div class="filter-options">
@@ -1048,7 +1053,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Status Filters -->
                             <div class="filter-section">
                                 <div class="filter-section-title">Account Status</div>
                                 <div class="filter-options">
@@ -1063,7 +1067,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Employee Link Filters -->
                             <div class="filter-section">
                                 <div class="filter-section-title">Employee Link</div>
                                 <div class="filter-options">
@@ -1082,7 +1085,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Action Buttons -->
                             <div class="filter-actions">
                                 <button class="btn-apply" id="applyFilters">Apply Filters</button>
                                 <button class="btn-clear" id="clearFilters">Reset Filters</button>
@@ -1091,9 +1093,7 @@
                     </div>
                 </div>
                 
-                <!-- Active Filters Display -->
                 <div class="active-filters" id="activeFilters">
-                    <!-- Filter tags will be dynamically added here -->
                 </div>
             </div>
         </div>
@@ -1189,7 +1189,7 @@
 {{-- CREATE MODAL --}}
 <div class="modal fade" id="addAccountModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <form action="{{ route('admin.accounts.store') }}" method="POST">
+        <form action="{{ route('admin.accounts.store') }}" method="POST" id="createAccountForm">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -1200,27 +1200,41 @@
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
                             <label class="form-label">Link to Employee <span class="text-danger">*</span></label>
-                            <select class="form-select" name="employee_id" required>
-                                <option value="">None (External Account)</option>
-                                @foreach(\App\Models\Employee::orderBy('EmployeeLName')->get() as $emp)
-                                    <option value="{{ $emp->EmployeeID }}">
+                            <select class="form-select" name="employee_id" id="employee_id" required>
+                                <option value="">Select Employee</option>
+                                @php
+                                    // Get all employees from the database
+                                    $allEmployees = DB::table('employees')->orderBy('EmployeeLName')->get();
+                                    // Get employee IDs that already have accounts
+                                    $employeesWithAccounts = collect($accounts)->pluck('EmployeeID')->filter()->toArray();
+                                @endphp
+                                @foreach($allEmployees as $emp)
+                                    @php
+                                        $hasAccount = in_array($emp->EmployeeID, $employeesWithAccounts);
+                                    @endphp
+                                    <option value="{{ $emp->EmployeeID }}" {{ $hasAccount ? 'disabled' : '' }}>
                                         {{ $emp->EmployeeFName }} {{ $emp->EmployeeMName }} {{ $emp->EmployeeLName }}
-                                        (EMP{{ str_pad($emp->EmployeeID, 3, '0', STR_PAD_LEFT) }})
+                                        ({{ str_pad($emp->EmployeeID, 3, '0', STR_PAD_LEFT) }})
+                                        @if($hasAccount)
+                                            - Already has account
+                                        @endif
                                     </option>
                                 @endforeach
                             </select>
+                            <small class="text-muted">Employees with existing accounts are disabled</small>
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label">Email / Username <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" name="email" required>
+                            <input type="email" class="form-control" name="email" id="email" required>
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" name="password" required>
+                            <input type="password" class="form-control" name="password" id="password" required minlength="6">
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label">Role <span class="text-danger">*</span></label>
-                            <select class="form-select" name="role" required>
+                            <select class="form-select" name="role" id="role" required>
+                                <option value="">Select Role</option>
                                 <option value="Cashier">Cashier</option>
                                 <option value="Admin">Admin</option>
                             </select>
@@ -1236,7 +1250,6 @@
     </div>
 </div>
 
-<!-- Include individual modals for view, edit, delete -->
 @foreach($accounts as $account)
     {{-- VIEW MODAL --}}
     <div class="modal fade" id="viewModal{{ $account->UserID }}" tabindex="-1">
@@ -1285,24 +1298,24 @@
                             <div class="col-12 col-md-6">
                                 <label class="form-label">New Password (leave blank to keep current)</label>
                                 <input type="password" name="password" class="form-control" minlength="6">
+                                <small class="text-muted">Leave blank to keep current password</small>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Role</label>
-                                <select name="role" class="form-select" required>
-                                    <option value="Cashier" {{ $account->Role === 'Cashier' ? 'selected' : '' }}>Cashier</option>
-                                    <option value="Admin" {{ $account->Role === 'Admin' ? 'selected' : '' }}>Admin</option>
-                                </select>
+                                <div class="readonly-field">{{ $account->Role }}</div>
+                                <input type="hidden" name="role" value="{{ $account->Role }}">
+                                <small class="text-muted">Role cannot be changed</small>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Linked Employee</label>
-                                <select name="employee_id" class="form-select">
-                                    <option value="">None (External Account)</option>
-                                    @foreach(\App\Models\Employee::orderBy('EmployeeLName')->get() as $emp)
-                                        <option value="{{ $emp->EmployeeID }}" {{ $account->EmployeeID == $emp->EmployeeID ? 'selected' : '' }}>
-                                            {{ $emp->EmployeeFName }} {{ $emp->EmployeeLName }} ({{ str_pad($emp->EmployeeID, 3, '0', STR_PAD_LEFT) }})
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @if($account->EmployeeID)
+                                    <div class="readonly-field">{{ $account->FullName }} (EMP{{ str_pad($account->EmployeeID, 3, '0', STR_PAD_LEFT) }})</div>
+                                    <input type="hidden" name="employee_id" value="{{ $account->EmployeeID }}">
+                                @else
+                                    <div class="readonly-field">External Account (No Employee Linked)</div>
+                                    <input type="hidden" name="employee_id" value="">
+                                @endif
+                                <small class="text-muted">Employee link cannot be changed</small>
                             </div>
                         </div>
                     </div>
@@ -1711,6 +1724,44 @@
             document.body.style.overflow = '';
         }
     });
+
+    // Reset create modal form when opened
+    const addAccountModal = document.getElementById('addAccountModal');
+    const createAccountForm = document.getElementById('createAccountForm');
+    
+    if (addAccountModal) {
+        addAccountModal.addEventListener('show.bs.modal', function() {
+            // Reset form fields
+            if (createAccountForm) {
+                createAccountForm.reset();
+            }
+            
+            // Reset select fields to first option
+            const employeeSelect = document.getElementById('employee_id');
+            const roleSelect = document.getElementById('role');
+            
+            if (employeeSelect) {
+                employeeSelect.selectedIndex = 0;
+            }
+            if (roleSelect) {
+                roleSelect.selectedIndex = 0;
+            }
+        });
+    }
+
+    // Prevent form submission if disabled employee is selected
+    if (createAccountForm) {
+        createAccountForm.addEventListener('submit', function(event) {
+            const employeeSelect = document.getElementById('employee_id');
+            const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
+            
+            if (selectedOption.disabled) {
+                event.preventDefault();
+                alert('This employee already has an account. Please select another employee or choose "None".');
+                employeeSelect.focus();
+            }
+        });
+    }
 </script>
 </body>
 </html>
