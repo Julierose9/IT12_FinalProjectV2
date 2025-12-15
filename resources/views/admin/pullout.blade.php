@@ -793,31 +793,39 @@
 </head>
 <body>
 @php
-    // Get employee data
     $user = Auth::user() ?? null;
-    $employeeName = 'Admin'; // Default
+    $employeeName = 'Admin';
     $employeeId = null;
+    $currentEmployee = null;
     
     if ($user) {
-        // Check if user has an employee record
-        // Method 1: If user has employee relationship
-        if (isset($user->employee) && $user->employee) {
-            $employeeName = $user->employee->EmployeeName ?? 
-                           ($user->employee->EmployeeFName . ' ' . $user->employee->EmployeeLName) ?? 
+        // Try to get employee from user relationship
+        if (method_exists($user, 'employee') && $user->employee) {
+            $employee = $user->employee;
+            $employeeName = $employee->EmployeeName ?? 
+                           ($employee->EmployeeFName . ' ' . $employee->EmployeeLName) ?? 
                            $user->name;
-            $employeeId = $user->employee->EmployeeID ?? null;
+            $employeeId = $employee->EmployeeID ?? null;
+            $currentEmployee = $employee;
         }
-        // Method 2: If user has direct employee fields
+        // If user has direct employee fields
         elseif (isset($user->EmployeeName)) {
             $employeeName = $user->EmployeeName;
             $employeeId = $user->EmployeeID ?? null;
+            $currentEmployee = $user;
         }
-        // Method 3: Fallback to user's name
+        // Fallback
         else {
             $employeeName = $user->name ?? 'Admin';
         }
     }
+    
+    // Get all employees for dropdown
+    $employees = isset($employees) ? $employees : collect([]);
+    $pullOuts = isset($pullOuts) ? $pullOuts : collect([]);
+    $products = isset($products) ? $products : collect([]);
 @endphp
+
 <button class="sidebar-toggle" id="sidebarToggle">
   <i class="fas fa-bars"></i>
 </button>
@@ -909,30 +917,29 @@
     </div>
 
     <div class="user-section">
-    <div class="user-dropdown">
-                <button class="user-dropdown-toggle" id="userDropdownToggle">
-                    <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
-                    <div class="user-details">
-                        <div class="user-name">{{ $employeeName }}</div>
-                        <div class="user-role">
-                            @if($employeeId)
-                                 Admin
-                            
-                            @endif
-                        </div>
-                    </div>
-                    <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
-                </button>
-                
-                <div class="user-dropdown-menu" id="userDropdownMenu">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="user-dropdown-item">
-                            <i class="fas fa-sign-out-alt me-2"></i> Sign Out
-                        </button>
-                    </form>
-                </div>
+      <div class="user-dropdown">
+        <button class="user-dropdown-toggle" id="userDropdownToggle">
+          <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
+          <div class="user-details">
+            <div class="user-name">{{ $employeeName }}</div>
+            <div class="user-role">
+              @if($employeeId)
+                Admin
+              @endif
             </div>
+          </div>
+          <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+        </button>
+        
+        <div class="user-dropdown-menu" id="userDropdownMenu">
+          <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="user-dropdown-item">
+              <i class="fas fa-sign-out-alt me-2"></i> Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
       
       <div class="filter-container">
         <div class="search-filter-section">
@@ -950,19 +957,19 @@
             
             <div class="filter-menu" id="filterMenu" style="display: none;">
               <div class="filter-section">
-                <div class="filter-section-title">Pullout Reason</div>
+                <div class="filter-section-title">Pullout Type</div>
                 <div class="filter-options">
                   <div class="filter-option">
-                    <input type="checkbox" id="reason-damaged" checked>
-                    <label for="reason-damaged">Damaged</label>
+                    <input type="checkbox" id="type-damaged" checked>
+                    <label for="type-damaged">Damaged</label>
                   </div>
                   <div class="filter-option">
-                    <input type="checkbox" id="reason-expired" checked>
-                    <label for="reason-expired">Expired</label>
+                    <input type="checkbox" id="type-expired" checked>
+                    <label for="type-expired">Expired</label>
                   </div>
                   <div class="filter-option">
-                    <input type="checkbox" id="reason-return" checked>
-                    <label for="reason-return">Return to Supplier</label>
+                    <input type="checkbox" id="type-return" checked>
+                    <label for="type-return">Return to Supplier</label>
                   </div>
                 </div>
               </div>
@@ -987,12 +994,12 @@
                     <label for="period-custom">Custom Range</label>
                   </div>
                 </div>
-                <div class="date-inputs" id="customDateRange" style="display: none;">
-                  <div class="date-input">
-                    <input type="date" id="dateFrom" placeholder="From Date">
+                <div class="date-inputs mt-2" id="customDateRange" style="display: none;">
+                  <div class="mb-2">
+                    <input type="date" class="form-control form-control-sm" id="dateFrom" placeholder="From Date">
                   </div>
-                  <div class="date-input">
-                    <input type="date" id="dateTo" placeholder="To Date">
+                  <div>
+                    <input type="date" class="form-control form-control-sm" id="dateTo" placeholder="To Date">
                   </div>
                 </div>
               </div>
@@ -1058,12 +1065,8 @@
             </tr>
           </thead>
           <tbody id="pulloutTableBody">
-            @php
-              $pullOuts = isset($pullOuts) ? $pullOuts : collect([]);
-            @endphp
-
             @forelse($pullOuts as $pullOut)
-            <tr data-reason="{{ $pullOut->PullOutReason }}">
+            <tr data-type="{{ $pullOut->PullOutType }}" data-date="{{ \Carbon\Carbon::parse($pullOut->DatePullOut)->format('Y-m-d') }}">
               <td><strong>{{ $pullOut->PullOutID }}</strong></td>
               <td>
                 <div style="font-weight:600">{{ $pullOut->product->ProductName ?? 'N/A' }}</div>
@@ -1071,28 +1074,35 @@
                 <div class="text-muted small">ID: {{ $pullOut->ProductID ?? '' }}</div>
               </td>
               <td>
-                <div style="font-weight:600">{{ $pullOut->employee->EmpFName ?? 'N/A' }} {{ $pullOut->employee->EmpLName ?? '' }}</div>
-                <div class="text-muted small">{{ $pullOut->employee->EmployeeID ?? '' }}</div>
+                @php
+                  $employeeName = 'N/A';
+                  $employeeId = '';
+                  
+                  if ($pullOut->employee) {
+                    $employeeName = ($pullOut->employee->EmployeeFName ?? $pullOut->employee->EmpFName ?? '') . ' ' . 
+                                   ($pullOut->employee->EmployeeLName ?? $pullOut->employee->EmpLName ?? '');
+                    $employeeId = $pullOut->employee->EmployeeID ?? '';
+                  }
+                @endphp
+                <div style="font-weight:600">{{ trim($employeeName) ?: 'N/A' }}</div>
+                <div class="text-muted small">{{ $employeeId }}</div>
               </td>
               <td>
                 <div style="font-weight:600" class="text-danger">-{{ $pullOut->PullOutQty }}</div>
               </td>
-<td>
-  <div class="text small">{{ $pullOut->PullOutReason ?? 'N/A' }}</div>
-</td>
-<td>
-  @if($pullOut->PullOutType == 'Damaged')
-    <span class="status-badge status-damaged">Damaged</span>
-  @elseif($pullOut->PullOutType == 'Expired')
-    <span class="status-badge status-expired">Expired</span>
-  @elseif($pullOut->PullOutType == 'Return')
-    <span class="status-badge status-return">Returned</span>
-  @else
-    <span class="badge bg-secondary">{{ $pullOut->PullOutType }}</span>
-  @endif
-</td>
               <td>
-                <span class="text small">{{ $pullOut->PullOutType ?? 'N/A' }}</span>
+                <div class="text small">{{ $pullOut->PullOutReason ?? 'N/A' }}</div>
+              </td>
+              <td>
+                @if($pullOut->PullOutType == 'Damaged')
+                  <span class="status-badge status-damaged">Damaged</span>
+                @elseif($pullOut->PullOutType == 'Expired')
+                  <span class="status-badge status-expired">Expired</span>
+                @elseif($pullOut->PullOutType == 'Return')
+                  <span class="status-badge status-return">Returned</span>
+                @else
+                  <span class="badge bg-secondary">{{ $pullOut->PullOutType }}</span>
+                @endif
               </td>
               <td>
                 <div class="text-muted small">{{ \Carbon\Carbon::parse($pullOut->DatePullOut)->format('M d, Y') }}</div>
@@ -1104,8 +1114,8 @@
                           data-product-name="{{ $pullOut->product->ProductName ?? 'N/A' }}"
                           data-sku="{{ $pullOut->product->SKUNumber ?? '' }}"
                           data-product-id="{{ $pullOut->ProductID }}"
-                          data-employee-name="{{ ($pullOut->employee->EmpFName ?? 'N/A') . ' ' . ($pullOut->employee->EmpLName ?? '') }}"
-                          data-employee-id="{{ $pullOut->EmployeeID }}"
+                          data-employee-name="{{ trim($employeeName) ?: 'N/A' }}"
+                          data-employee-id="{{ $employeeId }}"
                           data-qty="{{ $pullOut->PullOutQty }}"
                           data-reason="{{ $pullOut->PullOutReason }}"
                           data-type="{{ $pullOut->PullOutType }}"
@@ -1161,41 +1171,50 @@
           <div class="row">
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="SKUNumber" class="form-label required">Product </label>
-                <select class="form-select" id="SKUNumber" name="SKUNumber" required onchange="updateStockInfo(this.value)">
+                <label for="SKUNumber" class="form-label required">Product</label>
+                <select class="form-select" id="SKUNumber" name="SKUNumber" required onchange="updateStockInfo()">
                   <option value="">Select Product</option>
-                  @if(isset($products) && count($products) > 0)
+                  @if(count($products) > 0)
                     @foreach($products as $product)
+                      @php
+                        $availableQty = $product->available_qty ?? $product->StockQty ?? 0;
+                      @endphp
                       <option value="{{ $product->SKUNumber }}" 
                         data-product-id="{{ $product->ProductID }}"
                         data-product-name="{{ $product->ProductName ?? 'N/A' }}"
                         data-sku="{{ $product->SKUNumber ?? 'N/A' }}"
-                        data-available-qty="{{ $product->available_qty ?? 0 }}"
+                        data-available-qty="{{ $availableQty }}"
                         data-current-stock="{{ $product->StockQty ?? 0 }}"
                         data-supplier="{{ $product->supplier->SupplierName ?? 'N/A' }}"
                         data-retail-price="{{ $product->pricing->RetailPrice ?? 0 }}"
                         data-original-price="{{ $product->pricing->OriginalPrice ?? 0 }}"
                         data-category="{{ $product->category->CategoryName ?? 'N/A' }}">
-                        {{ $product->SKUNumber }} - {{ $product->ProductName }} (Available: {{ $product->available_qty ?? 0 }})
+                        {{ $product->SKUNumber }} - {{ $product->ProductName }} (Available: {{ $availableQty }})
                       </option>
                     @endforeach
                   @else
                     <option value="" disabled>No products with available stock</option>
                   @endif
                 </select>
-                <small class="text-muted">Select product by SKU and Name</small>
               </div>
             </div>
             
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="EmployeeID" class="form-label required">Employee </label>
+                <label for="EmployeeID" class="form-label required">Employee</label>
                 <select class="form-select" id="EmployeeID" name="EmployeeID" required>
                   <option value="">Select Employee</option>
-                  @if(isset($employees) && count($employees) > 0)
+                  @if(count($employees) > 0)
                     @foreach($employees as $employee)
-                      <option value="{{ $employee->EmployeeID }}">
-                        {{ $employee->EmployeeFName ?? $employee->EmpFName }} {{ $employee->EmployeeLName ?? $employee->EmpLName }} ({{ $employee->EmployeeID }})
+                      @php
+                        $empName = ($employee->EmployeeFName ?? $employee->EmpFName ?? '') . ' ' . 
+                                   ($employee->EmployeeLName ?? $employee->EmpLName ?? '');
+                      @endphp
+                      <option value="{{ $employee->EmployeeID }}"
+                        @if($currentEmployee && $currentEmployee->EmployeeID == $employee->EmployeeID)
+                          selected
+                        @endif>
+                        {{ trim($empName) }} ({{ $employee->EmployeeID }})
                       </option>
                     @endforeach
                   @endif
@@ -1207,25 +1226,24 @@
           <div class="row">
             <div class="col-md-4">
               <div class="mb-3">
-                <label for="PullOutQty" class="form-label required">Quantity </label>
+                <label for="PullOutQty" class="form-label required">Quantity</label>
                 <div class="input-group">
-                  <input type="number" class="form-control" id="PullOutQty" name="PullOutQty" min="1" required oninput="validateQuantity(this)">
+                  <input type="number" class="form-control" id="PullOutQty" name="PullOutQty" min="1" required oninput="validateQuantity()">
                   <span class="input-group-text">units</span>
                 </div>
-                <small class="text-muted">Maximum available: <span id="maxAvailableQty">0</span> units</small>
                 <div class="text-danger mt-1" id="quantityError" style="display: none;">
                   <i class="fas fa-exclamation-circle"></i> Cannot exceed available quantity
                 </div>
+                <small class="text-muted" id="availableQtyInfo">Available: <span id="maxAvailableQty">0</span> units</small>
               </div>
             </div>
             
             <div class="col-md-8">
               <div class="mb-3">
-                <label for="PullOutReason" class="form-label required">Reason (Description) </label>
+                <label for="PullOutReason" class="form-label required">Reason</label>
                 <input type="text" class="form-control" id="PullOutReason" name="PullOutReason" 
                        placeholder="e.g., Product damaged during handling, Expired goods, Return to supplier" 
                        required maxlength="255">
-                <small class="text-muted">Describe why the product is being pulled out</small>
               </div>
             </div>
           </div>
@@ -1233,7 +1251,7 @@
           <div class="row">
             <div class="col-md-4">
               <div class="mb-3">
-                <label for="PullOutType" class="form-label required">Pullout Type </label>
+                <label for="PullOutType" class="form-label required">Pullout Type</label>
                 <select class="form-select" id="PullOutType" name="PullOutType" required>
                   <option value="">Select Type</option>
                   <option value="Damaged">Damaged</option>
@@ -1243,13 +1261,12 @@
                   <option value="Quality Control">Quality Control</option>
                   <option value="Other">Other</option>
                 </select>
-                <small class="text-muted">Select the category of pullout</small>
               </div>
             </div>
             
             <div class="col-md-8">
               <div class="mb-3">
-                <label for="DatePullOut" class="form-label required">Date Pulled Out </label>
+                <label for="DatePullOut" class="form-label required">Date Pulled Out</label>
                 <input type="date" class="form-control" id="DatePullOut" name="DatePullOut" value="{{ date('Y-m-d') }}" required>
               </div>
             </div>
@@ -1378,14 +1395,14 @@
           </div>
           
           <div class="col-md-4">
-  <label class="form-label"><strong>Type</strong></label>
-  <div class="form-control bg-light" id="viewPullOutType">-</div>
-</div>
+            <label class="form-label"><strong>Type</strong></label>
+            <div class="form-control bg-light" id="viewPullOutType">-</div>
+          </div>
 
-<div class="col-md-8">
-  <label class="form-label"><strong>Reason (Description)</strong></label>
-  <div class="form-control bg-light" id="viewPullOutReason">-</div>
-</div>
+          <div class="col-md-12">
+            <label class="form-label"><strong>Reason (Description)</strong></label>
+            <div class="form-control bg-light" id="viewPullOutReason">-</div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -1441,6 +1458,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  // Sidebar functionality
   const sidebar = document.getElementById('sidebar');
   const sidebarToggle = document.getElementById('sidebarToggle');
   const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -1468,68 +1486,81 @@
     });
   });
 
-  function updateStockInfo(sku) {
+  // Update stock info when product is selected
+  function updateStockInfo() {
     const skuSelect = document.getElementById('SKUNumber');
     const selectedOption = skuSelect.options[skuSelect.selectedIndex];
     const stockInfoCard = document.getElementById('stockInfoCard');
     const stockWarning = document.getElementById('stockWarning');
+    const availableQtyInfo = document.getElementById('availableQtyInfo');
     
     if (selectedOption.value) {
-        stockInfoCard.style.display = 'block';
-        
-        document.getElementById('displayProductName').textContent = selectedOption.dataset.productName || '-';
-        document.getElementById('displaySKU').textContent = selectedOption.dataset.sku || '-';
-        document.getElementById('displayCategory').textContent = selectedOption.dataset.category || '-';
-        
-        const availableQty = parseInt(selectedOption.dataset.availableQty) || 0;
-        const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
-        
-        document.getElementById('displayAvailableQty').textContent = availableQty;
-        document.getElementById('displayCurrentStock').textContent = currentStock;
-        document.getElementById('displaySupplier').textContent = selectedOption.dataset.supplier || '-';
-        
-        const costPrice = parseFloat(selectedOption.dataset.originalPrice) || 0;
-        const retailPrice = parseFloat(selectedOption.dataset.retailPrice) || 0;
-        document.getElementById('displayCostPrice').textContent = '₱' + costPrice.toFixed(2);
-        document.getElementById('displayRetailPrice').textContent = '₱' + retailPrice.toFixed(2);
-        
-        document.getElementById('maxAvailableQty').textContent = availableQty;
-        document.getElementById('PullOutQty').value = '';
-        document.getElementById('quantityError').style.display = 'none';
-        document.getElementById('submitPulloutBtn').disabled = false;
-        
-        if (availableQty < 10) {
-            stockWarning.style.display = 'block';
-            document.getElementById('stockWarningText').textContent = `Low stock warning! Only ${availableQty} units available.`;
-        } else {
-            stockWarning.style.display = 'none';
-        }
-    } else {
-        stockInfoCard.style.display = 'none';
+      stockInfoCard.style.display = 'block';
+      availableQtyInfo.style.display = 'block';
+      
+      document.getElementById('displayProductName').textContent = selectedOption.dataset.productName || '-';
+      document.getElementById('displaySKU').textContent = selectedOption.dataset.sku || '-';
+      document.getElementById('displayCategory').textContent = selectedOption.dataset.category || '-';
+      
+      const availableQty = parseInt(selectedOption.dataset.availableQty) || 0;
+      const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
+      
+      document.getElementById('displayAvailableQty').textContent = availableQty;
+      document.getElementById('displayCurrentStock').textContent = currentStock;
+      document.getElementById('displaySupplier').textContent = selectedOption.dataset.supplier || '-';
+      document.getElementById('maxAvailableQty').textContent = availableQty;
+      
+      const costPrice = parseFloat(selectedOption.dataset.originalPrice) || 0;
+      const retailPrice = parseFloat(selectedOption.dataset.retailPrice) || 0;
+      document.getElementById('displayCostPrice').textContent = '₱' + costPrice.toFixed(2);
+      document.getElementById('displayRetailPrice').textContent = '₱' + retailPrice.toFixed(2);
+      
+      document.getElementById('PullOutQty').value = '';
+      document.getElementById('quantityError').style.display = 'none';
+      document.getElementById('submitPulloutBtn').disabled = false;
+      
+      if (availableQty < 10) {
+        stockWarning.style.display = 'block';
+        document.getElementById('stockWarningText').textContent = `Low stock warning! Only ${availableQty} units available.`;
+      } else {
         stockWarning.style.display = 'none';
-        document.getElementById('maxAvailableQty').textContent = '0';
+      }
+      
+      if (availableQty === 0) {
+        stockWarning.style.display = 'block';
+        document.getElementById('stockWarningText').textContent = 'Out of stock! Cannot pull out this product.';
+        document.getElementById('submitPulloutBtn').disabled = true;
+      }
+    } else {
+      stockInfoCard.style.display = 'none';
+      stockWarning.style.display = 'none';
+      availableQtyInfo.style.display = 'none';
+      document.getElementById('maxAvailableQty').textContent = '0';
     }
   }
 
-  function validateQuantity(input) {
-    const quantity = parseInt(input.value) || 0;
+  // Validate quantity input
+  function validateQuantity() {
+    const quantityInput = document.getElementById('PullOutQty');
+    const quantity = parseInt(quantityInput.value) || 0;
     const maxQty = parseInt(document.getElementById('maxAvailableQty').textContent) || 0;
     const quantityError = document.getElementById('quantityError');
     const submitBtn = document.getElementById('submitPulloutBtn');
     
     if (quantity > maxQty) {
-        quantityError.style.display = 'block';
-        submitBtn.disabled = true;
+      quantityError.style.display = 'block';
+      submitBtn.disabled = true;
     } else if (quantity <= 0) {
-        quantityError.style.display = 'block';
-        quantityError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Quantity must be greater than 0';
-        submitBtn.disabled = true;
+      quantityError.style.display = 'block';
+      quantityError.innerHTML = '<i class="fas fa-exclamation-circle"></i> Quantity must be greater than 0';
+      submitBtn.disabled = true;
     } else {
-        quantityError.style.display = 'none';
-        submitBtn.disabled = false;
+      quantityError.style.display = 'none';
+      submitBtn.disabled = false;
     }
   }
 
+  // Filter functionality
   const filterToggle = document.getElementById('filterToggle');
   const filterMenu = document.getElementById('filterMenu');
   const searchInput = document.getElementById('searchInput');
@@ -1540,7 +1571,7 @@
   const userDropdownMenu = document.getElementById('userDropdownMenu');
   
   let currentFilters = {
-    reasons: ['Damaged', 'Expired', 'Returned to supplier'],
+    types: ['Damaged', 'Expired', 'Return'],
     search: ''
   };
   
@@ -1571,65 +1602,77 @@
     e.stopPropagation();
   });
   
+  // Time period radio buttons
   document.querySelectorAll('input[name="timePeriod"]').forEach(radio => {
     radio.addEventListener('change', function() {
       if (this.id === 'period-custom') {
-        document.getElementById('customDateRange').style.display = 'flex';
+        document.getElementById('customDateRange').style.display = 'block';
       } else {
         document.getElementById('customDateRange').style.display = 'none';
       }
     });
   });
   
+  // Search input
   searchInput.addEventListener('input', function() {
     currentFilters.search = this.value.toLowerCase();
     filterPullouts();
   });
   
+  // Apply filters button
   document.getElementById('applyFilters').addEventListener('click', function() {
     filterMenu.style.display = 'none';
     filterToggle.classList.remove('active');
     
-    updateCurrentFilters();
+    // Update current filters
+    currentFilters.types = [];
+    if (document.getElementById('type-damaged').checked) {
+      currentFilters.types.push('Damaged');
+    }
+    if (document.getElementById('type-expired').checked) {
+      currentFilters.types.push('Expired');
+    }
+    if (document.getElementById('type-return').checked) {
+      currentFilters.types.push('Return');
+    }
+    
+    // Handle date filtering
+    const timePeriod = document.querySelector('input[name="timePeriod"]:checked')?.id;
+    if (timePeriod === 'period-custom') {
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+      currentFilters.dateFrom = dateFrom;
+      currentFilters.dateTo = dateTo;
+    } else {
+      currentFilters.dateFrom = null;
+      currentFilters.dateTo = null;
+    }
     
     filterPullouts();
   });
   
+  // Clear filters button
   document.getElementById('clearFilters').addEventListener('click', function() {
-    document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(checkbox => {
-      checkbox.checked = false;
-    });
-    
-    document.getElementById('reason-damaged').checked = true;
-    document.getElementById('reason-expired').checked = true;
-    document.getElementById('reason-return').checked = true;
+    document.getElementById('type-damaged').checked = true;
+    document.getElementById('type-expired').checked = true;
+    document.getElementById('type-return').checked = true;
     document.getElementById('period-week').checked = true;
     
     document.getElementById('customDateRange').style.display = 'none';
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
     
     searchInput.value = '';
     
     currentFilters = {
-      reasons: ['Damaged', 'Expired', 'Returned to supplier'],
+      types: ['Damaged', 'Expired', 'Return'],
       search: ''
     };
     
     filterPullouts();
   });
   
-  function updateCurrentFilters() {
-    currentFilters.reasons = [];
-    if (document.getElementById('reason-damaged').checked) {
-      currentFilters.reasons.push('Damaged');
-    }
-    if (document.getElementById('reason-expired').checked) {
-      currentFilters.reasons.push('Expired');
-    }
-    if (document.getElementById('reason-return').checked) {
-      currentFilters.reasons.push('Returned to supplier');
-    }
-  }
-  
+  // Filter pullouts function
   function filterPullouts() {
     const rows = pulloutTableBody.getElementsByTagName('tr');
     let visibleCount = 0;
@@ -1638,13 +1681,23 @@
       if (row.style.display === 'none') continue;
       
       const text = row.textContent.toLowerCase();
-      const reason = row.getAttribute('data-reason');
+      const type = row.getAttribute('data-type');
+      const date = row.getAttribute('data-date');
       
       const searchMatch = currentFilters.search === '' || text.includes(currentFilters.search);
+      const typeMatch = currentFilters.types.includes(type);
       
-      const reasonMatch = currentFilters.reasons.includes(reason);
+      let dateMatch = true;
+      if (currentFilters.dateFrom && currentFilters.dateTo) {
+        const rowDate = new Date(date);
+        const fromDate = new Date(currentFilters.dateFrom);
+        const toDate = new Date(currentFilters.dateTo);
+        toDate.setDate(toDate.getDate() + 1); // Include end date
+        
+        dateMatch = rowDate >= fromDate && rowDate < toDate;
+      }
       
-      if (searchMatch && reasonMatch) {
+      if (searchMatch && typeMatch && dateMatch) {
         row.style.display = '';
         visibleCount++;
       } else {
@@ -1655,26 +1708,20 @@
     totalCount.textContent = visibleCount;
   }
   
+  // Initialize on page load
   document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('DatePullOut').value = new Date().toISOString().split('T')[0];
     
-    const skuSelect = document.getElementById('SKUNumber');
-    if (skuSelect) {
-        skuSelect.addEventListener('change', function() {
-            updateStockInfo(this.value);
-        });
-    }
-    
-    const qtyInput = document.getElementById('PullOutQty');
-    if (qtyInput) {
-        qtyInput.addEventListener('input', function() {
-            validateQuantity(this);
-        });
-    }
+    // Initialize filter checkboxes
+    document.getElementById('type-damaged').checked = true;
+    document.getElementById('type-expired').checked = true;
+    document.getElementById('type-return').checked = true;
+    document.getElementById('period-week').checked = true;
     
     filterPullouts();
   });
 
+  // Window resize handler
   window.addEventListener('resize', function() {
     if (window.innerWidth >= 992) {
       sidebar.classList.remove('mobile-open');
@@ -1683,6 +1730,7 @@
     }
   });
 
+  // Auto-close alerts after 5 seconds
   document.querySelectorAll('.alert').forEach(alert => {
     setTimeout(() => {
       const bsAlert = new bootstrap.Alert(alert);
@@ -1690,6 +1738,7 @@
     }, 5000);
   });
 
+  // View pullout details
   document.addEventListener('click', function(e) {
     if (e.target.closest('.view-pullout-btn')) {
       const btn = e.target.closest('.view-pullout-btn');
@@ -1709,6 +1758,7 @@
       viewModal.show();
     }
     
+    // Delete pullout
     if (e.target.closest('.delete-pullout-btn')) {
       const btn = e.target.closest('.delete-pullout-btn');
       const pulloutId = btn.getAttribute('data-id');
@@ -1727,12 +1777,10 @@
       const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
       const originalText = confirmDeleteBtn.innerHTML;
       
-      const newConfirmBtn = confirmDeleteBtn.cloneNode(true);
-      confirmDeleteBtn.parentNode.replaceChild(newConfirmBtn, confirmDeleteBtn);
-      
-      newConfirmBtn.addEventListener('click', function() {
-        newConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
-        newConfirmBtn.disabled = true;
+      // Set up delete confirmation
+      confirmDeleteBtn.onclick = function() {
+        confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+        confirmDeleteBtn.disabled = true;
         
         fetch(`/admin/pullout/${pulloutId}`, {
           method: 'DELETE',
@@ -1758,33 +1806,31 @@
               
               deleteModal.hide();
               
-              newConfirmBtn.innerHTML = originalText;
-              newConfirmBtn.disabled = false;
+              confirmDeleteBtn.innerHTML = originalText;
+              confirmDeleteBtn.disabled = false;
               
+              // Reload after a short delay to update data
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }, 300);
           } else {
             showAlert('error', data.message);
-            newConfirmBtn.innerHTML = originalText;
-            newConfirmBtn.disabled = false;
+            confirmDeleteBtn.innerHTML = originalText;
+            confirmDeleteBtn.disabled = false;
           }
         })
         .catch(error => {
           console.error('Error:', error);
           showAlert('error', 'Error deleting pullout. Please try again.');
-          newConfirmBtn.innerHTML = originalText;
-          newConfirmBtn.disabled = false;
+          confirmDeleteBtn.innerHTML = originalText;
+          confirmDeleteBtn.disabled = false;
         });
-      });
-      
-      document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        newConfirmBtn.click();
-      });
+      };
     }
   });
 
+  // Show alert function
   function showAlert(type, message) {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;

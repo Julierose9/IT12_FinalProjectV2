@@ -105,33 +105,33 @@ class StockInController extends Controller
     }
     
     public function show($id)
-{
-    try {
-        $stock = StockIn::with(['product.category', 'product.supplier', 'product.pricing' => function($query) {
-                $query->where('IsActive', 'yes')->latest('EffectiveDate');
-            }])
+    {
+        try {
+            $stock = StockIn::with([
+                'product.category', 
+                'product.supplier', 
+                'product.pricing' => function($query) {
+                    $query->where('IsActive', 'yes')->latest('EffectiveDate')->first();
+                },
+                'supplier'
+            ])
             ->findOrFail($id);
             
-        if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'stock_in' => $stock,
                 'product' => $stock->product,
-                'pricing' => $stock->product->pricing ?? null
+                'pricing' => $stock->product->pricing ?? null,
+                'supplier' => $stock->supplier ?? $stock->product->supplier ?? null,
+                'category' => $stock->product->category ?? null
             ]);
-        }
-        
-        return view('admin.partials.stockin-details', compact('stock'));
-    } catch (\Exception $e) {
-        if (request()->ajax() || request()->wantsJson()) {
+            
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'error' => 'Stock record not found',
                 'message' => $e->getMessage()
             ], 404);
         }
-        
-        abort(404);
     }
-}
 }

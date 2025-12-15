@@ -76,12 +76,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/products/{id}/update-pricing', [ProductController::class, 'updateSinglePricing'])->name('products.update-single-pricing');
         Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
         
-        // ==================== STOCK IN ROUTES ====================
-        Route::get('/stockin', [StockInController::class, 'index'])->name('stockin');
-        Route::post('/stockin', [StockInController::class, 'store'])->name('stockin.store');
-        Route::get('/stockin/{id}', [StockInController::class, 'show'])->name('stockin.show');      
-        Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPricing'])
-            ->name('api.product.pricing');
+      // ==================== STOCK IN ROUTES ====================
+Route::get('/stockin', [StockInController::class, 'index'])->name('stockin');
+Route::post('/stockin', [StockInController::class, 'store'])->name('stockin.store');
+Route::get('/stockin/{id}', [StockInController::class, 'show'])->name('stockin.show');      
+Route::delete('/stockin/{id}', [StockInController::class, 'destroy'])->name('stockin.destroy'); // Add this line
+Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPricing'])
+    ->name('api.product.pricing');
 
         // ==================== PULLOUT ROUTES ====================
         Route::get('/pullout', [PullOutController::class, 'index'])->name('pullout');
@@ -103,7 +104,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/transaction/export/{type}', [TransactionController::class, 'export'])->name('transaction.export');
 
         // ==================== INVENTORY REPORT ====================
-        Route::get('/inventory', fn() => view('admin.inventory'))->name('inventory');
+        Route::get('/inventory', [InventoryReportController::class, 'index'])->name('inventory');
+        Route::get('/inventory/{id}/transactions', [InventoryReportController::class, 'productTransactions'])
+            ->name('inventory.transactions');
 
         // ==================== REPORTS GROUP ====================
         Route::prefix('reports')->name('reports.')->group(function () {

@@ -55,6 +55,20 @@ class Order extends Model
     {
         return $this->belongsTo(Employee::class, 'EmployeeID', 'EmployeeID');
     }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class, 'OrderID', 'OrderID');
+    }
+
+    // Safe fallback for views expecting PaymentType when column does not exist
+    public function getPaymentTypeAttribute()
+    {
+        if ($this->relationLoaded('payment') && $this->payment) {
+            return $this->payment->PaymentType;
+        }
+        return $this->attributes['PaymentType'] ?? null;
+    }
     
     // Helper method to get items count
     public function getItemsCountAttribute()

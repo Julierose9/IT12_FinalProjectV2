@@ -387,12 +387,10 @@
     }
     
     .status-completed { 
-      background: #e8f5e8; 
       color: #23b07a; 
     }
     
     .status-cancelled { 
-      background: #fde8e8; 
       color: #e05252; 
     }
 
@@ -719,9 +717,6 @@
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h5 class="card-title mb-0">Transaction History</h5>
         <div class="d-flex gap-2">
-          <a href="{{ route('admin.transaction.export', ['type' => 'csv']) . '?' . http_build_query(request()->except('page')) }}" class="btn btn-success">
-            <i class="fas fa-file-csv me-1"></i> Export CSV
-          </a>
           <a href="{{ route('admin.transaction.export', ['type' => 'pdf']) . '?' . http_build_query(request()->except('page')) }}" class="btn btn-danger">
             <i class="fas fa-file-pdf me-1"></i> Export PDF
           </a>
@@ -747,7 +742,7 @@
             <tr data-status="{{ $order->OrderStatus }}" 
                 data-payment="{{ $order->PaymentMethod }}"
                 data-date="{{ $order->OrderDateTime }}">
-              <td><strong>#{{ $order->OrderID }}</strong></td>
+              <td><strong>{{ $order->OrderID }}</strong></td>
               <td>
                 <div class="fw-semibold">
                   {{ $order->employee->EmployeeFName ?? 'System' }} {{ $order->employee->EmployeeLName ?? '' }}

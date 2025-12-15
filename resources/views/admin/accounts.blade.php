@@ -870,6 +870,17 @@
             padding: 0.375rem 0.75rem;
             width: 100%;
         }
+        
+        .email-suggestion {
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .email-suggestion.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -1202,42 +1213,40 @@
                             <label class="form-label">Link to Employee <span class="text-danger">*</span></label>
                             <select class="form-select" name="employee_id" id="employee_id" required>
                                 <option value="">Select Employee</option>
-                                @php
-                                    // Get all employees from the database
-                                    $allEmployees = DB::table('employees')->orderBy('EmployeeLName')->get();
-                                    // Get employee IDs that already have accounts
-                                    $employeesWithAccounts = collect($accounts)->pluck('EmployeeID')->filter()->toArray();
-                                @endphp
                                 @foreach($allEmployees as $emp)
                                     @php
                                         $hasAccount = in_array($emp->EmployeeID, $employeesWithAccounts);
+                                        $middle = $emp->EmployeeMName ? ' ' . $emp->EmployeeMName . ' ' : ' ';
+                                        $fullName = $emp->EmployeeFName . $middle . $emp->EmployeeLName;
+                                        $empCode = str_pad($emp->EmployeeID, 3, '0', STR_PAD_LEFT);
+                                        $role = $emp->role ?? ''; // Make sure this variable exists
                                     @endphp
-                                    <option value="{{ $emp->EmployeeID }}" {{ $hasAccount ? 'disabled' : '' }}>
-                                        {{ $emp->EmployeeFName }} {{ $emp->EmployeeMName }} {{ $emp->EmployeeLName }}
-                                        ({{ str_pad($emp->EmployeeID, 3, '0', STR_PAD_LEFT) }})
-                                        @if($hasAccount)
-                                            - Already has account
-                                        @endif
+                                    <option value="{{ $emp->EmployeeID }}"
+                                        data-role="{{ $role }}"
+                                        {{ $hasAccount ? 'disabled' : '' }}>
+                                        {{ $fullName }} ({{ $empCode }})
+                                        @if($hasAccount) - Already has account @endif
                                     </option>
                                 @endforeach
                             </select>
-                            <small class="text-muted">Employees with existing accounts are disabled</small>
+                            <small class="text-muted">Only Cashier/Admin employees without existing accounts are shown</small>
                         </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Detected Role</label>
+                            <input type="text" class="form-control readonly-field" id="detected_role_display" readonly placeholder="Select an employee to see role">
+                            <input type="hidden" name="role" id="role_hidden">
+                        </div>
+
                         <div class="col-12 col-md-6">
                             <label class="form-label">Email / Username <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" name="email" id="email" required>
+                            <input type="email" class="form-control" name="email" id="account_email" required>
                         </div>
+
                         <div class="col-12 col-md-6">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" name="password" id="password" required minlength="6">
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <label class="form-label">Role <span class="text-danger">*</span></label>
-                            <select class="form-select" name="role" id="role" required>
-                                <option value="">Select Role</option>
-                                <option value="Cashier">Cashier</option>
-                                <option value="Admin">Admin</option>
-                            </select>
+                            <input type="password" class="form-control" name="password" required minlength="6">
+                            <small class="text-muted">Minimum 6 characters</small>
                         </div>
                     </div>
                 </div>
@@ -1249,27 +1258,56 @@
         </form>
     </div>
 </div>
-
 @foreach($accounts as $account)
-    {{-- VIEW MODAL --}}
+    {{-- VIEW MODAL - Updated to match Add modal style --}}
     <div class="modal fade" id="viewModal{{ $account->UserID }}" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-user me-2"></i>Account Details</h5>
+                    <h5 class="modal-title"><i ></i>Account Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-12 col-md-6"><strong>Account ID:</strong> ACC{{ str_pad($loop->iteration, 3, '0', STR_PAD_LEFT) }}</div>
-                        <div class="col-12 col-md-6"><strong>Email:</strong> {{ $account->Username }}</div>
-                        <div class="col-12 col-md-6"><strong>Employee Name:</strong> {{ $account->FullName }}</div>
-                        <div class="col-12 col-md-6"><strong>Employee ID:</strong> {{ $account->EmployeeID ?? '—' }}</div>
-                        <div class="col-12 col-md-6"><strong>Role:</strong> 
-                            <span class="role-badge {{ $account->Role === 'Admin' ? 'role-admin' : 'role-cashier' }}">{{ $account->Role }}</span>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Account ID</label>
+                            <input type="text" class="form-control readonly-field" value="ACC{{ str_pad($loop->iteration, 3, '0', STR_PAD_LEFT) }}" readonly>
                         </div>
-                        <div class="col-12 col-md-6"><strong>Status:</strong> <span class="status-badge status-active">Active</span></div>
-                        <div class="col-12 col-md-6"><strong>Last Updated:</strong> {{ \Carbon\Carbon::parse($account->updated_at)->format('M d, Y H:i') }}</div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Email / Username</label>
+                            <input type="text" class="form-control readonly-field" value="{{ $account->Username }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Employee Name</label>
+                            <input type="text" class="form-control readonly-field" value="{{ $account->FullName }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Employee ID</label>
+                            <input type="text" class="form-control readonly-field" value="{{ $account->EmployeeID ? str_pad($account->EmployeeID, 3, '0', STR_PAD_LEFT) : '—' }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Role</label>
+                            <input type="text" class="form-control readonly-field" value="{{ $account->Role }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Status</label>
+                            <input type="text" class="form-control readonly-field" value="Active" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Date Created</label>
+                            <input type="text" class="form-control readonly-field" value="{{ \Carbon\Carbon::parse($account->created_at)->format('M d, Y H:i') }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Last Updated</label>
+                            <input type="text" class="form-control readonly-field" value="{{ \Carbon\Carbon::parse($account->updated_at)->format('M d, Y H:i') }}" readonly>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1356,6 +1394,7 @@
     </div>
 @endforeach
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Mobile sidebar functionality
@@ -1542,15 +1581,12 @@
             currentFilters.search !== '';
         
         if (!hasCustomFilters) {
-            // No custom filters applied, hide the active filters section
             activeFilters.classList.remove('has-filters');
             return;
         }
         
-        // Show active filters section
         activeFilters.classList.add('has-filters');
         
-        // Add role filter tags if not "All Roles"
         if (currentFilters.roles.length > 0 && 
             (currentFilters.roles.length > 1 || currentFilters.roles[0] !== 'All Roles')) {
             currentFilters.roles.forEach(role => {
@@ -1559,7 +1595,6 @@
             });
         }
         
-        // Add status filter tags if not all are selected
         if (currentFilters.status.length < 2) {
             currentFilters.status.forEach(status => {
                 const statusTag = createFilterTag(`Status: ${status}`, `status-${status.toLowerCase()}`);
@@ -1567,7 +1602,6 @@
             });
         }
         
-        // Add link filter tags if not "All Accounts"
         if (currentFilters.link.length > 0 && 
             (currentFilters.link.length > 1 || currentFilters.link[0] !== 'All Accounts')) {
             currentFilters.link.forEach(link => {
@@ -1576,7 +1610,6 @@
             });
         }
         
-        // Add search filter tag if not empty
         if (currentFilters.search !== '') {
             const searchTag = createFilterTag(`Search: "${currentFilters.search}"`, 'search');
             activeFilters.appendChild(searchTag);
@@ -1605,57 +1638,42 @@
     }
     
     function removeFilter(filterType) {
-        // Remove the specific filter and update the UI
         if (filterType.startsWith('role-')) {
             const filterName = filterType.replace('role-', '');
             const index = currentFilters.roles.indexOf(
                 filterName.charAt(0).toUpperCase() + filterName.slice(1)
             );
-            if (index > -1) {
-                currentFilters.roles.splice(index, 1);
-            }
+            if (index > -1) currentFilters.roles.splice(index, 1);
         } else if (filterType.startsWith('status-')) {
             const filterName = filterType.replace('status-', '');
             const index = currentFilters.status.indexOf(
                 filterName.charAt(0).toUpperCase() + filterName.slice(1)
             );
-            if (index > -1) {
-                currentFilters.status.splice(index, 1);
-            }
+            if (index > -1) currentFilters.status.splice(index, 1);
         } else if (filterType.startsWith('link-')) {
             const filterName = filterType.replace('link-', '');
             const index = currentFilters.link.indexOf(
                 filterName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
             );
-            if (index > -1) {
-                currentFilters.link.splice(index, 1);
-            }
+            if (index > -1) currentFilters.link.splice(index, 1);
         } else if (filterType === 'search') {
             currentFilters.search = '';
             searchInput.value = '';
         }
         
-        // Update the checkboxes to reflect the change
         updateFilterInputs();
-        
-        // Update active filters display
         updateActiveFilters();
-        
-        // Refresh account display
         filterAccounts();
     }
     
     function updateFilterInputs() {
-        // Update role checkboxes
         document.getElementById('role-all').checked = currentFilters.roles.includes('All Roles');
         document.getElementById('role-admin').checked = currentFilters.roles.includes('Admin');
         document.getElementById('role-cashier').checked = currentFilters.roles.includes('Cashier');
         
-        // Update status checkboxes
         document.getElementById('status-active').checked = currentFilters.status.includes('Active');
         document.getElementById('status-inactive').checked = currentFilters.status.includes('Inactive');
         
-        // Update link checkboxes
         document.getElementById('link-all').checked = currentFilters.link.includes('All Accounts');
         document.getElementById('link-linked').checked = currentFilters.link.includes('Linked');
         document.getElementById('link-external').checked = currentFilters.link.includes('External');
@@ -1666,7 +1684,7 @@
         let visibleCount = 0;
         
         for (let row of rows) {
-            if (row.cells.length < 2) continue; // Skip empty rows
+            if (row.cells.length < 2) continue;
             
             const email = row.cells[1].textContent.toLowerCase();
             const role = row.cells[3].textContent.trim();
@@ -1674,31 +1692,21 @@
             const employeeCell = row.cells[2];
             const hasEmployeeLink = employeeCell ? !employeeCell.textContent.includes('No Employee Linked') : false;
             
-            // Check search filter
             const searchMatch = currentFilters.search === '' || 
                                email.includes(currentFilters.search) ||
                                row.textContent.toLowerCase().includes(currentFilters.search);
             
-            // Check role filter
             const roleMatch = currentFilters.roles.includes('All Roles') || currentFilters.roles.includes(role);
-            
-            // Check status filter
             const statusMatch = currentFilters.status.includes(status);
             
-            // Check employee link filter
             let linkMatch = false;
             if (currentFilters.link.includes('All Accounts')) {
                 linkMatch = true;
             } else {
-                if (currentFilters.link.includes('Linked') && hasEmployeeLink) {
-                    linkMatch = true;
-                }
-                if (currentFilters.link.includes('External') && !hasEmployeeLink) {
-                    linkMatch = true;
-                }
+                if (currentFilters.link.includes('Linked') && hasEmployeeLink) linkMatch = true;
+                if (currentFilters.link.includes('External') && !hasEmployeeLink) linkMatch = true;
             }
             
-            // Show/hide row based on filters
             if (searchMatch && roleMatch && statusMatch && linkMatch) {
                 row.style.display = '';
                 visibleCount++;
@@ -1707,11 +1715,10 @@
             }
         }
         
-        // Update total count
         totalCount.textContent = visibleCount;
     }
     
-    // Initialize filtering on page load
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         filterAccounts();
     });
@@ -1725,41 +1732,103 @@
         }
     });
 
+    // === Auto-display employee role in Create Account Modal ===
+const employeeSelect = document.getElementById('employee_id');
+const detectedRoleDisplay = document.getElementById('detected_role_display');
+const roleHiddenInput = document.getElementById('role_hidden');
+
+if (employeeSelect && detectedRoleDisplay && roleHiddenInput) {
+    employeeSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        // Debug: Log the selected option to see what data-role contains
+        console.log('Selected option:', selectedOption);
+        console.log('data-role attribute:', selectedOption.getAttribute('data-role'));
+        
+        // Get the role from data-role attribute
+        const role = selectedOption.getAttribute('data-role');
+        
+        // Update role display
+        if (role && role.trim() !== '') {
+            detectedRoleDisplay.value = role;
+            roleHiddenInput.value = role;
+        } else if (this.value === '') {
+            detectedRoleDisplay.value = '';
+            roleHiddenInput.value = '';
+            detectedRoleDisplay.placeholder = 'Select an employee to see role';
+        } else {
+            detectedRoleDisplay.value = 'No role registered';
+            roleHiddenInput.value = '';
+        }
+    });
+}
+
+// Also, let's add a test function to check all option elements
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if employee select exists and has options
+    if (employeeSelect) {
+        console.log('Employee select options:');
+        for (let i = 0; i < employeeSelect.options.length; i++) {
+            const option = employeeSelect.options[i];
+            console.log(`Option ${i}:`, {
+                text: option.text,
+                value: option.value,
+                'data-role': option.getAttribute('data-role'),
+                disabled: option.disabled
+            });
+        }
+    }
+});
+
     // Reset create modal form when opened
     const addAccountModal = document.getElementById('addAccountModal');
     const createAccountForm = document.getElementById('createAccountForm');
-    
+
     if (addAccountModal) {
         addAccountModal.addEventListener('show.bs.modal', function() {
-            // Reset form fields
             if (createAccountForm) {
                 createAccountForm.reset();
             }
             
-            // Reset select fields to first option
-            const employeeSelect = document.getElementById('employee_id');
-            const roleSelect = document.getElementById('role');
-            
             if (employeeSelect) {
                 employeeSelect.selectedIndex = 0;
-            }
-            if (roleSelect) {
-                roleSelect.selectedIndex = 0;
+                // Trigger change event to reset role display
+                employeeSelect.dispatchEvent(new Event('change'));
             }
         });
     }
 
-    // Prevent form submission if disabled employee is selected
+    // Form validation before submission
     if (createAccountForm) {
         createAccountForm.addEventListener('submit', function(event) {
-            const employeeSelect = document.getElementById('employee_id');
             const selectedOption = employeeSelect.options[employeeSelect.selectedIndex];
             
-            if (selectedOption.disabled) {
+            // Check if employee is selected
+            if (!employeeSelect.value) {
                 event.preventDefault();
-                alert('This employee already has an account. Please select another employee or choose "None".');
+                alert('Please select an employee.');
                 employeeSelect.focus();
+                return false;
             }
+            
+            // Check if selected employee already has an account
+            if (selectedOption && selectedOption.disabled) {
+                event.preventDefault();
+                alert('This employee already has an account. Please select a different employee.');
+                employeeSelect.focus();
+                return false;
+            }
+
+            // Validate role is Cashier or Admin
+            const selectedRole = roleHiddenInput.value;
+            if (!['Cashier', 'Admin'].includes(selectedRole)) {
+                event.preventDefault();
+                alert('Only Cashier and Admin roles can have accounts. Please select a valid employee.');
+                employeeSelect.focus();
+                return false;
+            }
+
+            return true;
         });
     }
 </script>

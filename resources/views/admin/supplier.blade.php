@@ -1236,9 +1236,8 @@
     </div>
 </div>
 
-<!-- Include individual modals for view, edit, delete -->
 @foreach($suppliers as $supplier)
-    {{-- VIEW MODAL --}}
+    {{-- VIEW MODAL - Updated to match Add modal style --}}
     <div class="modal fade" id="viewModal{{ $supplier->id }}" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -1248,23 +1247,53 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-12 col-md-6"><strong>Supplier ID:</strong> <span class="text-primary fs-5">{{ $supplier->SupplierID }}</span></div>
-                        <div class="col-12 col-md-6"><strong>Supplier Name:</strong> {{ $supplier->SupplierName }}</div>
-                        <div class="col-12 col-md-6"><strong>Contact:</strong> {{ $supplier->SupplierContactNo ?? '—' }}</div>
-                        <div class="col-12 col-md-6"><strong>Address:</strong> {{ $supplier->Address ?? '—' }}</div>
-                        <div class="col-12 col-md-6"><strong>Products Supplied:</strong> <strong class="text-primary">{{ $supplier->products_count ?? 0 }}</strong> product{{ ($supplier->products_count ?? 0) != 1 ? 's' : '' }}</div>
-                        <div class="col-12 col-md-6"><strong>Status:</strong>
-                            <span class="status-badge {{ $supplier->Status === 'Active' ? 'status-active' : 'status-inactive' }}">
-                                {{ $supplier->Status }}
-                            </span>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Supplier ID</label>
+                            <input type="text" class="form-control readonly-field" value="{{ $supplier->SupplierID }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Supplier Name</label>
+                            <input type="text" class="form-control readonly-field" value="{{ $supplier->SupplierName }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Contact Number</label>
+                            <input type="text" class="form-control readonly-field" value="{{ $supplier->SupplierContactNo ?? '—' }}" readonly>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control readonly-field" rows="3" readonly>{{ $supplier->Address ?? '—' }}</textarea>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Products Supplied</label>
+                            <input type="text" class="form-control readonly-field" value="{{ $supplier->products_count ?? 0 }} product{{ ($supplier->products_count ?? 0) != 1 ? 's' : '' }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Status</label>
+                            <div class="d-flex align-items-center">
+                                <input type="text" class="form-control readonly-field me-2" value="{{ $supplier->Status }}" readonly style="flex: 1;">
+                               
+                            </div>
                             @if($supplier->Status === 'Inactive' && ($supplier->products_count ?? 0) > 0)
                                 <div class="text-danger mt-1">
                                     <i class="fas fa-exclamation-triangle"></i> Products cannot be ordered from this supplier
                                 </div>
                             @endif
                         </div>
-                        <div class="col-12 col-md-6"><strong>Date Added:</strong> {{ \Carbon\Carbon::parse($supplier->created_at)->format('M d, Y h:i A') }}</div>
-                        <div class="col-12 col-md-6"><strong>Last Updated:</strong> {{ \Carbon\Carbon::parse($supplier->updated_at)->format('M d, Y h:i A') }}</div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Date Added</label>
+                            <input type="text" class="form-control readonly-field" value="{{ \Carbon\Carbon::parse($supplier->created_at)->format('M d, Y h:i A') }}" readonly>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Last Updated</label>
+                            <input type="text" class="form-control readonly-field" value="{{ \Carbon\Carbon::parse($supplier->updated_at)->format('M d, Y h:i A') }}" readonly>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1374,7 +1403,6 @@
         </div>
     </div>
 @endforeach
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Mobile sidebar functionality

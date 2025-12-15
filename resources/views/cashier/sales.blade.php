@@ -947,12 +947,12 @@
     <ul class="nav nav-tabs" id="salesTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab">
-                <i class="fas fa-shopping-cart me-2"></i>Orders
+                <i></i>Orders
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
-                <i class="fas fa-credit-card me-2"></i>Payments
+                <i></i>Payments
             </button>
         </li>
     </ul>
@@ -987,10 +987,13 @@
                             <tbody id="ordersTableBody">
                                 @if(isset($orders) && $orders->count() > 0)
                                     @foreach($orders as $order)
-                                    <tr data-status="{{ strtolower($order->OrderStatus) }}" data-payment="{{ strtolower($order->PaymentType) }}" data-date="{{ \Carbon\Carbon::parse($order->OrderDateTime)->format('Y-m-d') }}">
+                                    <tr data-status="{{ strtolower($order->OrderStatus) }}" data-payment="{{ strtolower($order->PaymentType ?? 'n/a') }}" data-date="{{ \Carbon\Carbon::parse($order->OrderDateTime)->format('Y-m-d') }}">
                                         <td><strong>{{ $order->OrderID }}</strong></td>
                                         <td>
-                                            <div style="font-weight:600">{{ $order->employee->EmployeeName ?? 'N/A' }}</div>
+                                            <div style="font-weight:600">
+                                                {{ $order->employee->EmpFName ?? $order->employee->EmployeeName ?? 'N/A' }} 
+                                                {{ $order->employee->EmpLName ?? '' }}
+                                            </div>
                                             <small class="text-muted">{{ $order->employee->EmployeeID ?? '' }}</small>
                                         </td>
                                         <td>{{ \Carbon\Carbon::parse($order->OrderDateTime)->format('M d, Y h:i A') }}</td>
@@ -1005,10 +1008,10 @@
                                         </td>
                                         <td><strong class="text-success">₱{{ number_format($order->GrandTotal, 2) }}</strong></td>
                                         <td>
-                                            @if($order->PaymentType == 'Cash')
-                                            <span class="method-badge method-cash">Cash</span>
-                                            @elseif($order->PaymentType == 'GCash')
-                                            <span class="method-badge method-gcash">GCash</span>
+                                            @if($order->payment)
+                                            <span class="status-badge status-completed">Paid</span>
+                                            @else
+                                            <span class="status-badge status-pending">Pending</span>
                                             @endif
                                         </td>
                                         <td>
@@ -1104,15 +1107,11 @@
                                             </a>
                                         </td>
                                         <td>
-                                            @if($payment->order && $payment->order->employee)
-                                                <div style="font-weight:600">
-                                                    {{ $payment->order->employee->EmployeeFName }} 
-                                                    {{ $payment->order->employee->EmployeeLName }}
-                                                </div>
-                                                <small class="text-muted">{{ $payment->order->employee->EmployeeID }}</small>
-                                            @else
-                                                <div class="text-muted">N/A</div>
-                                            @endif
+                                            <div style="font-weight:600">
+                                                {{ $payment->order->employee->EmpFName ?? $payment->order->employee->EmployeeName ?? 'N/A' }}
+                                                {{ $payment->order->employee->EmpLName ?? '' }}
+                                            </div>
+                                            <small class="text-muted">{{ $payment->order->employee->EmployeeID ?? '' }}</small>
                                         </td>
                                         <td><strong class="text-success">₱{{ number_format($payment->Amount ?? 0, 2) }}</strong></td>
                                         <td>
@@ -1326,7 +1325,7 @@
                             <div class="col-md-12">
                                 <label class="form-label required">GCash Reference Number</label>
                                 <input type="text" class="form-control" id="gcashReference" 
-                                    name="GCashReference" placeholder="Enter GCash reference number">
+                                    name="PaymentReference" placeholder="Enter GCash reference number">
                                 <small class="text-muted">Enter the transaction reference number from GCash</small>
                             </div>
                         </div>
@@ -1340,6 +1339,7 @@
                                     <span class="h5 mb-0">Grand Total:</span>
                                     <span class="h4" id="grandTotalDisplay">₱0.00</span>
                                     <input type="hidden" name="GrandTotal" id="grandTotal">
+                                    <input type="hidden" name="AmountPaid" id="amountPaid" value="0">
                                 </div>
                             </div>
                         </div>
@@ -1564,7 +1564,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Store current filters
     let currentFilters = {
         status: [],
-        payment: [],
+        payment: ['cash', 'gcash', 'n/a'],
         dateFrom: '',
         dateTo: '',
         search: ''
@@ -1631,7 +1631,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (searchInput) searchInput.value = '';
         currentFilters = {
             status: [],
-            payment: [],
+            payment: ['cash', 'gcash', 'n/a'],
             dateFrom: '',
             dateTo: '',
             search: ''
@@ -1660,13 +1660,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update payment filters
         currentFilters.payment = [];
         if (document.getElementById('payment-all').checked) {
-            currentFilters.payment = ['cash', 'gcash'];
+            currentFilters.payment = ['cash', 'gcash', 'n/a'];
         } else {
             if (document.getElementById('payment-cash-filter').checked) {
                 currentFilters.payment.push('cash');
             }
             if (document.getElementById('payment-gcash-filter').checked) {
                 currentFilters.payment.push('gcash');
+            }
+            if (currentFilters.payment.length === 0) {
+                currentFilters.payment = ['cash', 'gcash', 'n/a'];
             }
         }
         
@@ -1694,14 +1697,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (currentFilters.status.length !== 3) {
                 currentFilters.status.forEach(status => {
-                    const statusTag = createFilterTag(Status: ${status.charAt(0).toUpperCase() + status.slice(1)}, status-${status});
+                    const statusTag = createFilterTag(
+                        `Status: ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+                        `status-${status}`
+                    );
                     activeFilters.appendChild(statusTag);
                 });
             }
             
             if (currentFilters.payment.length !== 2) {
                 currentFilters.payment.forEach(payment => {
-                    const paymentTag = createFilterTag(Payment: ${payment.charAt(0).toUpperCase() + payment.slice(1)}, payment-${payment});
+                    const paymentTag = createFilterTag(
+                        `Payment: ${payment.charAt(0).toUpperCase() + payment.slice(1)}`,
+                        `payment-${payment}`
+                    );
                     activeFilters.appendChild(paymentTag);
                 });
             }
@@ -1709,18 +1718,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentFilters.dateFrom || currentFilters.dateTo) {
                 let dateText = 'Date: ';
                 if (currentFilters.dateFrom && currentFilters.dateTo) {
-                    dateText += ${formatDate(currentFilters.dateFrom)} to ${formatDate(currentFilters.dateTo)};
+                    dateText += `${formatDate(currentFilters.dateFrom)} to ${formatDate(currentFilters.dateTo)}`;
                 } else if (currentFilters.dateFrom) {
-                    dateText += From ${formatDate(currentFilters.dateFrom)};
+                    dateText += `From ${formatDate(currentFilters.dateFrom)}`;
                 } else if (currentFilters.dateTo) {
-                    dateText += To ${formatDate(currentFilters.dateTo)};
+                    dateText += `To ${formatDate(currentFilters.dateTo)}`;
                 }
                 const dateTag = createFilterTag(dateText, 'date-range');
                 activeFilters.appendChild(dateTag);
             }
             
             if (currentFilters.search !== '') {
-                const searchTag = createFilterTag(Search: "${currentFilters.search}", 'search');
+                const searchTag = createFilterTag(`Search: "${currentFilters.search}"`, 'search');
                 activeFilters.appendChild(searchTag);
             }
         }
@@ -1809,7 +1818,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                    currentFilters.status.includes(status);
                 
                 const paymentMatch = currentFilters.payment.length === 0 || 
-                                   currentFilters.payment.includes(payment);
+                                   payment === '' || currentFilters.payment.includes(payment);
                 
                 let dateMatch = true;
                 if (currentFilters.dateFrom || currentFilters.dateTo) {
@@ -1836,7 +1845,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const countElement = document.querySelector('.text-muted');
             if (countElement && visibleCount > 0) {
                 const totalRows = rows.length;
-                countElement.textContent = Showing ${visibleCount} of ${totalRows} orders;
+                countElement.textContent = `Showing ${visibleCount} of ${totalRows} orders`;
             }
         }
     }
@@ -1882,7 +1891,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (parseInt(quantityInput.value) > stock) {
                 quantityInput.value = stock;
-                showAlert(Only ${stock} units available. Quantity adjusted., 'warning');
+                    showAlert(`Only ${stock} units available. Quantity adjusted.`, 'warning');
             }
             
             calculateTotals();
@@ -1917,11 +1926,15 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('changeDisplay').value = '0.00';
         }
         
+        updateAmountPaid();
         calculateChange();
     });
     
     // Amount tendered change handler
-    document.getElementById('amountTendered')?.addEventListener('input', calculateChange);
+    document.getElementById('amountTendered')?.addEventListener('input', function() {
+        updateAmountPaid();
+        calculateChange();
+    });
     
     // Calculate totals function
     function calculateTotals() {
@@ -1951,6 +1964,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('grandTotal').value = grandTotal;
         }
         
+        updateAmountPaid();
         calculateChange();
     }
     
@@ -1961,6 +1975,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const change = amountTendered - grandTotal;
             document.getElementById('changeDisplay').value = change.toFixed(2);
         }
+    }
+
+    // Sync amount paid with current payment type
+    function updateAmountPaid() {
+        const paymentType = document.getElementById('paymentType')?.value;
+        const amountPaidInput = document.getElementById('amountPaid');
+        if (!amountPaidInput) return;
+        
+        if (paymentType === 'Cash') {
+            const amountTendered = parseFloat(document.getElementById('amountTendered')?.value) || 0;
+            amountPaidInput.value = amountTendered;
+        } else if (paymentType === 'GCash') {
+            amountPaidInput.value = grandTotal;
+        } else {
+            amountPaidInput.value = 0;
+        }
+
+        // Keep the hidden field in sync if FormData was already created in devtools
+        amountPaidInput.setAttribute('value', amountPaidInput.value);
     }
     
     // Reset form function
@@ -1976,6 +2009,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('amountTendered').value = '';
             document.getElementById('changeDisplay').value = '';
             document.getElementById('gcashReference').value = '';
+            document.getElementById('amountPaid').value = 0;
             
             unitPrice = 0;
             subtotal = 0;
@@ -1992,8 +2026,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('archiveOrderForm');
             
             if (document.getElementById('archiveOrderId')) {
-                document.getElementById('archiveOrderId').textContent = Order ${orderCode};
-                form.action = /cashier/sales/${orderId}/archive;
+                document.getElementById('archiveOrderId').textContent = `Order ${orderCode}`;
+                form.action = `/cashier/sales/${orderId}/archive`;
             }
         });
     });
@@ -2003,7 +2037,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const orderId = this.dataset.orderId;
             
-            fetch(/cashier/sales/${orderId})
+            fetch(`/cashier/sales/${orderId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -2020,27 +2054,27 @@ document.addEventListener('DOMContentLoaded', function() {
                                 minute: '2-digit'
                             });
                         document.getElementById('viewOrderStatus').textContent = order.OrderStatus;
-                        document.getElementById('viewPaymentMethod').textContent = order.PaymentType;
+                        document.getElementById('viewPaymentMethod').textContent = order.PaymentType || 'N/A';
                         document.getElementById('viewEmployee').textContent = 
-                            ${order.employee?.EmployeeName || 'N/A'} (${order.employee?.EmployeeID || 'N/A'});
+                            `${order.Employee?.EmployeeName || 'N/A'} (${order.Employee?.EmployeeID || 'N/A'})`;
                         
                         const itemsContainer = document.getElementById('viewOrderItems');
                         itemsContainer.innerHTML = '';
                         
                         data.details.forEach(detail => {
                             const row = document.createElement('tr');
-                            row.innerHTML = 
-                                <td>${detail.product?.ProductName || 'N/A'}</td>
-                                <td>₱${parseFloat(detail.UnitPrice).toFixed(2)}</td>
-                                <td>${detail.Quantity}</td>
-                                <td>₱${parseFloat(detail.Subtotal).toFixed(2)}</td>
-                            ;
+            row.innerHTML = `
+                <td>${detail.ProductName || 'N/A'}</td>
+                <td>₱${parseFloat(detail.UnitPrice || 0).toFixed(2)}</td>
+                <td>${detail.Quantity || 0}</td>
+                <td>₱${parseFloat(detail.Subtotal || 0).toFixed(2)}</td>
+            `;
                             itemsContainer.appendChild(row);
                         });
                         
-                        document.getElementById('viewSubtotal').textContent = ₱${parseFloat(order.SubTotal).toFixed(2)};
-                        document.getElementById('viewDiscount').textContent = -₱${parseFloat(order.DiscountAmount).toFixed(2)};
-                        document.getElementById('viewGrandTotal').textContent = ₱${parseFloat(order.GrandTotal).toFixed(2)};
+        document.getElementById('viewSubtotal').textContent = `₱${parseFloat(order.SubTotal).toFixed(2)}`;
+        document.getElementById('viewDiscount').textContent = `-₱${parseFloat(order.DiscountAmount).toFixed(2)}`;
+        document.getElementById('viewGrandTotal').textContent = `₱${parseFloat(order.GrandTotal).toFixed(2)}`;
                     }
                 })
                 .catch(error => {
@@ -2063,31 +2097,65 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
             loadingSpinner.style.display = 'block';
             
-            const formData = new FormData(this);
+        // Ensure calculated fields are synced before submission
+        updateAmountPaid();
+        
+        const formData = new FormData(this);
+        // Force AmountPaid into the payload to satisfy validation
+        formData.set('AmountPaid', document.getElementById('amountPaid')?.value || '0');
+
+        // Debug: log outgoing payload keys/values to help diagnose 422s
+        console.log('Submitting order payload:');
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+        }
             
             fetch(this.action, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(async response => {
+                const contentType = response.headers.get('content-type') || '';
+                let payload = null;
+                
+                if (contentType.includes('application/json')) {
+                    payload = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(text || 'Unexpected non-JSON response');
+                }
+                
+                if (!response.ok) {
+                    // Laravel validation errors (422) or other failure responses
+                    if (payload?.errors) {
+                        const flatErrors = Object.values(payload.errors).flat().join('\n');
+                        throw new Error(flatErrors || payload.message || 'Validation failed.');
+                    }
+                    throw new Error(payload?.message || 'Request failed.');
+                }
+                
+                return payload;
+            })
             .then(data => {
                 if (data.success) {
-                    showAlert(Order created successfully!\nOrder ID: ${data.orderId}\nTotal: ₱${data.grandTotal}, 'success');
+                    showAlert(`Order created successfully!\nOrder ID: ${data.orderId}\nTotal: ₱${data.grandTotal}`, 'success');
                     const modal = bootstrap.Modal.getInstance(document.getElementById('createOrderModal'));
                     modal.hide();
                     setTimeout(() => {
                         window.location.reload();
                     }, 1500);
                 } else {
-                    showAlert('Error: ' + data.message, 'error');
+                    showAlert('Error: ' + (data.message || 'Unknown error'), 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('An error occurred. Please try again.', 'error');
+                const msg = error?.message?.slice(0, 500) || 'An error occurred. Please try again.';
+                showAlert(`An error occurred. Please try again.\n${msg}`, 'error');
             })
             .finally(() => {
                 submitBtn.disabled = false;
@@ -2102,7 +2170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const paymentId = this.dataset.paymentId;
             
-            fetch(/cashier/payments/${paymentId})
+            fetch(`/cashier/payments/${paymentId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -2123,7 +2191,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('viewPaymentStatus').textContent = payment.PaymentStatus;
                         document.getElementById('viewPaymentMethod').textContent = payment.PaymentType;
                         document.getElementById('viewPaymentReference').textContent = payment.ReferenceNumber || 'N/A';
-                        document.getElementById('viewPaymentAmount').textContent = ₱${parseFloat(payment.Amount).toFixed(2)};
+                        document.getElementById('viewPaymentAmount').textContent = `₱${parseFloat(payment.Amount).toFixed(2)}`;
                         
                         const itemsContainer = document.getElementById('viewPaymentItems');
                         itemsContainer.innerHTML = '';
@@ -2131,18 +2199,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (order && order.details) {
                             order.details.forEach(detail => {
                                 const row = document.createElement('tr');
-                                row.innerHTML = 
+                                row.innerHTML = `
                                     <td>${detail.product?.ProductName || 'N/A'}</td>
                                     <td>₱${parseFloat(detail.UnitPrice || 0).toFixed(2)}</td>
                                     <td>${detail.Quantity || detail.OrderQty || 0}</td>
                                     <td>₱${parseFloat(detail.Subtotal || 0).toFixed(2)}</td>
-                                ;
+                                `;
                                 itemsContainer.appendChild(row);
                             });
                             
-                            document.getElementById('viewPaymentSubtotal').textContent = ₱${parseFloat(order.SubTotal || 0).toFixed(2)};
-                            document.getElementById('viewPaymentDiscount').textContent = -₱${parseFloat(order.DiscountAmount || 0).toFixed(2)};
-                            document.getElementById('viewPaymentGrandTotal').textContent = ₱${parseFloat(order.GrandTotal || 0).toFixed(2)};
+                            document.getElementById('viewPaymentSubtotal').textContent = `₱${parseFloat(order.SubTotal || 0).toFixed(2)}`;
+                            document.getElementById('viewPaymentDiscount').textContent = `-₱${parseFloat(order.DiscountAmount || 0).toFixed(2)}`;
+                            document.getElementById('viewPaymentGrandTotal').textContent = `₱${parseFloat(order.GrandTotal || 0).toFixed(2)}`;
                         }
                     }
                 })
@@ -2158,7 +2226,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const orderId = this.dataset.orderId;
             
-            const viewOrderBtn = document.querySelector(.view-order[data-order-id="${orderId}"]);
+            const viewOrderBtn = document.querySelector(`.view-order[data-order-id="${orderId}"]`);
             if (viewOrderBtn) {
                 viewOrderBtn.click();
                 document.getElementById('orders-tab').click();
@@ -2171,13 +2239,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.print-receipt').forEach(button => {
         button.addEventListener('click', function() {
             const paymentId = this.dataset.paymentId;
-            showAlert(Printing receipt for payment ${paymentId}, 'info');
+            showAlert(`Printing receipt for payment ${paymentId}`, 'info');
         });
     });
     
     document.querySelector('.print-payment-receipt')?.addEventListener('click', function() {
         const paymentId = document.getElementById('viewPaymentNo').textContent;
-        showAlert(Printing receipt for payment ${paymentId}, 'info');
+        showAlert(`Printing receipt for payment ${paymentId}`, 'info');
     });
     
     // ========== HELPER FUNCTIONS ==========
@@ -2186,17 +2254,17 @@ document.addEventListener('DOMContentLoaded', function() {
         existingAlerts.forEach(alert => alert.remove());
         
         const alertDiv = document.createElement('div');
-        alertDiv.className = alert alert-${type} alert-dismissible fade show;
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
         
         let icon = 'fa-info-circle';
         if (type === 'success') icon = 'fa-check-circle';
         if (type === 'error') icon = 'fa-exclamation-circle';
         if (type === 'warning') icon = 'fa-exclamation-triangle';
         
-        alertDiv.innerHTML = 
+        alertDiv.innerHTML = `
             <i class="fas ${icon} me-2"></i>${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        ;
+        `;
         
         const topbar = document.querySelector('.topbar');
         if (topbar) {

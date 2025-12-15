@@ -174,7 +174,6 @@
     .topbar { 
       background: var(--light-bg);
       display: flex; 
-      gap: 16px; 
       align-items: flex-start; 
       justify-content: space-between; 
       margin-bottom: 22px; 
@@ -183,21 +182,32 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      gap: 20px;
+    }
+
+    /* ========== UPDATED LAYOUT ========== */
+    .page-header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 20px;
     }
 
     .page-title-section {
       flex: 1;
-      min-width: 250px;
+      min-width: 300px;
     }
 
-    /* ========== USER SECTION STYLES ========== */
+    /* ========== USER SECTION STYLES (ORIGINAL) ========== */
     .user-section {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       gap: 16px;
       min-width: 300px;
-      width: 100%;
+      width: auto;
       max-width: 800px;
       margin-left: auto;
     }
@@ -301,6 +311,7 @@
       flex-wrap: wrap;
       justify-content: space-between;
       width: 100%;
+      margin-top: 20px;
     }
 
     /* Filter container styling */
@@ -663,9 +674,20 @@
         align-items: stretch;
       }
       
-      .user-section {
+      .page-header-container {
+        flex-direction: column;
         align-items: stretch;
+      }
+      
+      .user-section {
+        align-items: flex-start;
         min-width: 100%;
+        margin-left: 0;
+      }
+      
+      .user-dropdown-menu {
+        right: auto;
+        left: 0;
       }
       
       .search-filter-section {
@@ -688,11 +710,6 @@
         width: 100%;
       }
       
-      .user-dropdown-menu {
-        right: auto;
-        left: 0;
-      }
-      
       .filter-container {
         align-items: stretch;
       }
@@ -707,7 +724,7 @@
 
       .user-dropdown-toggle {
         width: 100%;
-        justify-content: center;
+        justify-content: space-between;
       }
 
       .main-content {
@@ -789,20 +806,16 @@
     $employeeId = null;
     
     if ($user) {
-        // Check if user has an employee record
-        // Method 1: If user has employee relationship
         if (isset($user->employee) && $user->employee) {
             $employeeName = $user->employee->EmployeeName ?? 
                            ($user->employee->EmployeeFName . ' ' . $user->employee->EmployeeLName) ?? 
                            $user->name;
             $employeeId = $user->employee->EmployeeID ?? null;
         }
-        // Method 2: If user has direct employee fields
         elseif (isset($user->EmployeeName)) {
             $employeeName = $user->EmployeeName;
             $employeeId = $user->EmployeeID ?? null;
         }
-        // Method 3: Fallback to user's name
         else {
             $employeeName = $user->name ?? 'Admin';
         }
@@ -898,167 +911,171 @@
 
 <main class="content-wrap" id="contentWrap">
   <div class="topbar">
-    <div class="page-title-section">
-      <h4 class="mb-1">Dashboard</h4>
-      <p class="text-muted mb-0">Overview of your inventory and sales</p>
-    </div>
-
-    <div class="user-section">
-      <!-- User Info Section with Dropdown -->
-      <div class="user-dropdown">
-        <button class="user-dropdown-toggle" id="userDropdownToggle">
-          <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
-          <div class="user-details">
-            <div class="user-name">{{ $employeeName }}</div>
-            <div class="user-role">
-              @if($employeeId)
-                Admin
-              @endif
-            </div>
-          </div>
-          <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
-        </button>
-        
-        <div class="user-dropdown-menu" id="userDropdownMenu">
-          <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="user-dropdown-item">
-              <i class="fas fa-sign-out-alt me-2"></i> Sign Out
-            </button>
-          </form>
-        </div>
+    <!-- UPDATED: Page header with user dropdown on same line -->
+    <div class="page-header-container">
+      <div class="page-title-section">
+        <h4 class="mb-1">Dashboard</h4>
+        <p class="text-muted mb-0">Overview of your inventory and sales</p>
       </div>
-      
-      <!-- Filter Container with Search/Filter and Active Filters -->
-      <div class="filter-container">
-        <!-- Search and Filter Section -->
-        <div class="search-filter-section">
-          <!-- Expanded Search Bar -->
-          <div class="input-group search-input">
-            <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
-            <input type="text" class="form-control" placeholder="Search products, suppliers..." id="searchInput">
-          </div>
+
+      <!-- User Section - Now on same line with title -->
+      <div class="user-section">
+        <!-- User Info Section with Dropdown -->
+        <div class="user-dropdown">
+          <button class="user-dropdown-toggle" id="userDropdownToggle">
+            <img src="{{ asset('images/logo_.png') }}" alt="avatar" class="user-avatar">
+            <div class="user-details">
+              <div class="user-name">{{ $employeeName }}</div>
+              <div class="user-role">
+                @if($employeeId)
+                  Admin
+                @endif
+              </div>
+            </div>
+            <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+          </button>
           
-          <!-- Date Picker -->
-          <div class="date-picker-container">
-            <div class="input-group">
-              <input type="date" class="form-control" id="dateFilter" value="{{ $today }}">
-              <button class="btn btn-outline-primary" type="button" id="applyDateFilter">
-                <i class="fas fa-calendar-check"></i>
+          <div class="user-dropdown-menu" id="userDropdownMenu">
+            <form method="POST" action="{{ route('logout') }}">
+              @csrf
+              <button type="submit" class="user-dropdown-item">
+                <i class="fas fa-sign-out-alt me-2"></i> Sign Out
               </button>
-            </div>
-          </div>
-          
-          <!-- Relevant Filter Dropdown -->
-          <div class="filter-dropdown">
-            <button class="filter-toggle" id="filterToggle">
-              <i class="fas fa-filter"></i>
-              <i class="fas fa-chevron-down ms-1" style="font-size: 0.8rem;"></i>
-            </button>
-            
-            <div class="filter-menu" id="filterMenu">
-              <!-- Time Period Filter -->
-              <div class="filter-section">
-                <div class="filter-section-title">Time Period</div>
-                <div class="filter-options">
-                  <div class="filter-option">
-                    <input type="radio" name="timePeriod" id="period-today" checked>
-                    <label for="period-today">Today</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="timePeriod" id="period-week">
-                    <label for="period-week">This Week</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="timePeriod" id="period-month">
-                    <label for="period-month">This Month</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="timePeriod" id="period-quarter">
-                    <label for="period-quarter">This Quarter</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="timePeriod" id="period-year">
-                    <label for="period-year">This Year</label>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Category Filter -->
-              <div class="filter-section">
-                <div class="filter-section-title">Category</div>
-                <div class="filter-options">
-                  <div class="filter-option">
-                    <input type="checkbox" id="category-all" checked>
-                    <label for="category-all">All Categories</label>
-                  </div>
-                  @if(isset($categories) && count($categories) > 0)
-                    @foreach($categories as $category)
-                      <div class="filter-option">
-                        <input type="checkbox" id="category-{{ $category->CategoryID }}">
-                        <label for="category-{{ $category->CategoryID }}">{{ $category->CategoryName }}</label>
-                      </div>
-                    @endforeach
-                  @else
-                    <div class="text-muted" style="font-size: 0.8rem;">No categories available</div>
-                  @endif
-                </div>
-              </div>
-              
-              <!-- Stock Status Filter -->
-              <div class="filter-section">
-                <div class="filter-section-title">Stock Status</div>
-                <div class="filter-options">
-                  <div class="filter-option">
-                    <input type="radio" name="stockStatus" id="status-all" checked>
-                    <label for="status-all">All Items</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="stockStatus" id="status-low">
-                    <label for="status-low">Low Stock</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="stockStatus" id="status-normal">
-                    <label for="status-normal">Normal Stock</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="stockStatus" id="status-high">
-                    <label for="status-high">High Stock</label>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Expiry Status Filter -->
-              <div class="filter-section">
-                <div class="filter-section-title">Expiry Status</div>
-                <div class="filter-options">
-                  <div class="filter-option">
-                    <input type="radio" name="expiryStatus" id="expiry-all" checked>
-                    <label for="expiry-all">All Items</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="expiryStatus" id="expiry-near">
-                    <label for="expiry-near">Near Expiry</label>
-                  </div>
-                  <div class="filter-option">
-                    <input type="radio" name="expiryStatus" id="expiry-safe">
-                    <label for="expiry-safe">Safe</label>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Action Buttons -->
-              <div class="filter-actions">
-                <button class="btn-apply" id="applyFilters">Apply Filters</button>
-                <button class="btn-clear" id="clearFilters">Reset Filters</button>
-              </div>
-            </div>
+            </form>
           </div>
         </div>
         
-        <!-- Active Filters Display -->
-        <div class="active-filters" id="activeFilters">
-          <!-- Filter tags will be dynamically added here -->
+        <!-- Filter Container with Search/Filter and Active Filters -->
+        <div class="filter-container">
+          <!-- Search and Filter Section -->
+          <div class="search-filter-section">
+            <!-- Expanded Search Bar -->
+            <div class="input-group search-input">
+              <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+              <input type="text" class="form-control" placeholder="Search products, suppliers..." id="searchInput">
+            </div>
+            
+            <!-- Date Picker -->
+            <div class="date-picker-container">
+              <div class="input-group">
+                <input type="date" class="form-control" id="dateFilter" value="{{ $today }}">
+                <button class="btn btn-outline-primary" type="button" id="applyDateFilter">
+                  <i class="fas fa-calendar-check"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Relevant Filter Dropdown -->
+            <div class="filter-dropdown">
+              <button class="filter-toggle" id="filterToggle">
+                <i class="fas fa-filter"></i>
+                <i class="fas fa-chevron-down ms-1" style="font-size: 0.8rem;"></i>
+              </button>
+              
+              <div class="filter-menu" id="filterMenu">
+                <!-- Time Period Filter -->
+                <div class="filter-section">
+                  <div class="filter-section-title">Time Period</div>
+                  <div class="filter-options">
+                    <div class="filter-option">
+                      <input type="radio" name="timePeriod" id="period-today" checked>
+                      <label for="period-today">Today</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="timePeriod" id="period-week">
+                      <label for="period-week">This Week</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="timePeriod" id="period-month">
+                      <label for="period-month">This Month</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="timePeriod" id="period-quarter">
+                      <label for="period-quarter">This Quarter</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="timePeriod" id="period-year">
+                      <label for="period-year">This Year</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Category Filter -->
+                <div class="filter-section">
+                  <div class="filter-section-title">Category</div>
+                  <div class="filter-options">
+                    <div class="filter-option">
+                      <input type="checkbox" id="category-all" checked>
+                      <label for="category-all">All Categories</label>
+                    </div>
+                    @if(isset($categories) && count($categories) > 0)
+                      @foreach($categories as $category)
+                        <div class="filter-option">
+                          <input type="checkbox" id="category-{{ $category->CategoryID }}">
+                          <label for="category-{{ $category->CategoryID }}">{{ $category->CategoryName }}</label>
+                        </div>
+                      @endforeach
+                    @else
+                      <div class="text-muted" style="font-size: 0.8rem;">No categories available</div>
+                    @endif
+                  </div>
+                </div>
+                
+                <!-- Stock Status Filter -->
+                <div class="filter-section">
+                  <div class="filter-section-title">Stock Status</div>
+                  <div class="filter-options">
+                    <div class="filter-option">
+                      <input type="radio" name="stockStatus" id="status-all" checked>
+                      <label for="status-all">All Items</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="stockStatus" id="status-low">
+                      <label for="status-low">Low Stock</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="stockStatus" id="status-normal">
+                      <label for="status-normal">Normal Stock</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="stockStatus" id="status-high">
+                      <label for="status-high">High Stock</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Expiry Status Filter -->
+                <div class="filter-section">
+                  <div class="filter-section-title">Expiry Status</div>
+                  <div class="filter-options">
+                    <div class="filter-option">
+                      <input type="radio" name="expiryStatus" id="expiry-all" checked>
+                      <label for="expiry-all">All Items</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="expiryStatus" id="expiry-near">
+                      <label for="expiry-near">Near Expiry</label>
+                    </div>
+                    <div class="filter-option">
+                      <input type="radio" name="expiryStatus" id="expiry-safe">
+                      <label for="expiry-safe">Safe</label>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="filter-actions">
+                  <button class="btn-apply" id="applyFilters">Apply Filters</button>
+                  <button class="btn-clear" id="clearFilters">Reset Filters</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Active Filters Display -->
+          <div class="active-filters" id="activeFilters">
+            <!-- Filter tags will be dynamically added here -->
+          </div>
         </div>
       </div>
     </div>

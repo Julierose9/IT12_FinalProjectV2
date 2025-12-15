@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,9 +31,26 @@ class LoginController extends Controller
             'email'    => $request->email,
             'password' => $request->password
         ], $remember)) {
+            $user = Auth::user();
+            
+            // Check if employee is inactive
+            if ($user->EmployeeID) {
+                $employee = Employee::where('EmployeeID', $user->EmployeeID)->first();
+                
+                if ($employee && $employee->EmployeeStatus === 'Inactive') {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                    
+                    return back()->withErrors([
+                        'email' => 'Your account is inactive. Please contact the administrator for assistance.',
+                    ])->withInput($request->only('email'));
+                }
+            }
+            
             $request->session()->regenerate();
 
-            \Log::info('Login Success: ' . Auth::user()->email . ' | Role: ' . Auth::user()->Role);
+            \Log::info('Login Success: ' . $user->email . ' | Role: ' . $user->Role);
 
             return $this->redirectBasedOnRole();
         }

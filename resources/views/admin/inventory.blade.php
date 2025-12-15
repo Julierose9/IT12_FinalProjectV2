@@ -368,17 +368,14 @@
     }
     
     .status-instock { 
-      background: #e8f5e8; 
       color: #23b07a; 
     }
     
     .status-low { 
-      background: #fde8e8; 
       color: #e05252; 
     }
     
     .status-out { 
-      background: #fde8e8; 
       color: #e05252; 
     }
 
@@ -515,9 +512,10 @@
     $outOfStockCount = 0;
     
     foreach ($products as $product) {
-        if (($product->current_stock ?? 0) <= 0) {
+        $currentStock = $product->current_stock ?? 0;
+        if ($currentStock <= 0) {
             $outOfStockCount++;
-        } elseif (($product->current_stock ?? 0) <= ($product->ReorderLvl ?? 0)) {
+        } elseif ($currentStock <= ($product->ReorderLvl ?? 5)) {
             $lowStockCount++;
         }
     }
@@ -695,80 +693,18 @@
     </div>
   @endif
 
-  {{-- Inventory Summary Cards --}}
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="text-muted mb-2">Total Products</h6>
-              <h3 class="mb-0">{{ $products->count() }}</h3>
-            </div>
-            <div class="bg-light p-3 rounded-circle">
-              <i class="fas fa-box text-primary fa-2x"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="text-muted mb-2">In Stock</h6>
-              <h3 class="mb-0">{{ $products->count() - $lowStockCount - $outOfStockCount }}</h3>
-            </div>
-            <div class="bg-light p-3 rounded-circle">
-              <i class="fas fa-check-circle text-success fa-2x"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="text-muted mb-2">Low Stock</h6>
-              <h3 class="mb-0">{{ $lowStockCount }}</h3>
-            </div>
-            <div class="bg-light p-3 rounded-circle">
-              <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="text-muted mb-2">Out of Stock</h6>
-              <h3 class="mb-0">{{ $outOfStockCount }}</h3>
-            </div>
-            <div class="bg-light p-3 rounded-circle">
-              <i class="fas fa-times-circle text-danger fa-2x"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  
 
   {{-- Tab Navigation --}}
   <ul class="nav nav-tabs" id="inventoryTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab">
-        <i class="fas fa-box me-2"></i>Products Inventory
+        <i ></i>Products Inventory
       </button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button" role="tab">
-        <i class="fas fa-exchange-alt me-2"></i>Stock Transactions
+        <i ></i>Stock Transactions
       </button>
     </li>
   </ul>
@@ -782,8 +718,8 @@
           <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <h5 class="card-title mb-0">Current Inventory</h5>
             <div class="d-flex gap-2">
-              <a href="{{ route('admin.reports.inventory.export') . '?' . http_build_query(request()->except('page')) }}" class="btn btn-success">
-                <i class="fas fa-file-csv me-1"></i> Export CSV
+              <a href="{{ route('admin.reports.inventory.export') . '?' . http_build_query(request()->except('page')) }}" class="btn btn-danger">
+                <i class="fas fa-file-pdf me-1"></i> Export PDF
               </a>
             </div>
           </div>
@@ -806,7 +742,7 @@
                 @forelse($paginatedProducts ?? $products as $product)
                 <tr data-stock="{{ $product->current_stock }}" 
                     data-category="{{ $product->CatID }}">
-                  <td><strong>#{{ $product->ProductID }}</strong></td>
+                  <td><strong>{{ $product->ProductID }}</strong></td>
                   <td>
                     <div class="fw-semibold">{{ $product->ProductName }}</div>
                     <small class="text-muted">SKU: {{ $product->SKUNumber }}</small>
@@ -814,18 +750,20 @@
                   <td>{{ $product->category?->CategoryName ?? 'Uncategorized' }}</td>
                   <td>
                     <div style="display:flex; align-items:center; gap:8px;">
-                      <strong>{{ $product->current_stock }}</strong>
+                      <strong>{{ $product->current_stock ?? 0 }}</strong>
+                      <span class="text-muted" style="font-size: 0.75rem;">units</span>
                       <div class="stock-bar">
                         @php
+                          $currentStock = $product->current_stock ?? 0;
                           $reorderLevel = $product->ReorderLvl ?? 5;
-                          $maxStock = max($reorderLevel * 3, $product->current_stock);
-                          $percent = $product->current_stock > 0 ? min(100, ($product->current_stock / max(1, $maxStock)) * 100) : 0;
+                          $maxStock = max($reorderLevel * 3, $currentStock, 1);
+                          $percent = $currentStock > 0 ? min(100, ($currentStock / $maxStock) * 100) : 0;
                           $fill = 'stock-high';
-                          if ($product->current_stock <= 0) {
+                          if ($currentStock <= 0) {
                             $fill = 'stock-low';
-                          } elseif ($product->current_stock <= $reorderLevel) {
+                          } elseif ($currentStock <= $reorderLevel) {
                             $fill = 'stock-low';
-                          } elseif ($product->current_stock <= $reorderLevel * 2) {
+                          } elseif ($currentStock <= $reorderLevel * 2) {
                             $fill = 'stock-medium';
                           }
                         @endphp
@@ -835,17 +773,21 @@
                   </td>
                   <td>{{ $product->ReorderLvl ?? 5 }}</td>
                   <td>
-                    @if($product->current_stock <= 0)
+                    @php
+                      $currentStock = $product->current_stock ?? 0;
+                      $reorderLevel = $product->ReorderLvl ?? 5;
+                    @endphp
+                    @if($currentStock <= 0)
                       <span class="status-badge status-out">Out of Stock</span>
-                    @elseif($product->current_stock <= ($product->ReorderLvl ?? 5))
+                    @elseif($currentStock <= $reorderLevel)
                       <span class="status-badge status-low">Low Stock</span>
                     @else
                       <span class="status-badge status-instock">In Stock</span>
                     @endif
                   </td>
                   <td>
-                    <div>₱{{ number_format($product->SellingPrice ?? $product->Price ?? 0, 2) }}</div>
-                    <small class="text-muted">Cost: ₱{{ number_format($product->CostPrice ?? 0, 2) }}</small>
+                    <div>₱{{ number_format($product->pricing->RetailPrice ?? 0, 2) }}</div>
+                    <small class="text-muted">Cost: ₱{{ number_format($product->pricing->OriginalPrice ?? 0, 2) }}</small>
                   </td>
                   <td>
                     <div class="action-buttons">
@@ -923,7 +865,7 @@
               <tbody>
                 @forelse($recentMovements ?? [] as $movement)
                 <tr>
-                  <td>{{ $movement->ChangeDateTime->format('M d, Y h:i A') }}</td>
+                  <td>{{ \Carbon\Carbon::parse($movement->ChangeDateTime)->format('M d, Y h:i A') }}</td>
                   <td>
                     @if($movement->ChangeType == 'Decrease')
                       <span class="badge bg-danger">Sale</span>
@@ -1073,7 +1015,12 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       
       // Load transaction history via AJAX
-      fetch(`/admin/inventory/${productId}/transactions`)
+      fetch(`/admin/inventory/${productId}/transactions`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'text/html'
+        }
+      })
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');

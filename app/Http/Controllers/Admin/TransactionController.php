@@ -204,63 +204,11 @@ class TransactionController extends Controller
         $query->with(['employee', 'items.product'])->orderBy('OrderDateTime', 'desc');
         $orders = $query->get();
         
-        if ($type == 'csv') {
-            return $this->exportToCSV($orders);
-        } elseif ($type == 'pdf') {
+        if ($type == 'pdf') {
             return $this->exportToPDF($orders);
         }
-        
+
         return redirect()->back()->with('error', 'Invalid export type');
-    }
-    
-    private function exportToCSV($orders)
-    {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="transactions_' . date('Y-m-d') . '.csv"',
-        ];
-        
-        $callback = function() use ($orders) {
-            $file = fopen('php://output', 'w');
-            
-            // Add CSV headers
-            fputcsv($file, [
-                'Transaction ID',
-                'Cashier',
-                'Items Count',
-                'Total Amount',
-                'Payment Method',
-                'Order Status',
-                'Payment Status',
-                'Date',
-                'Time'
-            ]);
-            
-            // Add data rows
-            foreach ($orders as $order) {
-                // Calculate total amount for each order
-                $orderTotal = 0;
-                foreach ($order->items as $item) {
-                    $orderTotal += $item->Quantity * $item->Price;
-                }
-                
-                fputcsv($file, [
-                    $order->OrderID,
-                    $order->employee ? $order->employee->EmployeeFName . ' ' . $order->employee->EmployeeLName : 'N/A',
-                    $order->items->count(),
-                    $orderTotal,
-                    $order->PaymentMethod,
-                    $order->OrderStatus,
-                    $order->PaymentStatus,
-                    $order->OrderDateTime->format('Y-m-d'),
-                    $order->OrderDateTime->format('H:i:s')
-                ]);
-            }
-            
-            fclose($file);
-        };
-        
-        return response()->stream($callback, 200, $headers);
     }
     
     private function exportToPDF($orders)

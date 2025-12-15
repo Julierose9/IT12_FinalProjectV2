@@ -43,6 +43,7 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
+        $oldStatus = $employee->EmployeeStatus;
         
         $validated = $request->validate([
             'EmployeeFName' => 'required|string|max:50',
@@ -55,6 +56,24 @@ class EmployeeController extends Controller
         ]);
 
         $employee->update($validated);
+        
+        // Check if status changed to Inactive
+        if ($oldStatus !== 'Inactive' && $validated['EmployeeStatus'] === 'Inactive') {
+            $employeeName = trim("{$employee->EmployeeFName} " . ($employee->EmployeeMName ? $employee->EmployeeMName . '. ' : '') . "{$employee->EmployeeLName}");
+            
+            $message = "Employee {$employeeName} has been set to Inactive status. ";
+            
+            // Add role-specific consequences
+            if (in_array($employee->Role, ['Cashier', 'Sales Person'])) {
+                $message .= "This employee will lose system access and may be permanently removed after 30 days of inactivity.";
+            } else {
+                $message .= "This employee will lose system access.";
+            }
+            
+            return redirect()->route('admin.employees')
+                ->with('warning', $message)
+                ->with('success', 'Employee updated successfully!');
+        }
         
         return redirect()->route('admin.employees')->with('success', 'Employee updated successfully!');
     }

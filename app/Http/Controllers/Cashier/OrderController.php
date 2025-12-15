@@ -1,229 +1,276 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Reports;
+namespace App\Http\Controllers\Cashier;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\Payment;
+use App\Models\Product;
+use App\Models\InventoryMovement;
 use App\Models\StockIn;
+use App\Models\PullOut;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class InventoryReportController extends Controller
+class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        // Get all products with categories
-        $query = Product::with(['category'])
-            ->where('ProductStatus', 'Active');
-        
-        // Apply search filter
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('ProductID', 'like', '%' . $search . '%')
-                  ->orWhere('ProductName', 'like', '%' . $search . '%')
-                  ->orWhere('SKUNumber', 'like', '%' . $search . '%')
-                  ->orWhereHas('category', function($q2) use ($search) {
-                      $q2->where('CategoryName', 'like', '%' . $search . '%');
-                  });
+        // Get current employee
+        $employee = auth()->user()->employee ?? null;
+        $employeeId = $employee->EmployeeID ?? null;
+        $employeeName = $employee ? ($employee->EmpFName . ' ' . $employee->EmpLName) : 'Cashier';
+
+        // Get products with available stock
+        $products = Product::with(['category', 'pricing'])
+            ->where('ProductStatus', 'Active')
+            ->get()
+            ->map(function ($product) {
+                // Calculate available stock
+                $stockInTotal = StockIn::where('ProductID', $product->ProductID)
+                    ->where('ProdStatus', 'Received')
+                    ->sum('Qty');
+                
+                $pulledOutQty = PullOut::where('ProductID', $product->ProductID)
+                    ->sum('PullOutQty');
+                
+                // Calculate sales from completed orders
+                $salesDeduction = OrderDetail::where('ProductID', $product->ProductID)
+                    ->whereHas('order', function($query) {
+                        $query->where('OrderStatus', 'Completed');
+                    })
+                    ->sum('OrderQty');
+                
+                $product->available_stock = max(0, $stockInTotal - $pulledOutQty - $salesDeduction);
+                return $product;
+            })
+            ->filter(function ($product) {
+                return $product->available_stock > 0;
             });
+
+        // Get orders
+        $orders = Order::with(['details.product', 'employee', 'payment'])
+            ->orderBy('OrderDateTime', 'desc')
+            ->paginate(15);
+
+        // Get payments
+        $payments = Payment::with(['order.employee'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('cashier.sales', compact('products', 'orders', 'payments', 'employeeId', 'employeeName'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'ProductID' => 'required|exists:products,ProductID',
+            'Quantity' => 'required|integer|min:1',
+            'EmployeeID' => 'required|exists:employees,EmployeeID',
+            // PaymentType is accepted but not stored (no payment columns in schema)
+            'PaymentType' => 'nullable|in:Cash,GCash',
+            'PaymentReference' => 'nullable|string|max:255',
+            'AmountPaid' => 'nullable|numeric|min:0',
+            'DiscountType' => 'nullable|in:None,Senior,PWD',
+            'DiscountAmount' => 'nullable|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get product with pricing
+            $product = Product::with('pricing')->findOrFail($request->ProductID);
+            $unitPrice = $product->pricing->RetailPrice ?? 0;
+
+            // Calculate available stock
+            $stockInTotal = StockIn::where('ProductID', $product->ProductID)
+                ->where('ProdStatus', 'Received')
+                ->sum('Qty');
+            
+            $pulledOutQty = PullOut::where('ProductID', $product->ProductID)
+                ->sum('PullOutQty');
+            
+            // Calculate sales from completed orders
+            $salesDeduction = OrderDetail::where('ProductID', $product->ProductID)
+                ->whereHas('order', function($query) {
+                    $query->where('OrderStatus', 'Completed');
+                })
+                ->sum('OrderQty');
+            
+            $availableStock = max(0, $stockInTotal - $pulledOutQty - $salesDeduction);
+
+            // Validate stock availability
+            if ($request->Quantity > $availableStock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient stock. Available: ' . $availableStock
+                ], 400);
+            }
+
+            // Calculate order totals
+            $subTotal = $unitPrice * $request->Quantity;
+            $discountAmount = $request->DiscountAmount ?? 0;
+            $grandTotal = $subTotal - $discountAmount;
+
+            // Generate OrderID
+            $lastOrder = Order::orderBy('OrderID', 'desc')->first();
+            $lastId = $lastOrder ? intval(substr($lastOrder->OrderID, 3)) : 0;
+            $orderId = 'ORD' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
+
+            // Create Order
+            $order = Order::create([
+                'OrderID' => $orderId,
+                'EmployeeID' => $request->EmployeeID,
+                'OrderDateTime' => now(),
+                'OrderStatus' => 'Completed',
+                'SubTotal' => $subTotal,
+                'DiscountType' => $request->DiscountType ?? 'None',
+                'DiscountRate' => $request->DiscountType == 'None' ? 0 : 20,
+                'DiscountAmount' => $discountAmount,
+                'GrandTotal' => $grandTotal,
+            ]);
+
+            // Generate OrderDetailID
+            $lastDetail = OrderDetail::orderBy('OrderDetailsID', 'desc')->first();
+            $lastDetailId = $lastDetail ? intval(substr($lastDetail->OrderDetailsID, 2)) : 0;
+            $detailId = 'OD' . str_pad($lastDetailId + 1, 4, '0', STR_PAD_LEFT);
+
+            // Create OrderDetail
+            $orderDetail = OrderDetail::create([
+                'OrderDetailsID' => $detailId,
+                'OrderID' => $orderId,
+                'ProductID' => $request->ProductID,
+                'OrderQty' => $request->Quantity,
+            ]);
+
+            // Generate PaymentID
+            $lastPayment = Payment::orderBy('PaymentID', 'desc')->first();
+            $lastPayId = $lastPayment ? intval(substr($lastPayment->PaymentID, 3)) : 0;
+            $paymentId = 'PAY' . str_pad($lastPayId + 1, 4, '0', STR_PAD_LEFT);
+
+            // Create Payment record
+            Payment::create([
+                'PaymentID' => $paymentId,
+                'OrderID' => $orderId,
+                'PaymentType' => $request->PaymentType ?? 'Cash',
+                'ReferenceNumber' => $request->PaymentReference,
+            ]);
+
+            // Generate InventoryMovementID
+            $lastMovement = InventoryMovement::orderBy('InventoryID', 'desc')->first();
+            $lastMovId = $lastMovement ? intval(substr($lastMovement->InventoryID, 3)) : 0;
+            $movementId = 'INV' . str_pad($lastMovId + 1, 4, '0', STR_PAD_LEFT);
+
+            // Create InventoryMovement record for stock deduction (sale)
+            InventoryMovement::create([
+                'InventoryID' => $movementId,
+                'ProductID' => $request->ProductID,
+                'QtyChange' => $request->Quantity,
+                'ChangeType' => 'Decrease',
+                'ChangeDateTime' => now(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order created successfully!',
+                'orderId' => $orderId,
+                'grandTotal' => number_format($grandTotal, 2),
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating order: ' . $e->getMessage()
+            ], 500);
         }
+    }
+
+    public function show($id)
+    {
+        $order = Order::with(['details.product.pricing', 'employee', 'payment'])
+            ->findOrFail($id);
         
-        // Get the products first
-        $products = $query->orderBy('ProductName')->get();
-        
-        // Calculate stock for each product
-        $products = $products->map(function($product) {
-            $product->current_stock = $this->calculateProductStock($product->ProductID);
-            return $product;
+        // Build detail payload with computed pricing
+        $details = $order->details->map(function ($detail) {
+            $price = $detail->product->pricing->RetailPrice ?? 0;
+            return [
+                'ProductName' => $detail->product->ProductName ?? 'N/A',
+                'UnitPrice' => $price,
+                'Quantity' => $detail->OrderQty,
+                'Subtotal' => $price * $detail->OrderQty,
+            ];
         });
         
-        // Apply stock status filters
-        if ($request->has('stock_status') && is_array($request->stock_status) && count($request->stock_status) > 0) {
-            $products = $products->filter(function($product) use ($request) {
-                $statusMatch = false;
-                foreach ($request->stock_status as $status) {
-                    if ($status == 'instock' && $product->current_stock > ($product->ReorderLvl ?? 0)) {
-                        $statusMatch = true;
-                    } elseif ($status == 'low' && $product->current_stock > 0 && $product->current_stock <= ($product->ReorderLvl ?? 5)) {
-                        $statusMatch = true;
-                    } elseif ($status == 'out' && $product->current_stock <= 0) {
-                        $statusMatch = true;
-                    }
-                }
-                return $statusMatch;
-            });
-        }
-        
-        // Apply category filters
-        if ($request->has('categories') && is_array($request->categories) && count($request->categories) > 0) {
-            $products = $products->filter(function($product) use ($request) {
-                return in_array($product->CatID, $request->categories);
-            });
-        }
-        
-        // Get categories for filter dropdown
-        $categories = Category::orderBy('CategoryName')->get();
-        
-        // Paginate the results manually
-        $page = $request->get('page', 1);
-        $perPage = 20;
-        $paginatedProducts = new \Illuminate\Pagination\LengthAwarePaginator(
-            $products->forPage($page, $perPage),
-            $products->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-        
-        // Calculate summary statistics
-        $totalProducts = $products->count();
-        $inStockCount = $products->where('current_stock', '>', 0)->count();
-        $lowStockCount = $products->where('current_stock', '>', 0)
-            ->where('current_stock', '<=', function($product) {
-                return $product->ReorderLvl ?? 5;
-            })->count();
-        $outOfStockCount = $products->where('current_stock', '<=', 0)->count();
-        
-        // Get recent inventory movements
-        $recentMovements = InventoryMovement::with(['product'])
-            ->orderBy('ChangeDateTime', 'desc')
-            ->take(30)
-            ->get();
-        
-        return view('admin.inventory', compact(
-            'products', 
-            'paginatedProducts',
-            'categories', 
-            'recentMovements',
-            'totalProducts',
-            'inStockCount',
-            'lowStockCount',
-            'outOfStockCount'
-        ));
+        return response()->json([
+            'success' => true,
+            'order' => [
+                'OrderID' => $order->OrderID,
+                'OrderDateTime' => $order->OrderDateTime,
+                'OrderStatus' => $order->OrderStatus,
+                'SubTotal' => $order->SubTotal,
+                'DiscountAmount' => $order->DiscountAmount,
+                'GrandTotal' => $order->GrandTotal,
+                'PaymentType' => $order->payment->PaymentType ?? null,
+                'Employee' => [
+                    'EmployeeName' => $order->employee->EmployeeName ?? null,
+                    'EmployeeID' => $order->employee->EmployeeID ?? null,
+                ],
+            ],
+            'details' => $details,
+        ]);
     }
-    
-    // Calculate product stock
-    private function calculateProductStock($productId)
+
+    public function archive($id)
     {
-        // Calculate from StockIn table
-        $stockInTotal = StockIn::where('ProductID', $productId)
-            ->where('ProdStatus', 'Good')
+        try {
+            $order = Order::findOrFail($id);
+            $order->OrderStatus = 'Archived';
+            $order->save();
+
+            return redirect()->route('cashier.sales')
+                ->with('success', 'Order archived successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error archiving order: ' . $e->getMessage());
+        }
+    }
+
+    public function getProductDetails($id)
+    {
+        $product = Product::with(['pricing', 'category'])->findOrFail($id);
+        
+        // Calculate available stock
+        $stockInTotal = StockIn::where('ProductID', $product->ProductID)
+            ->where('ProdStatus', 'Received')
             ->sum('Qty');
         
-        // Calculate from InventoryMovements (sales)
-        $salesDeduction = InventoryMovement::where('ProductID', $productId)
-            ->where('ChangeType', 'Decrease')
-            ->sum('QtyChange');
-        
-        return max(0, $stockInTotal - $salesDeduction);
-    }
-    
-    public function productTransactions($id)
-    {
-        $product = Product::findOrFail($id);
-        
-        // Get inventory movements for this product
-        $movements = InventoryMovement::where('ProductID', $id)
-            ->orderBy('ChangeDateTime', 'desc')
-            ->take(50)
-            ->get();
-        
-        // Get sales data from orders
-        $sales = OrderDetail::with(['order.employee'])
-            ->where('ProductID', $id)
-            ->orderBy('created_at', 'desc')
-            ->take(20)
-            ->get();
-        
-        // Calculate current stock
-        $currentStock = $this->calculateProductStock($id);
-        
-        if (request()->ajax()) {
-            return view('admin.inventory.partials.transactions', compact(
-                'product', 
-                'movements', 
-                'sales',
-                'currentStock'
-            ));
-        }
-        
-        return view('admin.inventory.transactions', compact(
-            'product', 
-            'movements', 
-            'sales',
-            'currentStock'
-        ));
-    }
-    
-    public function export(Request $request)
-    {
-        // Get all products
-        $products = Product::with(['category'])
-            ->where('ProductStatus', 'Active')
-            ->orderBy('ProductName')
-            ->get()
-            ->map(function($product) {
-                $product->current_stock = $this->calculateProductStock($product->ProductID);
-                return $product;
-            });
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="inventory_report_' . date('Y-m-d') . '.csv"',
-        ];
-        
-        $callback = function() use ($products) {
-            $file = fopen('php://output', 'w');
+            $pulledOutQty = PullOut::where('ProductID', $product->ProductID)
+                ->sum('PullOutQty');
             
-            // Add CSV headers
-            fputcsv($file, [
-                'Product ID',
-                'SKU',
-                'Product Name',
-                'Category',
-                'Current Stock',
-                'Reorder Level',
-                'Stock Status',
-                'Cost Price',
-                'Selling Price',
-                'Total Value (Cost)',
-                'Last Updated'
-            ]);
+            // Calculate sales from completed orders
+            $salesDeduction = OrderDetail::where('ProductID', $product->ProductID)
+                ->whereHas('order', function($query) {
+                    $query->where('OrderStatus', 'Completed');
+                })
+                ->sum('OrderQty');
             
-            // Add data rows
-            foreach ($products as $product) {
-                $status = 'In Stock';
-                if ($product->current_stock <= 0) {
-                    $status = 'Out of Stock';
-                } elseif ($product->current_stock <= ($product->ReorderLvl ?? 5)) {
-                    $status = 'Low Stock';
-                }
-                
-                $totalValue = $product->current_stock * ($product->CostPrice ?? 0);
-                
-                fputcsv($file, [
-                    $product->ProductID,
-                    $product->SKUNumber,
-                    $product->ProductName,
-                    $product->category?->CategoryName ?? 'Uncategorized',
-                    $product->current_stock,
-                    $product->ReorderLvl ?? 5,
-                    $status,
-                    number_format($product->CostPrice ?? 0, 2),
-                    number_format($product->SellingPrice ?? 0, 2),
-                    number_format($totalValue, 2),
-                    $product->updated_at->format('Y-m-d H:i:s')
-                ]);
-            }
-            
-            fclose($file);
-        };
-        
-        return response()->stream($callback, 200, $headers);
+            $availableStock = max(0, $stockInTotal - $pulledOutQty - $salesDeduction);
+
+        return response()->json([
+            'success' => true,
+            'product' => [
+                'ProductID' => $product->ProductID,
+                'ProductName' => $product->ProductName,
+                'SKUNumber' => $product->SKUNumber,
+                'Price' => $product->pricing->RetailPrice ?? 0,
+                'AvailableStock' => $availableStock,
+            ],
+        ]);
     }
 }

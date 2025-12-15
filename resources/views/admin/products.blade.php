@@ -1134,12 +1134,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3">
-            <label class="form-label">Category ID</label>
-            <div class="id-info">
-              <div class="text-muted">Auto-generated </div>
-            </div>
-          </div>
+          
           
           <div class="mb-3">
             <label class="form-label required">Category Name</label>
@@ -1170,12 +1165,10 @@
         @csrf
         @method('PUT')
         <div class="modal-body">
-          <div class="mb-3">
-            <label for="edit_CategoryID" class="form-label">Category ID</label>
-            <div class="id-info">
-              <div class="text-muted">Category ID cannot be changed</div>
-            </div>
-          </div>
+        <div class="mb-3">
+    <label for="edit_CategoryID" class="form-label">Category ID</label>
+    <input type="text" class="form-control readonly-field" value="{{ $category->CategoryID }}" readonly>
+</div>
           <div class="mb-3">
             <label for="edit_CategoryName" class="form-label required">Category Name</label>
             <input type="text" class="form-control" id="edit_CategoryName" name="CategoryName" required>

@@ -28,31 +28,28 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    // THIS IS THE MISSING LINE THAT BREAKS EVERYTHING
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'Role' => 'string',
     ];
 
     public function employee()
-{
-    return $this->belongsTo(Employee::class, 'EmployeeID', 'EmployeeID');
-}
+    {
+        return $this->belongsTo(Employee::class, 'EmployeeID', 'EmployeeID');
+    }
 
-    // CRITICAL: Tell Laravel to use 'email' as login field
     public function getAuthPassword()
     {
         return $this->password;
     }
 
-    // Optional: if you ever use remember token
-    public function getRememberToken()
+    // For Laravel's default authentication
+    public function getAuthIdentifierName()
     {
-        return $this->remember_token;
+        return 'UserID';
     }
 
-    public function setRememberToken($value)
+    public function getAuthIdentifier()
     {
-        $this->remember_token = $value;
+        return $this->UserID;
     }
 }

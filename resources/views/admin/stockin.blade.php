@@ -1420,8 +1420,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ========== VIEW STOCK DETAILS ==========
-    document.querySelectorAll(.view-stock).forEach(button => {
-        button.addEventListener(click, function() {
+    document.querySelectorAll('.view-stock').forEach(button => {
+        button.addEventListener('click', function() {
             const stockId = this.dataset.stockId;
             loadStockDetails(stockId);
         });
@@ -1429,27 +1429,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to load stock details
     function loadStockDetails(stockId) {
-        const viewContent = document.getElementById(viewStockContent);
+        const viewContent = document.getElementById('viewStockContent');
         
         // Show loading state
-        viewContent.innerHTML = 
+        viewContent.innerHTML = `
             <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <p class="mt-3 text-muted">Loading stock details...</p>
             </div>
-        ;
+        `;
         
         // Show modal
-        const viewModal = new bootstrap.Modal(document.getElementById(viewStockModal));
+        const viewModal = new bootstrap.Modal(document.getElementById('viewStockModal'));
         viewModal.show();
         
         // Load stock details via AJAX
-        fetch(/admin/stockin/${stockId})
+        fetch(`/admin/stockin/${stockId}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(HTTP ${response.status});
+                    throw new Error(`HTTP ${response.status}`);
                 }
                 return response.json();
             })
@@ -1459,22 +1464,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     const html = formatStockDetails(data);
                     viewContent.innerHTML = html;
                 } else {
-                    viewContent.innerHTML = 
+                    viewContent.innerHTML = `
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-circle me-2"></i>
                             ${data.error || 'Error loading stock details'}
                         </div>
-                    ;
+                    `;
                 }
             })
             .catch(error => {
                 console.error('Error loading stock details:', error);
-                viewContent.innerHTML = 
+                viewContent.innerHTML = `
                     <div class="alert alert-danger">
                         <i class="fas fa-exclamation-circle me-2"></i>
                         Error loading stock details. Please try again.
                     </div>
-                ;
+                `;
             });
     }
 
@@ -1508,19 +1513,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // Status badge
         let statusBadge = '';
         if (stock.ProdStatus === 'Received') {
-            statusBadge = '<span class="badge bg-success">Good Condition</span>';
+            statusBadge = '<span class="badge bg-success">Received</span>';
         } else if (stock.ProdStatus === 'Defective') {
-            statusBadge = '<span class="badge bg-danger">Damaged/Defective</span>';
+            statusBadge = '<span class="badge bg-danger">Defective</span>';
         } else if (stock.ProdStatus === 'Expired') {
             statusBadge = '<span class="badge bg-warning text-dark">Expired</span>';
         } else {
-            statusBadge = <span class="badge bg-secondary">${stock.ProdStatus}</span>;
+            statusBadge = `<span class="badge bg-secondary">${stock.ProdStatus}</span>`;
         }
         
         // Check if low stock
-        const isLowStock = product && product.StockQty <= product.ReorderLevel;
+        const isLowStock = product && product.StockQty && product.ReorderLevel && product.StockQty <= product.ReorderLevel;
         
-        return 
+        return `
             <div class="container-fluid">
                 <div class="row mb-4">
                     <div class="col-12">
@@ -1540,13 +1545,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 
-                ${isLowStock ? 
+                ${isLowStock ? `
                 <div class="alert alert-warning mb-4">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     <strong>Low Stock Warning!</strong> 
                     Current stock (${product.StockQty}) is at or below reorder level (${product.ReorderLevel})
-                </div> 
-                : ''}
+                </div>
+                ` : ''}
                 
                 <div class="row mb-4">
                     <div class="col-md-6">
@@ -1555,15 +1560,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <h6 class="card-title text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Basic Information</h6>
                                 <p class="mb-2"><strong>Status:</strong> ${statusBadge}</p>
                                 <p class="mb-2"><strong>Date Received:</strong> ${formatDateTime(stock.DateRcvd)}</p>
-                                ${stock.ExpirationDate ? 
-                                <p class="mb-2"><strong>Expiration Date:</strong> ${formatDate(stock.ExpirationDate)}</p> 
-                                : ''}
-                                ${product?.Size ? 
-                                <p class="mb-2"><strong>Size:</strong> ${product.Size}</p> 
-                                : ''}
-                                ${product?.Type ? 
-                                <p class="mb-2"><strong>Type:</strong> ${product.Type}</p> 
-                                : ''}
+                                ${stock.ExpirationDate ? `
+                                <p class="mb-2"><strong>Expiration Date:</strong> ${formatDate(stock.ExpirationDate)}</p>
+                                ` : ''}
+                                ${product?.Size ? `
+                                <p class="mb-2"><strong>Size:</strong> ${product.Size}</p>
+                                ` : ''}
+                                ${product?.Type ? `
+                                <p class="mb-2"><strong>Type:</strong> ${product.Type}</p>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -1577,12 +1582,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <span class="badge bg-light text-dark">${getValue(category?.CategoryName)}</span>
                                 </p>
                                 <p class="mb-2"><strong>Supplier:</strong> ${getValue(supplier?.SupplierName)}</p>
-                                ${supplier?.ContactNumber ? 
-                                <p class="mb-2"><strong>Supplier Contact:</strong> ${supplier.ContactNumber}</p> 
-                                : ''}
-                                ${supplier?.Address ? 
-                                <p class="mb-2"><strong>Supplier Address:</strong> ${supplier.Address}</p> 
-                                : ''}
+                                ${supplier?.ContactNumber ? `
+                                <p class="mb-2"><strong>Supplier Contact:</strong> ${supplier.ContactNumber}</p>
+                                ` : ''}
+                                ${supplier?.Address ? `
+                                <p class="mb-2"><strong>Supplier Address:</strong> ${supplier.Address}</p>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -1620,7 +1625,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="row text-center">
                                     <div class="col-md-3 py-3">
                                         <small class="text-muted d-block">Before This Entry</small>
-                                        <strong class="fs-5">${product ? (product.StockQty - stock.Qty) : 'N/A'}</strong>
+                                        <strong class="fs-5">${product && product.StockQty ? (product.StockQty - stock.Qty) : 'N/A'}</strong>
                                     </div>
                                     <div class="col-md-3 py-3">
                                         <small class="text-muted d-block">This Entry</small>
@@ -1640,7 +1645,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
-        ;
+        `;
     }
 
     // ========== DELETE STOCK FUNCTIONALITY ==========

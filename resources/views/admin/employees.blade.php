@@ -1210,11 +1210,15 @@
             </div>
             <div class="col-12 col-md-6">
               <label class="form-label">Status <span class="text-danger">*</span></label>
-              <select name="EmployeeStatus" class="form-select" required>
+              <select name="EmployeeStatus" id="createEmployeeStatus" class="form-select" required>
                 <option value="Active" {{ old('EmployeeStatus') == 'Active' ? 'selected' : '' }}>Active</option>
                 <option value="Inactive" {{ old('EmployeeStatus') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 <option value="On Leave" {{ old('EmployeeStatus') == 'On Leave' ? 'selected' : '' }}>On Leave</option>
               </select>
+              <div id="createInactiveWarning" class="alert alert-warning mt-2" style="display: none;">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> Setting an employee to Inactive will revoke their system access immediately and prevent them from logging in.
+              </div>
             </div>
           </div>
         </div>
@@ -1342,11 +1346,22 @@
             </div>
             <div class="col-12 col-md-6">
               <label class="form-label">Status <span class="text-danger">*</span></label>
-              <select name="EmployeeStatus" class="form-select" required>
+              <select name="EmployeeStatus" id="editEmployeeStatus" class="form-select" required>
                 <option value="Active" {{ old('EmployeeStatus', $employee->EmployeeStatus) == 'Active' ? 'selected' : '' }}>Active</option>
                 <option value="Inactive" {{ old('EmployeeStatus', $employee->EmployeeStatus) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                 <option value="On Leave" {{ old('EmployeeStatus', $employee->EmployeeStatus) == 'On Leave' ? 'selected' : '' }}>On Leave</option>
               </select>
+              <div id="inactiveWarning" class="alert alert-warning mt-2" style="display: none;">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> Setting this employee to Inactive will:
+                <ul class="mb-0 mt-2">
+                  <li>Revoke their system access immediately</li>
+                  @if(in_array($employee->Role, ['Cashier', 'Sales Person']))
+                  <li>Mark them for permanent removal after 30 days of inactivity</li>
+                  @endif
+                  <li>Prevent them from logging into the system</li>
+                </ul>
+              </div>
               @if(in_array($employee->Role, ['Cashier', 'Sales Person']))
                 <small class="text-muted">Inactive employees will be marked for removal after 30 days</small>
               @endif
@@ -1678,6 +1693,39 @@
       if (removeButton) {
         row.classList.add('table-warning');
       }
+    }
+    
+    // Show warning when Inactive status is selected in edit modal
+    const editEmployeeStatus = document.getElementById('editEmployeeStatus');
+    const inactiveWarning = document.getElementById('inactiveWarning');
+    
+    if (editEmployeeStatus && inactiveWarning) {
+      editEmployeeStatus.addEventListener('change', function() {
+        if (this.value === 'Inactive') {
+          inactiveWarning.style.display = 'block';
+        } else {
+          inactiveWarning.style.display = 'none';
+        }
+      });
+      
+      // Show warning on page load if already set to Inactive
+      if (editEmployeeStatus.value === 'Inactive') {
+        inactiveWarning.style.display = 'block';
+      }
+    }
+    
+    // Show warning when Inactive status is selected in create modal
+    const createEmployeeStatus = document.getElementById('createEmployeeStatus');
+    const createInactiveWarning = document.getElementById('createInactiveWarning');
+    
+    if (createEmployeeStatus && createInactiveWarning) {
+      createEmployeeStatus.addEventListener('change', function() {
+        if (this.value === 'Inactive') {
+          createInactiveWarning.style.display = 'block';
+        } else {
+          createInactiveWarning.style.display = 'none';
+        }
+      });
     }
   });
 </script>
