@@ -991,10 +991,10 @@
                                         <td><strong>{{ $order->OrderID }}</strong></td>
                                         <td>
                                             <div style="font-weight:600">
-                                                {{ $order->employee->EmpFName ?? $order->employee->EmployeeName ?? 'N/A' }} 
-                                                {{ $order->employee->EmpLName ?? '' }}
+                                                {{ $order->employee->EmployeeFName ?? 'N/A' }} 
+                                                {{ $order->employee->EmployeeLName ?? '' }}
                                             </div>
-                                            <small class="text-muted">{{ $order->employee->EmployeeID ?? '' }}</small>
+                                            <small class="text-muted">{{ $order->employee->EmployeeID ?? $order->EmployeeID ?? '' }}</small>
                                         </td>
                                         <td>{{ \Carbon\Carbon::parse($order->OrderDateTime)->format('M d, Y h:i A') }}</td>
                                         <td>
@@ -1026,9 +1026,7 @@
                                         <td>
                                             <div class="btn-group btn-group-sm">
                                                 <button class="btn btn-outline-primary view-order" 
-                                                        data-order-id="{{ $order->OrderID }}"
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#viewOrderModal">
+                                                        data-order-id="{{ $order->OrderID }}">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                                 <button class="btn btn-outline-warning archive-order" 
@@ -1108,10 +1106,10 @@
                                         </td>
                                         <td>
                                             <div style="font-weight:600">
-                                                {{ $payment->order->employee->EmpFName ?? $payment->order->employee->EmployeeName ?? 'N/A' }}
-                                                {{ $payment->order->employee->EmpLName ?? '' }}
+                                                {{ $payment->order ? ($payment->order->employee ? $payment->order->employee->EmployeeFName : 'N/A') : 'N/A' }}
+                                                {{ $payment->order ? ($payment->order->employee ? $payment->order->employee->EmployeeLName : '') : '' }}
                                             </div>
-                                            <small class="text-muted">{{ $payment->order->employee->EmployeeID ?? '' }}</small>
+                                            <small class="text-muted">{{ $payment->order ? ($payment->order->employee ? $payment->order->employee->EmployeeID : ($payment->order->EmployeeID ?? '')) : '' }}</small>
                                         </td>
                                         <td><strong class="text-success">₱{{ number_format($payment->Amount ?? 0, 2) }}</strong></td>
                                         <td>
@@ -1138,9 +1136,7 @@
                                         <td>
                                             <div class="btn-group btn-group-sm">
                                                 <button class="btn btn-outline-primary view-payment" 
-                                                        data-payment-id="{{ $payment->PaymentID }}"
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#viewPaymentModal">
+                                                        data-payment-id="{{ $payment->PaymentID }}">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                                 <button class="btn btn-outline-success print-receipt" 
@@ -1472,7 +1468,7 @@
                     </div>
                     <div class="col-md-6">
                         <h6>Payment Details</h6>
-                        <p class="mb-1"><strong>Payment Method:</strong> <span id="viewPaymentMethod"></span></p>
+                        <p class="mb-1"><strong>Payment Method:</strong> <span id="paymentMethodType"></span></p>
                         <p class="mb-1"><strong>Reference No:</strong> <span id="viewPaymentReference"></span></p>
                         <p class="mb-0"><strong>Amount:</strong> <span id="viewPaymentAmount" class="text-success"></span></p>
                     </div>
@@ -1698,8 +1694,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentFilters.status.length !== 3) {
                 currentFilters.status.forEach(status => {
                     const statusTag = createFilterTag(
-                        `Status: ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-                        `status-${status}`
+                        'Status: ' + status.charAt(0).toUpperCase() + status.slice(1),
+                        'status-' + status
                     );
                     activeFilters.appendChild(statusTag);
                 });
@@ -1708,8 +1704,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentFilters.payment.length !== 2) {
                 currentFilters.payment.forEach(payment => {
                     const paymentTag = createFilterTag(
-                        `Payment: ${payment.charAt(0).toUpperCase() + payment.slice(1)}`,
-                        `payment-${payment}`
+                        'Payment: ' + payment.charAt(0).toUpperCase() + payment.slice(1),
+                        'payment-' + payment
                     );
                     activeFilters.appendChild(paymentTag);
                 });
@@ -1718,18 +1714,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentFilters.dateFrom || currentFilters.dateTo) {
                 let dateText = 'Date: ';
                 if (currentFilters.dateFrom && currentFilters.dateTo) {
-                    dateText += `${formatDate(currentFilters.dateFrom)} to ${formatDate(currentFilters.dateTo)}`;
+                    dateText += formatDate(currentFilters.dateFrom) + ' to ' + formatDate(currentFilters.dateTo);
                 } else if (currentFilters.dateFrom) {
-                    dateText += `From ${formatDate(currentFilters.dateFrom)}`;
+                    dateText += 'From ' + formatDate(currentFilters.dateFrom);
                 } else if (currentFilters.dateTo) {
-                    dateText += `To ${formatDate(currentFilters.dateTo)}`;
+                    dateText += 'To ' + formatDate(currentFilters.dateTo);
                 }
                 const dateTag = createFilterTag(dateText, 'date-range');
                 activeFilters.appendChild(dateTag);
             }
             
             if (currentFilters.search !== '') {
-                const searchTag = createFilterTag(`Search: "${currentFilters.search}"`, 'search');
+                const searchTag = createFilterTag('Search: "' + currentFilters.search + '"', 'search');
                 activeFilters.appendChild(searchTag);
             }
         }
@@ -1845,7 +1841,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const countElement = document.querySelector('.text-muted');
             if (countElement && visibleCount > 0) {
                 const totalRows = rows.length;
-                countElement.textContent = `Showing ${visibleCount} of ${totalRows} orders`;
+                countElement.textContent = 'Showing ' + visibleCount + ' of ' + totalRows + ' orders';
             }
         }
     }
@@ -1891,7 +1887,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (parseInt(quantityInput.value) > stock) {
                 quantityInput.value = stock;
-                    showAlert(`Only ${stock} units available. Quantity adjusted.`, 'warning');
+                    showAlert('Only ' + stock + ' units available. Quantity adjusted.', 'warning');
             }
             
             calculateTotals();
@@ -2026,8 +2022,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('archiveOrderForm');
             
             if (document.getElementById('archiveOrderId')) {
-                document.getElementById('archiveOrderId').textContent = `Order ${orderCode}`;
-                form.action = `/cashier/sales/${orderId}/archive`;
+                document.getElementById('archiveOrderId').textContent = 'Order ' + orderCode;
+                form.action = '/cashier/sales/' + orderId + '/archive';
             }
         });
     });
@@ -2037,7 +2033,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const orderId = this.dataset.orderId;
             
-            fetch(`/cashier/sales/${orderId}`)
+            fetch('/cashier/sales/' + orderId)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -2056,25 +2052,28 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('viewOrderStatus').textContent = order.OrderStatus;
                         document.getElementById('viewPaymentMethod').textContent = order.PaymentType || 'N/A';
                         document.getElementById('viewEmployee').textContent = 
-                            `${order.Employee?.EmployeeName || 'N/A'} (${order.Employee?.EmployeeID || 'N/A'})`;
+                            (order.Employee?.EmployeeName || 'N/A') + ' (' + (order.Employee?.EmployeeID || 'N/A') + ')';
                         
                         const itemsContainer = document.getElementById('viewOrderItems');
                         itemsContainer.innerHTML = '';
                         
                         data.details.forEach(detail => {
                             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${detail.ProductName || 'N/A'}</td>
-                <td>₱${parseFloat(detail.UnitPrice || 0).toFixed(2)}</td>
-                <td>${detail.Quantity || 0}</td>
-                <td>₱${parseFloat(detail.Subtotal || 0).toFixed(2)}</td>
-            `;
+                            row.innerHTML = 
+                                '<td>' + (detail.ProductName || 'N/A') + '</td>' +
+                                '<td>₱' + parseFloat(detail.UnitPrice || 0).toFixed(2) + '</td>' +
+                                '<td>' + (detail.Quantity || 0) + '</td>' +
+                                '<td>₱' + parseFloat(detail.Subtotal || 0).toFixed(2) + '</td>';
                             itemsContainer.appendChild(row);
                         });
                         
-        document.getElementById('viewSubtotal').textContent = `₱${parseFloat(order.SubTotal).toFixed(2)}`;
-        document.getElementById('viewDiscount').textContent = `-₱${parseFloat(order.DiscountAmount).toFixed(2)}`;
-        document.getElementById('viewGrandTotal').textContent = `₱${parseFloat(order.GrandTotal).toFixed(2)}`;
+                        document.getElementById('viewSubtotal').textContent = '₱' + parseFloat(order.SubTotal).toFixed(2);
+                        document.getElementById('viewDiscount').textContent = '-₱' + parseFloat(order.DiscountAmount).toFixed(2);
+                        document.getElementById('viewGrandTotal').textContent = '₱' + parseFloat(order.GrandTotal).toFixed(2);
+                        
+                        // Show the modal after data is loaded
+                        const modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+                        modal.show();
                     }
                 })
                 .catch(error => {
@@ -2104,10 +2103,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Force AmountPaid into the payload to satisfy validation
         formData.set('AmountPaid', document.getElementById('amountPaid')?.value || '0');
 
-        // Debug: log outgoing payload keys/values to help diagnose 422s
         console.log('Submitting order payload:');
         for (const [key, value] of formData.entries()) {
-            console.log(`${key}:`, value);
+            console.log(key + ':', value);
         }
             
             fetch(this.action, {
@@ -2142,7 +2140,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 if (data.success) {
-                    showAlert(`Order created successfully!\nOrder ID: ${data.orderId}\nTotal: ₱${data.grandTotal}`, 'success');
+                    showAlert('Order created successfully!\nOrder ID: ' + data.orderId + '\nTotal: ₱' + data.grandTotal, 'success');
                     const modal = bootstrap.Modal.getInstance(document.getElementById('createOrderModal'));
                     modal.hide();
                     setTimeout(() => {
@@ -2155,7 +2153,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
                 const msg = error?.message?.slice(0, 500) || 'An error occurred. Please try again.';
-                showAlert(`An error occurred. Please try again.\n${msg}`, 'error');
+                showAlert('An error occurred. Please try again.\n' + msg, 'error');
             })
             .finally(() => {
                 submitBtn.disabled = false;
@@ -2170,16 +2168,26 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const paymentId = this.dataset.paymentId;
             
-            fetch(`/cashier/payments/${paymentId}`)
+            fetch('/cashier/payments/' + paymentId)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        const payment = data.payment;
-                        const order = payment.order;
-                        
-                        document.getElementById('viewPaymentId').textContent = payment.PaymentID;
-                        document.getElementById('viewPaymentNo').textContent = payment.PaymentID;
-                        document.getElementById('viewPaymentOrderId').textContent = payment.OrderID;
+                    console.log('Payment fetch response:', data);
+                    // Be tolerant of different payload shapes
+                    const payload = data.payment || data;
+                    if (!payload) {
+                        showAlert('Payment details not found.', 'warning');
+                        return;
+                    }
+
+                    const payment = payload;
+                    const order = payment.order || {};
+
+                    // Top-level payment info
+                    document.getElementById('viewPaymentId').textContent      = payment.PaymentID || '';
+                    document.getElementById('viewPaymentNo').textContent      = payment.PaymentID || '';
+                    document.getElementById('viewPaymentOrderId').textContent = payment.OrderID || '';
+
+                    if (payment.PaymentDate) {
                         document.getElementById('viewPaymentDate').textContent = 
                             new Date(payment.PaymentDate).toLocaleString('en-US', {
                                 year: 'numeric',
@@ -2188,31 +2196,56 @@ document.addEventListener('DOMContentLoaded', function() {
                                 hour: '2-digit',
                                 minute: '2-digit'
                             });
-                        document.getElementById('viewPaymentStatus').textContent = payment.PaymentStatus;
-                        document.getElementById('viewPaymentMethod').textContent = payment.PaymentType;
-                        document.getElementById('viewPaymentReference').textContent = payment.ReferenceNumber || 'N/A';
-                        document.getElementById('viewPaymentAmount').textContent = `₱${parseFloat(payment.Amount).toFixed(2)}`;
-                        
-                        const itemsContainer = document.getElementById('viewPaymentItems');
-                        itemsContainer.innerHTML = '';
-                        
-                        if (order && order.details) {
-                            order.details.forEach(detail => {
-                                const row = document.createElement('tr');
-                                row.innerHTML = `
-                                    <td>${detail.product?.ProductName || 'N/A'}</td>
-                                    <td>₱${parseFloat(detail.UnitPrice || 0).toFixed(2)}</td>
-                                    <td>${detail.Quantity || detail.OrderQty || 0}</td>
-                                    <td>₱${parseFloat(detail.Subtotal || 0).toFixed(2)}</td>
-                                `;
-                                itemsContainer.appendChild(row);
-                            });
-                            
-                            document.getElementById('viewPaymentSubtotal').textContent = `₱${parseFloat(order.SubTotal || 0).toFixed(2)}`;
-                            document.getElementById('viewPaymentDiscount').textContent = `-₱${parseFloat(order.DiscountAmount || 0).toFixed(2)}`;
-                            document.getElementById('viewPaymentGrandTotal').textContent = `₱${parseFloat(order.GrandTotal || 0).toFixed(2)}`;
-                        }
+                    } else {
+                        document.getElementById('viewPaymentDate').textContent = '';
                     }
+
+                    document.getElementById('viewPaymentStatus').textContent = payment.PaymentStatus || 'N/A';
+                    console.log('Payment data:', payment);
+                    console.log('PaymentType:', payment.PaymentType);
+                    document.getElementById('paymentMethodType').textContent   = payment.PaymentType || 'N/A';
+                    
+                    let reference = payment.ReferenceNumber;
+                    if (!reference && payment.PaymentType === 'GCash') {
+                        reference = 'GCASH-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                    }
+                    document.getElementById('viewPaymentReference').textContent = reference || 'N/A';
+
+                    const amount = parseFloat(payment.Amount ?? order.GrandTotal ?? 0);
+                    document.getElementById('viewPaymentAmount').textContent   = '₱' + amount.toFixed(2);
+                    
+                    // Order items
+                    const itemsContainer = document.getElementById('viewPaymentItems');
+                    itemsContainer.innerHTML = '';
+                    
+                    if (order.details && Array.isArray(order.details)) {
+                        order.details.forEach(detail => {
+                            const productName = detail.product?.ProductName || detail.ProductName || 'N/A';
+                            const price       = parseFloat(detail.UnitPrice ?? 0);
+                            const qty         = detail.Quantity ?? detail.OrderQty ?? 0;
+                            const subtotal    = parseFloat(detail.Subtotal ?? (price * qty));
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = 
+                                '<td>' + productName + '</td>' +
+                                '<td>₱' + price.toFixed(2) + '</td>' +
+                                '<td>' + qty + '</td>' +
+                                '<td>₱' + subtotal.toFixed(2) + '</td>';
+                            itemsContainer.appendChild(row);
+                        });
+                    }
+                    
+                    const sub  = parseFloat(order.SubTotal ?? 0);
+                    const disc = parseFloat(order.DiscountAmount ?? 0);
+                    const gt   = parseFloat(order.GrandTotal ?? (sub - disc));
+
+                    document.getElementById('viewPaymentSubtotal').textContent = '₱' + sub.toFixed(2);
+                    document.getElementById('viewPaymentDiscount').textContent = '-₱' + disc.toFixed(2);
+                    document.getElementById('viewPaymentGrandTotal').textContent= '₱' + gt.toFixed(2);
+                    
+                    // Show the modal after data is loaded
+                    const modal = new bootstrap.Modal(document.getElementById('viewPaymentModal'));
+                    modal.show();
                 })
                 .catch(error => {
                     console.error('Error fetching payment details:', error);
@@ -2226,7 +2259,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const orderId = this.dataset.orderId;
             
-            const viewOrderBtn = document.querySelector(`.view-order[data-order-id="${orderId}"]`);
+            const viewOrderBtn = document.querySelector('.view-order[data-order-id="' + orderId + '"]');
             if (viewOrderBtn) {
                 viewOrderBtn.click();
                 document.getElementById('orders-tab').click();
@@ -2239,13 +2272,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.print-receipt').forEach(button => {
         button.addEventListener('click', function() {
             const paymentId = this.dataset.paymentId;
-            showAlert(`Printing receipt for payment ${paymentId}`, 'info');
+            showAlert('Printing receipt for payment ' + paymentId, 'info');
         });
     });
     
     document.querySelector('.print-payment-receipt')?.addEventListener('click', function() {
         const paymentId = document.getElementById('viewPaymentNo').textContent;
-        showAlert(`Printing receipt for payment ${paymentId}`, 'info');
+        showAlert('Printing receipt for payment ' + paymentId, 'info');
     });
     
     // ========== HELPER FUNCTIONS ==========
@@ -2254,17 +2287,16 @@ document.addEventListener('DOMContentLoaded', function() {
         existingAlerts.forEach(alert => alert.remove());
         
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
         
         let icon = 'fa-info-circle';
         if (type === 'success') icon = 'fa-check-circle';
         if (type === 'error') icon = 'fa-exclamation-circle';
         if (type === 'warning') icon = 'fa-exclamation-triangle';
         
-        alertDiv.innerHTML = `
-            <i class="fas ${icon} me-2"></i>${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        alertDiv.innerHTML = 
+            '<i class="fas ' + icon + ' me-2"></i>' + message +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
         
         const topbar = document.querySelector('.topbar');
         if (topbar) {

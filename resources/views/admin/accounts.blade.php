@@ -1219,7 +1219,8 @@
                                         $middle = $emp->EmployeeMName ? ' ' . $emp->EmployeeMName . ' ' : ' ';
                                         $fullName = $emp->EmployeeFName . $middle . $emp->EmployeeLName;
                                         $empCode = str_pad($emp->EmployeeID, 3, '0', STR_PAD_LEFT);
-                                        $role = $emp->role ?? ''; // Make sure this variable exists
+                                        // Use correct property name from query (capital R), with fallback
+                                        $role = $emp->Role ?? $emp->role ?? '';
                                     @endphp
                                     <option value="{{ $emp->EmployeeID }}"
                                         data-role="{{ $role }}"

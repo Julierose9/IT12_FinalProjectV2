@@ -239,7 +239,7 @@
                             <div class="form-group">
                                 <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" 
                                        name="email" value="{{ old('email') }}" required autofocus
-                                       placeholder="email">
+                                       placeholder="Email">
                                 @error('email')
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror

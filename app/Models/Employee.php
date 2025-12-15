@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class Employee extends Model
 {
@@ -49,9 +50,14 @@ class Employee extends Model
     protected static function booted()
     {
         static::creating(function ($employee) {
-            $latest = static::max('id');
-            $nextId = $latest ? $latest + 1 : 1;
-            $employee->EmployeeID = 'EMP' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+            // Get the numeric part of the highest existing EmployeeID (e.g. EMP001 -> 1)
+            $latestNumber = static::select(DB::raw('MAX(CAST(SUBSTRING(EmployeeID, 4) AS UNSIGNED)) as max_num'))
+                ->value('max_num');
+
+            $nextNumber = $latestNumber ? $latestNumber + 1 : 1;
+
+            // Build the next EmployeeID: EMP001, EMP002, ...
+            $employee->EmployeeID = 'EMP' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
         });
 
         // Auto-set removed_at when status changes to Inactive for Cashiers and Sales Persons
@@ -91,7 +97,7 @@ class Employee extends Model
     // Get employee code
     public function getEmployeeCodeAttribute()
     {
-        return 'EMP' . str_pad($this->EmployeeID, 3, '0', STR_PAD_LEFT);
+        return $this->EmployeeID;
     }
 
     // Get role badge class

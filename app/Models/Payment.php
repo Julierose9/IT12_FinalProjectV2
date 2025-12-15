@@ -18,6 +18,13 @@ class Payment extends Model
         'ReferenceNumber',
     ];
 
+    // Ensure computed attributes are included when model is serialized to JSON
+    protected $appends = [
+        'Amount',
+        'PaymentDate',
+        'PaymentStatus',
+    ];
+
     public function order()
     {
         return $this->belongsTo(Order::class, 'OrderID', 'OrderID');

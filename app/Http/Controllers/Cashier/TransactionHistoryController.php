@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Cashier;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use Carbon\Carbon;
@@ -10,7 +11,9 @@ class TransactionHistoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::query();
+        // Base query with relationships so the blade can show cashier, items, and payment
+        $query = Order::with(['employee', 'payment', 'items'])
+            ->withCount('items as items_count');
         
         // Apply search filter
         if ($request->has('search') && $request->search != '') {
@@ -59,9 +62,9 @@ class TransactionHistoryController extends Controller
         // Order by latest first
         $query->orderBy('OrderDateTime', 'desc');
         
-        // Paginate results (simple pagination, no archiving)
+        // Paginate results (simple pagination)
         $orders = $query->paginate(20);
         
-        return view('cashier.transaction-history', compact('orders'));
+        return view('cashier.transactionhistory', compact('orders'));
     }
 }

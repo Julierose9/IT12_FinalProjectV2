@@ -1016,10 +1016,10 @@
                                 $orderStatusClass = 'status-pending';
                             }
 
-                            $paymentStatus = $order->PaymentStatus ?? 'Unpaid';
+                            $paymentStatus = $order->payment ? ($order->payment->PaymentStatus ?? 'Unpaid') : 'Unpaid';
                             $paymentStatusClass = $paymentStatus == 'Paid' ? 'status-paid' : 'status-unpaid';
 
-                            $paymentMethod = $order->PaymentMethod ?? 'Cash';
+                            $paymentMethod = $order->payment ? ($order->payment->PaymentType ?? 'Cash') : 'Cash';
                             $paymentMethodClass = '';
                             if ($paymentMethod == 'Cash') {
                                 $paymentMethodClass = 'method-cash';
@@ -1029,14 +1029,14 @@
                                 $paymentMethodClass = 'method-card';
                             }
 
-                            $orderDate = $order->created_at ?? $order->OrderDate ?? now();
+                            $orderDate = $order->OrderDateTime ?? $order->created_at ?? now();
                             if ($orderDate instanceof \Carbon\Carbon) {
                                 $formattedDate = $orderDate->format('M d, Y h:i A');
                             } else {
                                 $formattedDate = \Carbon\Carbon::parse($orderDate)->format('M d, Y h:i A');
                             }
 
-                            $totalAmount = $order->TotalAmount ?? $order->total_amount ?? 0;
+                            $totalAmount = $order->GrandTotal ?? $order->SubTotal ?? 0;
                             $formattedAmount = '₱' . number_format($totalAmount, 2);
 
                             $itemsCount = $order->items_count ?? ($order->orderItems->count() ?? 0);
@@ -1088,6 +1088,15 @@
                                             data-bs-target="#orderDetailsModal">
                                         <i class="fas fa-eye"></i>
                                     </button>
+                                    @if($order->payment)
+                                        <button type="button" 
+                                                class="btn btn-outline-info view-payment-btn"
+                                                data-payment-id="{{ $order->payment->PaymentID }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#viewPaymentModal">
+                                            <i class="fas fa-credit-card"></i>
+                                        </button>
+                                    @endif
                                     @if($orderStatus != 'Completed')
                                         <a href="{{ route('cashier.sales.edit', $order->OrderID ?? $order->id) }}" 
                                            class="btn btn-outline-warning">
@@ -1185,6 +1194,63 @@
         </div>
     </div>
 </main>
+
+<!-- VIEW PAYMENT MODAL -->
+<div class="modal fade" id="viewPaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payment Details - <span id="viewPaymentId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- PAYMENT INFORMATION -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Payment Information</h6>
+                        <p class="mb-1"><strong>Payment ID:</strong> <span id="viewPaymentNo"></span></p>
+                        <p class="mb-1"><strong>Order ID:</strong> <span id="viewPaymentOrderId"></span></p>
+                        <p class="mb-1"><strong>Date:</strong> <span id="viewPaymentDate"></span></p>
+                        <p class="mb-0"><strong>Status:</strong> <span id="viewPaymentStatus"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Payment Details</h6>
+                        <p class="mb-1"><strong>Payment Method:</strong> <span id="paymentMethodType"></span></p>
+                        <p class="mb-1"><strong>Reference No:</strong> <span id="viewPaymentReference"></span></p>
+                        <p class="mb-0"><strong>Amount:</strong> <span id="viewPaymentAmount" class="text-success"></span></p>
+                    </div>
+                </div>
+
+                <!-- ORDER ITEMS TABLE -->
+                <h6>Order Items</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th></tr></thead>
+                        <tbody id="viewPaymentItems"></tbody>
+                    </table>
+                </div>
+
+                <!-- PAYMENT SUMMARY -->
+                <div class="row mt-4">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Subtotal:</span><strong id="viewPaymentSubtotal">₱0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Discount:</span><strong id="viewPaymentDiscount" class="text-danger">-₱0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                            <span class="h6">Grand Total:</span><strong class="h5 text-success" id="viewPaymentGrandTotal">₱0.00</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- EXTERNAL JAVASCRIPT -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -1424,7 +1490,7 @@
                 </div>
             `;
 
-            fetch(`/cashier/orders/${orderId}/details`)
+            fetch(`/cashier/sales/${orderId}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -1432,11 +1498,35 @@
                     return response.json();
                 })
                 .then(data => {
-                    const orderDetailsHTML = formatOrderDetails(data);
+                    // Transform the data to match expected format
+                    const transformedData = {
+                        OrderID: data.order.OrderID,
+                        OrderDateTime: data.order.OrderDateTime,
+                        OrderStatus: data.order.OrderStatus,
+                        PaymentStatus: data.order.OrderStatus === 'Completed' ? 'Paid' : 'Unpaid',
+                        PaymentType: data.order.PaymentType,
+                        Notes: null,
+                        cashier: {
+                            EmployeeName: data.order.Employee.EmployeeName
+                        },
+                        employee: {
+                            EmployeeName: data.order.Employee.EmployeeName
+                        },
+                        items: data.details.map(detail => ({
+                            product_name: detail.ProductName,
+                            ProductName: detail.ProductName,
+                            price: detail.UnitPrice,
+                            Price: detail.UnitPrice,
+                            quantity: detail.Quantity,
+                            Quantity: detail.Quantity
+                        }))
+                    };
+                    
+                    const orderDetailsHTML = formatOrderDetails(transformedData);
                     orderDetailsContent.innerHTML = orderDetailsHTML;
                     
                     printReceiptBtn.onclick = function() {
-                        printOrderReceipt(data);
+                        printOrderReceipt(transformedData);
                     };
                 })
                 .catch(error => {
@@ -1515,8 +1605,8 @@
                                 </span>
                             </p>
                             <p><strong>Payment Method:</strong> 
-                                <span class="badge ${getPaymentMethodClass(orderData.PaymentMethod)}">
-                                    ${orderData.PaymentMethod || 'Cash'}
+                                <span class="badge ${getPaymentMethodClass(orderData.PaymentType)}">
+                                    ${orderData.PaymentType || 'Cash'}
                                 </span>
                             </p>
                         </div>
@@ -1551,6 +1641,76 @@
                     ` : ''}
                 </div>
             `;
+        }
+
+        // ========== VIEW PAYMENT DETAILS FUNCTIONALITY ==========
+        const viewPaymentButtons = document.querySelectorAll('.view-payment-btn');
+
+        viewPaymentButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const paymentId = this.getAttribute('data-payment-id');
+                loadPaymentDetails(paymentId);
+            });
+        });
+
+        function loadPaymentDetails(paymentId) {
+            fetch(`/cashier/payments/${paymentId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Payment details loaded:', data);
+                    
+                    // Update modal title
+                    document.getElementById('viewPaymentId').textContent = '#' + (data.payment.PaymentID || data.payment.id || 'N/A');
+                    
+                    // Update payment information
+                    document.getElementById('viewPaymentNo').textContent = data.payment.PaymentID || data.payment.id || 'N/A';
+                    document.getElementById('viewPaymentOrderId').textContent = '#' + (data.payment.OrderID || data.payment.order_id || 'N/A');
+                    document.getElementById('viewPaymentDate').textContent = data.payment.PaymentDate ? new Date(data.payment.PaymentDate).toLocaleString() : 'N/A';
+                    document.getElementById('viewPaymentStatus').textContent = data.payment.PaymentStatus || 'Unpaid';
+                    
+                    // Update payment details
+                    document.getElementById('paymentMethodType').textContent = data.payment.PaymentType || 'Cash';
+                    document.getElementById('viewPaymentReference').textContent = data.payment.ReferenceNumber || 'N/A';
+                    document.getElementById('viewPaymentAmount').textContent = '₱' + (parseFloat(data.payment.Amount || 0).toFixed(2));
+                    
+                    // Update order items
+                    const itemsContainer = document.getElementById('viewPaymentItems');
+                    if (data.payment.order && data.payment.order.details) {
+                        const itemsHTML = data.payment.order.details.map(item => `
+                            <tr>
+                                <td>${item.product.ProductName || 'N/A'}</td>
+                                <td>₱${parseFloat(item.UnitPrice || 0).toFixed(2)}</td>
+                                <td>${item.Quantity || 0}</td>
+                                <td>₱${parseFloat(item.Subtotal || 0).toFixed(2)}</td>
+                            </tr>
+                        `).join('');
+                        itemsContainer.innerHTML = itemsHTML;
+                    } else {
+                        itemsContainer.innerHTML = '<tr><td colspan="4" class="text-center">No items found</td></tr>';
+                    }
+                    
+                    // Update payment summary
+                    const subtotal = data.payment.order ? data.payment.order.SubTotal : 0;
+                    const discount = parseFloat(data.payment.order ? data.payment.order.DiscountAmount : 0);
+                    const grandTotal = parseFloat(data.payment.Amount || 0);
+                    
+                    document.getElementById('viewPaymentSubtotal').textContent = '₱' + subtotal.toFixed(2);
+                    document.getElementById('viewPaymentDiscount').textContent = '-₱' + discount.toFixed(2);
+                    document.getElementById('viewPaymentGrandTotal').textContent = '₱' + grandTotal.toFixed(2);
+                    
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('viewPaymentModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading payment details:', error);
+                    alert('Failed to load payment details. Please try again.');
+                });
         }
 
         function getOrderStatusClass(status) {

@@ -1010,8 +1010,8 @@
                         @php
                             $methodName = ucfirst(str_replace('_', ' ', $method));
                             $percentage = $data['percentage'] ?? 0;
-                            $amount = $data['amount'] ?? 0;
-                            $count = $data['count'] ?? 0;
+                            $amount = $data['sales'] ?? 0;
+                            $count = $data['orders'] ?? 0;
                         @endphp
                         <tr>
                             <td>
@@ -1150,7 +1150,7 @@
                     'report-weekly': 'weekly',
                     'report-monthly': 'monthly'
                 };
-                params.append('report_type', reportMap[reportType.id] || 'daily');
+                params.append('period', reportMap[reportType.id] || 'daily');
             }
             
             let selectedMethods = [];
@@ -1215,7 +1215,7 @@
                 } else if (filter === 'range') {
                     url.searchParams.delete('range');
                 } else if (filter === 'report_type') {
-                    url.searchParams.delete('report_type');
+                    url.searchParams.delete('period');
                 }
                 
                 window.location.href = url.toString();

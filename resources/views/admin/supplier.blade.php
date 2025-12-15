@@ -1196,10 +1196,10 @@
                             <label class="form-label">Contact Number <span class="text-danger">*</span></label>
                             <input type="text" name="SupplierContactNo" class="form-control {{ $errors->has('SupplierContactNo') ? 'is-invalid' : '' }}" 
                                    value="{{ old('SupplierContactNo') }}" 
-                                   pattern="[0-9]{12}" 
-                                   maxlength="12"
-                                   placeholder=""
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12)"
+                                   pattern="09[0-9]{9}" 
+                                   maxlength="11"
+                                   placeholder="09XXXXXXXXX"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
                                    required>
                             @if($errors->has('SupplierContactNo'))
                                 <div class="invalid-feedback">{{ $errors->first('SupplierContactNo') }}</div>
@@ -1328,15 +1328,15 @@
                                 <label class="form-label">Contact Number <span class="text-danger">*</span></label>
                                 <input type="text" name="SupplierContactNo" class="form-control {{ $errors->has('SupplierContactNo') ? 'is-invalid' : '' }}"
                                        value="{{ old('SupplierContactNo', $supplier->SupplierContactNo) }}" 
-                                       pattern="[0-9]{12}" 
-                                       maxlength="12"
+                                       pattern="09[0-9]{9}" 
+                                       maxlength="11"
                                        placeholder="09XXXXXXXXX"
-                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12)"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)"
                                        required>
                                 @if($errors->has('SupplierContactNo'))
                                     <div class="invalid-feedback">{{ $errors->first('SupplierContactNo') }}</div>
                                 @endif
-                                <small class="text-muted">Must be exactly 12 digits (e.g., 091234567890)</small>
+                                <small class="text-muted">Must be exactly 11 digits and start with 09 (e.g., 09123456789)</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address <span class="text-danger">*</span></label>
@@ -1770,8 +1770,8 @@
             const contactInput = document.querySelector('input[name="SupplierContactNo"]');
             const contactValue = contactInput.value;
             
-            // Check if contact number is exactly 12 digits
-            if (contactValue.length !== 12 || !/^\d{12}$/.test(contactValue)) {
+            // Check if contact number is exactly 11 digits and starts with 09
+            if (contactValue.length !== 11 || !/^09\d{9}$/.test(contactValue)) {
                 event.preventDefault();
                 contactInput.classList.add('is-invalid');
                 contactInput.nextElementSibling.textContent = 'Contact number must be exactly 12 digits.';
@@ -1786,8 +1786,8 @@
             const contactInput = this.querySelector('input[name="SupplierContactNo"]');
             const contactValue = contactInput.value;
             
-            // Check if contact number is exactly 12 digits
-            if (contactValue.length !== 12 || !/^\d{12}$/.test(contactValue)) {
+            // Check if contact number is exactly 11 digits and starts with 09
+            if (contactValue.length !== 11 || !/^09\d{9}$/.test(contactValue)) {
                 event.preventDefault();
                 contactInput.classList.add('is-invalid');
                 if (!contactInput.nextElementSibling.classList.contains('text-muted')) {
@@ -1821,14 +1821,14 @@
                 }
             }
             
-            // Limit to 12 digits
-            if (this.value.length > 12) {
-                this.value = this.value.substring(0, 12);
+            // Limit to 11 digits
+            if (this.value.length > 11) {
+                this.value = this.value.substring(0, 11);
             }
         });
         
         input.addEventListener('blur', function() {
-            if (this.value.length > 0 && this.value.length !== 12) {
+            if (this.value.length > 0 && this.value.length !== 11) {
                 this.classList.add('is-invalid');
             } else {
                 this.classList.remove('is-invalid');

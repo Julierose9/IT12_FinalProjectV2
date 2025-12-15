@@ -41,34 +41,47 @@ class DailySalesController extends Controller
     $selectedDate = Carbon::parse($request->get('date', Carbon::today()->toDateString()));
     $period = $request->get('period', 'daily');
     $category = $request->get('category', 'all');
+    $paymentMethod = $request->get('method', 'all');
+    $salesRange = $request->get('range', 'all');
     
     // Get all data
-    $salesData = $this->getSalesData($selectedDate, $period, $category);
-    $topProducts = $this->getTopProducts($selectedDate, $period, 5);
-    $paymentBreakdown = $this->getPaymentBreakdown($selectedDate, $period);
+    $salesData = $this->getSalesData($selectedDate, $period, $category, $paymentMethod, $salesRange);
+    $topProducts = $this->getTopProducts($selectedDate, $period, 5, $paymentMethod, $salesRange);
+    $breakdown = $this->getPaymentBreakdown($selectedDate, $period, $paymentMethod, $salesRange);
     $salesTrend = $this->getSalesTrend($selectedDate, $period);
     $categories = Category::orderBy('CategoryName')->get();
+    
+    // Calculate summary statistics
+    $totalSales = collect($breakdown)->sum('sales');
+    $totalTransactions = collect($breakdown)->sum('orders');
+    $averageTransaction = $totalTransactions > 0 ? $totalSales / $totalTransactions : 0;
+    $topPaymentMethod = collect($breakdown)->sortByDesc('sales')->keys()->first() ?? 'Cash';
     
     return view('cashier.dailysales', compact(
         'salesData',
         'categories',
         'topProducts',
-        'paymentBreakdown',
+        'breakdown',
         'salesTrend',
         'selectedDate',
         'period',
         'category',
+        'paymentMethod',
+        'salesRange',
         'employee',
         'employeeName',
-        'employeeRole', // Add this
-        'employeeId'
+        'employeeId',
+        'totalSales',
+        'totalTransactions',
+        'averageTransaction',
+        'topPaymentMethod'
     ));
 }
     
     /**
      * Get sales data based on selected period
      */
-    private function getSalesData(Carbon $date, $period = 'daily', $category = 'all')
+    private function getSalesData(Carbon $date, $period = 'daily', $category = 'all', $paymentMethod = 'all', $salesRange = 'all')
     {
         $data = [
             'total_sales' => 0,
@@ -97,6 +110,29 @@ class DailySalesController extends Controller
             $startDate = $date->copy()->startOfMonth();
             $endDate = $date->copy()->endOfMonth();
             $orderQuery->whereBetween('OrderDateTime', [$startDate, $endDate]);
+        }
+        
+        // Apply payment method filter
+        if ($paymentMethod !== 'all') {
+            $orderQuery->whereHas('payment', function($q) use ($paymentMethod) {
+                $methods = explode(',', $paymentMethod);
+                $q->whereIn('PaymentType', $methods);
+            });
+        }
+        
+        // Apply sales range filter
+        if ($salesRange !== 'all') {
+            switch ($salesRange) {
+                case 'high':
+                    $orderQuery->where('GrandTotal', '>', 1000);
+                    break;
+                case 'medium':
+                    $orderQuery->whereBetween('GrandTotal', [500, 1000]);
+                    break;
+                case 'low':
+                    $orderQuery->where('GrandTotal', '<', 500);
+                    break;
+            }
         }
         
         // Get orders with details
@@ -216,10 +252,11 @@ class DailySalesController extends Controller
     /**
      * Get top selling products
      */
-    private function getTopProducts(Carbon $date, $period = 'daily', $limit = 5)
+    private function getTopProducts(Carbon $date, $period = 'daily', $limit = 5, $paymentMethod = 'all', $salesRange = 'all')
     {
         $query = OrderDetail::join('orders', 'order_details.OrderID', '=', 'orders.OrderID')
             ->join('products', 'order_details.ProductID', '=', 'products.ProductID')
+            ->leftJoin('payments', 'orders.OrderID', '=', 'payments.OrderID')
             ->select(
                 'products.ProductID',
                 'products.ProductName',
@@ -243,6 +280,14 @@ class DailySalesController extends Controller
             $query->whereBetween('orders.OrderDateTime', [$startDate, $endDate]);
         }
         
+        // Apply payment method filter
+        if ($paymentMethod !== 'all') {
+            $methods = explode(',', $paymentMethod);
+            $query->whereIn('payments.PaymentType', $methods);
+        }
+        
+        // Apply sales range filter (this is tricky for individual products, so we'll skip for now)
+        
         return $query->orderBy('total_quantity', 'desc')
             ->limit($limit)
             ->get();
@@ -251,26 +296,48 @@ class DailySalesController extends Controller
     /**
      * Get payment method breakdown
      */
-    private function getPaymentBreakdown(Carbon $date, $period = 'daily')
+    private function getPaymentBreakdown(Carbon $date, $period = 'daily', $paymentMethod = 'all', $salesRange = 'all')
     {
         $query = Order::select(
-            'PaymentType',
-            DB::raw('COUNT(*) as order_count'),
-            DB::raw('SUM(GrandTotal) as total_sales')
+            'payments.PaymentType',
+            DB::raw('COUNT(orders.OrderID) as order_count'),
+            DB::raw('SUM(orders.GrandTotal) as total_sales')
         )
-        ->groupBy('PaymentType');
+        ->join('payments', 'orders.OrderID', '=', 'payments.OrderID')
+        ->groupBy('payments.PaymentType');
         
         // Apply date filter based on period
         if ($period === 'daily') {
-            $query->whereDate('OrderDateTime', $date);
+            $query->whereDate('orders.OrderDateTime', $date);
         } elseif ($period === 'weekly') {
             $startDate = $date->copy()->startOfWeek();
             $endDate = $date->copy()->endOfWeek();
-            $query->whereBetween('OrderDateTime', [$startDate, $endDate]);
+            $query->whereBetween('orders.OrderDateTime', [$startDate, $endDate]);
         } elseif ($period === 'monthly') {
             $startDate = $date->copy()->startOfMonth();
             $endDate = $date->copy()->endOfMonth();
-            $query->whereBetween('OrderDateTime', [$startDate, $endDate]);
+            $query->whereBetween('orders.OrderDateTime', [$startDate, $endDate]);
+        }
+        
+        // Apply payment method filter
+        if ($paymentMethod !== 'all') {
+            $methods = explode(',', $paymentMethod);
+            $query->whereIn('payments.PaymentType', $methods);
+        }
+        
+        // Apply sales range filter
+        if ($salesRange !== 'all') {
+            switch ($salesRange) {
+                case 'high':
+                    $query->having('total_sales', '>', 1000);
+                    break;
+                case 'medium':
+                    $query->havingBetween('total_sales', [500, 1000]);
+                    break;
+                case 'low':
+                    $query->having('total_sales', '<', 500);
+                    break;
+            }
         }
         
         $results = $query->get();

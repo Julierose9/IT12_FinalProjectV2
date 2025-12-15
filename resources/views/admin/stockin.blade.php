@@ -1338,9 +1338,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (newTotal === 0) {
                     reorderText.textContent = 'Product will be OUT OF STOCK after this entry!';
                 } else if (newTotal < reorderLevel) {
-                    reorderText.textContent = Stock will be BELOW reorder level (${reorderLevel} units) after adding.;
+                    reorderText.textContent = `Stock will be BELOW reorder level (${reorderLevel} units) after adding.`;
                 } else {
-                    reorderText.textContent = Stock will be AT reorder level (${reorderLevel} units) after adding.;
+                    reorderText.textContent = `Stock will be AT reorder level (${reorderLevel} units) after adding.`;
                 }
             } else {
                 reorderAlert.style.display = 'none';
@@ -1667,7 +1667,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set up the delete form action
         const deleteForm = document.getElementById('deleteStockForm');
-        deleteForm.action = /admin/stockin/${currentStockIdToDelete};
+        deleteForm.action = `/admin/stockin/${currentStockIdToDelete}`;
     }
 
     // Handle delete form submission
@@ -1699,9 +1699,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            if (data.success) {
+                if (data.success) {
                 // Remove the row from the table
-                const row = document.getElementById(stock-row-${stockId});
+                const row = document.getElementById(`stock-row-${stockId}`);
                 if (row) {
                     row.remove();
                 }
@@ -1718,13 +1718,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (remainingRows.length === 0 || (remainingRows.length === 1 && remainingRows[0].cells.length > 2)) {
                     // Add empty state row
                     const emptyRow = document.createElement('tr');
-                    emptyRow.innerHTML = 
+                    emptyRow.innerHTML = `
                         <td colspan="6" class="text-center py-5 text-muted">
                             <i class="fas fa-box-open fa-2x mb-3"></i>
                             <h5>No stock records found</h5>
                             <p class="mb-0">Add your first stock record using the "Add Stock" button</p>
                         </td>
-                    ;
+                    `;
                     tableBody.appendChild(emptyRow);
                 }
             } else {
@@ -1745,12 +1745,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Helper function to show alerts
     function showAlert(type, message) {
         const alertDiv = document.createElement('div');
-        alertDiv.className = alert alert-${type} alert-dismissible fade show;
-        alertDiv.innerHTML = 
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
             <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        ;
+        `;
         
         // Insert after topbar
         const topbar = document.querySelector('.topbar');

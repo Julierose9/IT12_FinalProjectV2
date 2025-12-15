@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('stock_in', function (Blueprint $table) {
+            if (!Schema::hasColumn('stock_in', 'ExpirationDate')) {
+                // Make expiration date optional
+                $table->date('ExpirationDate')->nullable()->after('DateRcvd');
+            }
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('stock_in', function (Blueprint $table) {
+            if (Schema::hasColumn('stock_in', 'ExpirationDate')) {
+                $table->dropColumn('ExpirationDate');
+            }
+        });
+    }
+};
+
+

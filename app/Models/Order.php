@@ -70,9 +70,9 @@ class Order extends Model
         return $this->attributes['PaymentType'] ?? null;
     }
     
-    // Helper method to get items count
+    // Helper method to get items count (sum of quantities from order_details)
     public function getItemsCountAttribute()
     {
-        return $this->items()->sum('Quantity');
+        return $this->details()->sum('OrderQty');
     }
 }

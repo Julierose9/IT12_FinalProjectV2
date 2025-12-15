@@ -16,7 +16,6 @@ class Supplier extends Model
         'SupplierName',
         'SupplierContactNo',
         'Address',
-        'Status'
     ];
 
     public function products()
@@ -34,5 +33,12 @@ class Supplier extends Model
                 $supplier->SupplierID = 'SUP' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
             }
         });
+    }
+
+    // Virtual Status attribute so views can still use $supplier->Status
+    public function getStatusAttribute($value)
+    {
+        // If the column doesn't exist, $value will be null; default to 'Active'
+        return $value ?? 'Active';
     }
 }

@@ -21,7 +21,10 @@ class OrderController extends Controller
         // Get current employee
         $employee = auth()->user()->employee ?? null;
         $employeeId = $employee->EmployeeID ?? null;
-        $employeeName = $employee ? ($employee->EmpFName . ' ' . $employee->EmpLName) : 'Cashier';
+        // Use correct column names from Employee model
+        $employeeName = $employee 
+            ? trim(($employee->EmployeeFName ?? '') . ' ' . ($employee->EmployeeLName ?? ''))
+            : 'Cashier';
 
         // Get products with available stock
         $products = Product::with(['category', 'pricing'])
@@ -57,6 +60,7 @@ class OrderController extends Controller
 
         // Get payments
         $payments = Payment::with(['order.employee'])
+            ->whereHas('order')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -119,17 +123,27 @@ class OrderController extends Controller
             $lastId = $lastOrder ? intval(substr($lastOrder->OrderID, 3)) : 0;
             $orderId = 'ORD' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
 
-            // Create Order
+            // Determine payment info
+            $paymentMethod = $request->PaymentType ?? 'Cash';
+            $amountPaid = $request->AmountPaid ?? $grandTotal;
+            $balance = max(0, $grandTotal - $amountPaid);
+
+            // Create Order (also store payment summary fields for history)
             $order = Order::create([
-                'OrderID' => $orderId,
-                'EmployeeID' => $request->EmployeeID,
-                'OrderDateTime' => now(),
-                'OrderStatus' => 'Completed',
-                'SubTotal' => $subTotal,
-                'DiscountType' => $request->DiscountType ?? 'None',
-                'DiscountRate' => $request->DiscountType == 'None' ? 0 : 20,
-                'DiscountAmount' => $discountAmount,
-                'GrandTotal' => $grandTotal,
+                'OrderID'         => $orderId,
+                'EmployeeID'      => $request->EmployeeID,
+                'OrderDateTime'   => now(),
+                'OrderStatus'     => 'Completed',
+                'SubTotal'        => $subTotal,
+                'DiscountType'    => $request->DiscountType ?? 'None',
+                'DiscountRate'    => $request->DiscountType == 'None' ? 0 : 20,
+                'DiscountAmount'  => $discountAmount,
+                'GrandTotal'      => $grandTotal,
+                'PaymentMethod'   => $paymentMethod,
+                'PaymentStatus'   => $balance <= 0 ? 'Paid' : 'Unpaid',
+                'PaymentReference'=> $request->PaymentReference,
+                'AmountPaid'      => $amountPaid,
+                'Balance'         => $balance,
             ]);
 
             // Generate OrderDetailID
@@ -154,8 +168,8 @@ class OrderController extends Controller
             Payment::create([
                 'PaymentID' => $paymentId,
                 'OrderID' => $orderId,
-                'PaymentType' => $request->PaymentType ?? 'Cash',
-                'ReferenceNumber' => $request->PaymentReference,
+                'PaymentType' => $request->paymentType ?? 'Cash',
+                'ReferenceNumber' => $request->gcashReference,
             ]);
 
             // Generate InventoryMovementID
@@ -207,38 +221,28 @@ class OrderController extends Controller
             ];
         });
         
+        $employee = $order->employee;
+        $employeeName = $employee
+            ? trim(($employee->EmployeeFName ?? '') . ' ' . ($employee->EmployeeLName ?? ''))
+            : null;
+
         return response()->json([
             'success' => true,
             'order' => [
-                'OrderID' => $order->OrderID,
-                'OrderDateTime' => $order->OrderDateTime,
-                'OrderStatus' => $order->OrderStatus,
-                'SubTotal' => $order->SubTotal,
+                'OrderID'        => $order->OrderID,
+                'OrderDateTime'  => $order->OrderDateTime,
+                'OrderStatus'    => $order->OrderStatus,
+                'SubTotal'       => $order->SubTotal,
                 'DiscountAmount' => $order->DiscountAmount,
-                'GrandTotal' => $order->GrandTotal,
-                'PaymentType' => $order->payment->PaymentType ?? null,
-                'Employee' => [
-                    'EmployeeName' => $order->employee->EmployeeName ?? null,
-                    'EmployeeID' => $order->employee->EmployeeID ?? null,
+                'GrandTotal'     => $order->GrandTotal,
+                'PaymentType'    => $order->payment->PaymentType ?? 'Cash',
+                'Employee'       => [
+                    'EmployeeName' => $employeeName,
+                    'EmployeeID'   => $employee->EmployeeID ?? null,
                 ],
             ],
             'details' => $details,
         ]);
-    }
-
-    public function archive($id)
-    {
-        try {
-            $order = Order::findOrFail($id);
-            $order->OrderStatus = 'Archived';
-            $order->save();
-
-            return redirect()->route('cashier.sales')
-                ->with('success', 'Order archived successfully!');
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Error archiving order: ' . $e->getMessage());
-        }
     }
 
     public function getProductDetails($id)

@@ -14,6 +14,7 @@ use App\Http\Controllers\Cashier\DailySalesController;
 use App\Http\Controllers\Cashier\OrderController;
 use App\Http\Controllers\Cashier\PaymentController;
 use App\Http\Controllers\Cashier\DashboardController;
+use App\Http\Controllers\Cashier\TransactionHistoryController;
 use App\Http\Controllers\Admin\DashboardAdminController;
 use App\Http\Controllers\Admin\TransactionController;
 
@@ -121,7 +122,7 @@ Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPr
     Route::prefix('cashier')->name('cashier.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/api/dashboard/stats', [DashboardController::class, 'apiDashboardStats'])->name('api.dashboard.stats');  
-        Route::get('/dailysales', fn() => view('cashier.dailysales'))->name('daily.sales');
+        Route::get('/dailysales', [DailySalesController::class, 'index'])->name('daily.sales');
         Route::get('/sales', [OrderController::class, 'index'])->name('sales');
         Route::post('/sales', [OrderController::class, 'store'])->name('sales.store');
         Route::get('/sales/{id}', [OrderController::class, 'show'])->name('sales.show');
@@ -129,7 +130,7 @@ Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPr
         Route::get('/api/product/{id}', [OrderController::class, 'getProductDetails'])->name('api.product.details');
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments');
         Route::get('/payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
-        Route::get('/transaction-history', fn() => view('cashier.transactionhistory'))->name('transaction.history');
+        Route::get('/transaction-history', [TransactionHistoryController::class, 'index'])->name('transaction.history');
     });
 
 }); // End of auth middleware group
