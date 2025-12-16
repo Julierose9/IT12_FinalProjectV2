@@ -610,11 +610,15 @@
                   <div class="filter-section-title">Time Period</div>
                   <div class="filter-options">
                     <div class="filter-option">
+                      <input type="radio" name="time_period" id="period-all" value="all" {{ !request('time_period') || request('time_period') == 'all' ? 'checked' : '' }}>
+                      <label for="period-all">All Time</label>
+                    </div>
+                    <div class="filter-option">
                       <input type="radio" name="time_period" id="period-today" value="today" {{ request('time_period') == 'today' ? 'checked' : '' }}>
                       <label for="period-today">Today</label>
                     </div>
                     <div class="filter-option">
-                      <input type="radio" name="time_period" id="period-week" value="week" {{ !request('time_period') || request('time_period') == 'week' ? 'checked' : '' }}>
+                      <input type="radio" name="time_period" id="period-week" value="week" {{ request('time_period') == 'week' ? 'checked' : '' }}>
                       <label for="period-week">This Week</label>
                     </div>
                     <div class="filter-option">
@@ -752,15 +756,14 @@
                 @endif
               </td>
               <td>{{ $order->items->count() }} items</td>
-              <td><strong>₱{{ number_format($order->TotalAmount, 2) }}</strong></td>
+              <td><strong>₱{{ number_format($order->GrandTotal ?? 0, 2) }}</strong></td>
               <td>
                 @php
-                  $paymentMethod = $order->PaymentMethod ?? 'Cash';
+                  $paymentMethod = $order->payment->PaymentType ?? $order->PaymentMethod ?? 'Cash';
                   $paymentBadgeClass = '';
                   if($paymentMethod == 'Cash') $paymentBadgeClass = 'bg-success';
                   elseif($paymentMethod == 'Card') $paymentBadgeClass = 'bg-info';
-                  elseif($paymentMethod == 'Online') $paymentBadgeClass = 'bg-primary';
-                  elseif($paymentMethod == 'GCash') $paymentBadgeClass = 'bg-primary';
+                  elseif($paymentMethod == 'Online' || $paymentMethod == 'GCash') $paymentBadgeClass = 'bg-primary';
                 @endphp
                 <span class="badge {{ $paymentBadgeClass }}">{{ $paymentMethod }}</span>
               </td>
@@ -917,8 +920,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('clearFilters')?.addEventListener('click', function() {
     // Reset form and submit
     filterForm.reset();
-    // Set default time period
-    document.getElementById('period-week').checked = true;
+    // Set default time period to 'all'
+    document.getElementById('period-all').checked = true;
     document.getElementById('customDateRange').style.display = 'none';
     
     // Remove all query parameters and submit
@@ -953,7 +956,12 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       
       // Load order details via AJAX
-      fetch(`/admin/transaction/${orderId}/details`)
+      fetch(`/admin/transaction/${orderId}/details`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+      })
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');

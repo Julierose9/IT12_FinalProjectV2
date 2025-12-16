@@ -13,7 +13,7 @@ class TransactionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with(['employee', 'items.product']);
+        $query = Order::with(['employee', 'items.product', 'payment']);
         
         // Apply search filter
         if ($request->has('search') && $request->search != '') {
@@ -36,7 +36,7 @@ class TransactionController extends Controller
         }
         
         // Apply time period filter
-        if ($request->has('time_period') && $request->time_period) {
+        if ($request->has('time_period') && $request->time_period && $request->time_period !== 'all') {
             $now = Carbon::now();
             switch ($request->time_period) {
                 case 'today':
@@ -96,7 +96,9 @@ class TransactionController extends Controller
         // Try to get the sum using possible column names
         try {
             // Try different possible column names
-            if (\Schema::hasColumn('orders', 'TotalAmount')) {
+            if (\Schema::hasColumn('orders', 'GrandTotal')) {
+                $totalAmount = $summaryQuery->sum('GrandTotal');
+            } elseif (\Schema::hasColumn('orders', 'TotalAmount')) {
                 $totalAmount = $summaryQuery->sum('TotalAmount');
             } elseif (\Schema::hasColumn('orders', 'Total')) {
                 $totalAmount = $summaryQuery->sum('Total');
@@ -131,7 +133,7 @@ class TransactionController extends Controller
     
     public function show($id)
     {
-        $order = Order::with(['employee', 'items.product'])->findOrFail($id);
+        $order = Order::with(['employee', 'items.product', 'payment'])->findOrFail($id);
         
         if (request()->ajax()) {
             // Return partial view for modal

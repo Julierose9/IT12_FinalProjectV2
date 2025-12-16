@@ -982,16 +982,16 @@
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <h5 class="card-title mb-0">Sales by Payment Method</h5>
             <div>
+            <button class="btn btn-danger btn-sm ms-2" onclick="exportPDF()" id="exportBtn">
+                    <i class="fas fa-download me-1"></i>
+                    <span class="export-btn-text">Export PDF</span>
+                </button>
                 @if(request()->hasAny(['date', 'method', 'range']))
                     <a href="{{ route('cashier.daily.sales') }}" class="btn btn-outline-primary btn-sm ms-2">
                         <i class="fas fa-sync-alt"></i> Reset
                     </a>
                 @endif
-                <button class="btn btn-success btn-sm ms-2" onclick="exportCSV()" id="exportBtn">
-                    <i class="fas fa-download me-1"></i>
-                    <span class="export-btn-text">Export CSV</span>
-                    <span class="export-btn-icon">Export</span>
-                </button>
+
             </div>
         </div>
 
@@ -1335,5 +1335,6 @@
         });
     });
 </script>
+
 </body>
 </html>
