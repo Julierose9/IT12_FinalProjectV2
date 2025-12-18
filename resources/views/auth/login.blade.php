@@ -9,7 +9,7 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f8f8ff ;
+            background-color: #f8f8ff;
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -222,7 +222,7 @@
                 <div class="col-lg-6 col-md-6">
                     <div class="login-card">
                         <div class="login-header">
-                            <h2 class="login-title">Welcome back!</h2>
+                            <h2 class="login-title">Log In</h2>
                         </div>
 
                         @if (session('success'))
@@ -241,7 +241,10 @@
                                        name="email" value="{{ old('email') }}" required autofocus
                                        placeholder="Email">
                                 @error('email')
-                                    <span class="text-danger">{{ $message }}</span>
+                                    <!-- Specific email errors (e.g., invalid format, not found) -->
+                                    @if($message !== 'These credentials do not match our records.' && $message !== 'The provided credentials are incorrect.')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @endif
                                 @enderror
                             </div>
 
@@ -250,15 +253,22 @@
                                 <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" 
                                        name="password" required placeholder="Password">
                                 <button type="button" class="toggle-icon" onclick="togglePassword('password', this)">👁</button>
+                                
+                                <!-- Specific password errors + General credential error moved here -->
                                 @error('password')
                                     <span class="text-danger">{{ $message }}</span>
+                                @enderror
+
+                                <!-- General "The provided credentials are incorrect." error (usually under 'email') -->
+                                @error('email')
+                                    @if($message === 'The provided credentials are incorrect.' || $message === 'These credentials do not match our records.')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @endif
                                 @enderror
                             </div>
 
                             <!-- Login Button -->
                             <button type="submit" class="btn btn-login">Log in</button>
-
-                            
 
                             <div class="divider"></div>
 
@@ -270,8 +280,6 @@
                                 </div>
                             </div>
                         </form>
-
-                       
                     </div>
                 </div>
             </div>

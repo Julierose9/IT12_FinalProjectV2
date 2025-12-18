@@ -8,6 +8,8 @@ use App\Models\OrderItem;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Schema;
 
 class TransactionController extends Controller
 {
@@ -96,15 +98,15 @@ class TransactionController extends Controller
         // Try to get the sum using possible column names
         try {
             // Try different possible column names
-            if (\Schema::hasColumn('orders', 'GrandTotal')) {
+            if (Schema::hasColumn('orders', 'GrandTotal')) {
                 $totalAmount = $summaryQuery->sum('GrandTotal');
-            } elseif (\Schema::hasColumn('orders', 'TotalAmount')) {
+            } elseif (Schema::hasColumn('orders', 'TotalAmount')) {
                 $totalAmount = $summaryQuery->sum('TotalAmount');
-            } elseif (\Schema::hasColumn('orders', 'Total')) {
+            } elseif (Schema::hasColumn('orders', 'Total')) {
                 $totalAmount = $summaryQuery->sum('Total');
-            } elseif (\Schema::hasColumn('orders', 'OrderTotal')) {
+            } elseif (Schema::hasColumn('orders', 'OrderTotal')) {
                 $totalAmount = $summaryQuery->sum('OrderTotal');
-            } elseif (\Schema::hasColumn('orders', 'Amount')) {
+            } elseif (Schema::hasColumn('orders', 'Amount')) {
                 $totalAmount = $summaryQuery->sum('Amount');
             } else {
                 // If no total column exists, calculate from order items
@@ -149,9 +151,9 @@ class TransactionController extends Controller
         return view('admin.transactions.receipt', compact('order'));
     }
     
-    public function export($type, Request $request)
+    public function export(Request $request)
     {
-        $query = Order::query();
+        $query = Order::with(['employee', 'items.product', 'payment']);
         
         // Apply the same filters as index
         if ($request->has('search') && $request->search != '') {
@@ -203,20 +205,55 @@ class TransactionController extends Controller
             $query->whereIn('PaymentMethod', $request->payment_method);
         }
         
-        $query->with(['employee', 'items.product'])->orderBy('OrderDateTime', 'desc');
+        $query->orderBy('OrderDateTime', 'desc');
+        
+        // Clone query for summary calculations
+        $summaryQuery = clone $query;
+        
+        // Calculate total amount using the same logic as index()
+        $totalAmount = 0;
+        $totalOrders = $summaryQuery->count();
+        
+        try {
+            // Try different possible column names
+            if (Schema::hasColumn('orders', 'GrandTotal')) {
+                $totalAmount = $summaryQuery->sum('GrandTotal');
+            } elseif (Schema::hasColumn('orders', 'TotalAmount')) {
+                $totalAmount = $summaryQuery->sum('TotalAmount');
+            } elseif (Schema::hasColumn('orders', 'Total')) {
+                $totalAmount = $summaryQuery->sum('Total');
+            } elseif (Schema::hasColumn('orders', 'OrderTotal')) {
+                $totalAmount = $summaryQuery->sum('OrderTotal');
+            } elseif (Schema::hasColumn('orders', 'Amount')) {
+                $totalAmount = $summaryQuery->sum('Amount');
+            } else {
+                // If no total column exists, calculate from order items
+                $ordersForSum = $summaryQuery->get();
+                foreach ($ordersForSum as $order) {
+                    $totalAmount += $order->items->sum(function($item) {
+                        return $item->Quantity * $item->Price;
+                    });
+                }
+            }
+        } catch (\Exception $e) {
+            // If there's an error, fall back to calculating from items
+            $ordersForSum = $summaryQuery->get();
+            foreach ($ordersForSum as $order) {
+                $totalAmount += $order->items->sum(function($item) {
+                    return $item->Quantity * $item->Price;
+                });
+            }
+        }
+        
         $orders = $query->get();
         
-        if ($type == 'pdf') {
-            return $this->exportToPDF($orders);
-        }
-
-        return redirect()->back()->with('error', 'Invalid export type');
+        return $this->exportToPDF($orders, $totalAmount, $totalOrders);
     }
     
-    private function exportToPDF($orders)
+    private function exportToPDF($orders, $totalAmount, $totalOrders)
     {
-        // For now, redirect back with a message
-        return redirect()->route('admin.transaction')
-            ->with('info', 'PDF export feature coming soon. Please use CSV export for now.');
+        $pdf = Pdf::loadView('admin.transaction_pdf', compact('orders', 'totalAmount', 'totalOrders'))
+            ->setPaper('a4', 'landscape');
+        return $pdf->download('transaction_report_' . now()->format('Y-m-d_H-i-s') . '.pdf');
     }
 }

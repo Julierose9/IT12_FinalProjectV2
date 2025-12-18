@@ -568,4 +568,34 @@ class DailySalesController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Export daily sales as PDF
+     */
+    public function exportPDF(Request $request)
+    {
+        $selectedDate = Carbon::parse($request->get('date', Carbon::today()->toDateString()));
+        $paymentMethod = $request->get('method', 'all');
+        $salesRange = $request->get('range', 'all');
+        $period = $request->get('period', 'daily');
+
+        $breakdown = $this->getPaymentBreakdown($selectedDate, $period, $paymentMethod, $salesRange);
+        
+        $totalSales = 0;
+        $totalTransactions = 0;
+        
+        foreach ($breakdown as $method => $data) {
+            $totalSales += $data['sales'];
+            $totalTransactions += $data['orders'];
+        }
+
+        $pdf = \PDF::loadView('cashier.dailysales_pdf', [
+            'breakdown' => $breakdown,
+            'totalSales' => $totalSales,
+            'totalTransactions' => $totalTransactions,
+            'selectedDate' => $selectedDate,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('daily-sales-' . $selectedDate->format('Y-m-d') . '.pdf');
+    }
 }

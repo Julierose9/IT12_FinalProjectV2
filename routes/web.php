@@ -102,7 +102,10 @@ Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPr
         Route::get('/transaction', [TransactionController::class, 'index'])->name('transaction');
         Route::get('/transaction/{id}/details', [TransactionController::class, 'show'])->name('transaction.details');
         Route::get('/transaction/{id}/receipt', [TransactionController::class, 'receipt'])->name('transaction.receipt');
-        Route::get('/transaction/export/{type}', [TransactionController::class, 'export'])->name('transaction.export');
+        Route::get('/transaction/export/{type}', [TransactionController::class, 'export'])->name('transaction.export.type');
+
+        Route::get('/transaction/export', [TransactionController::class, 'export'])->name('transaction.export');
+        Route::get('/admin/transaction/export/csv', [TransactionController::class, 'exportCSV'])->name('admin.transaction.export.csv');
 
         // ==================== INVENTORY REPORT ====================
         Route::get('/inventory', [InventoryReportController::class, 'index'])->name('inventory');
@@ -121,8 +124,9 @@ Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPr
     // ==================== CASHIER ROUTES ====================
     Route::prefix('cashier')->name('cashier.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/api/dashboard/stats', [DashboardController::class, 'apiDashboardStats'])->name('api.dashboard.stats');  
+        Route::get('/api/dashboard/stats', [DashboardController::class, 'apiDashboardStats'])->name('api.dashboard.stats');
         Route::get('/dailysales', [DailySalesController::class, 'index'])->name('daily.sales');
+        Route::get('/dailysales/export', [DailySalesController::class, 'exportPDF'])->name('daily.sales.export');
         Route::get('/sales', [OrderController::class, 'index'])->name('sales');
         Route::post('/sales', [OrderController::class, 'store'])->name('sales.store');
         Route::get('/sales/{id}', [OrderController::class, 'show'])->name('sales.show');

@@ -631,7 +631,7 @@
                     </div>
                   </div>
                   
-                  <div class="date-inputs" id="customDateRange" style="{{ request('time_period') == 'custom' ? 'display: flex;' : 'display: none;' }}">
+                  <div class="date-inputs" id="customDateRange">
                     <div class="date-input">
                       <input type="date" name="start_date" id="dateFrom" value="{{ request('start_date') }}" placeholder="From Date">
                     </div>
@@ -721,7 +721,7 @@
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h5 class="card-title mb-0">Transaction History</h5>
         <div class="d-flex gap-2">
-          <a href="{{ route('admin.transaction.export', ['type' => 'pdf']) . '?' . http_build_query(request()->except('page')) }}" class="btn btn-danger">
+          <a href="{{ route('admin.transaction.export') . '?' . http_build_query(request()->except('page')) }}" class="btn btn-danger">
             <i class="fas fa-file-pdf me-1"></i> Export PDF
           </a>
         </div>

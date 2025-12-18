@@ -35,6 +35,26 @@ class DashboardController extends Controller
             'today'
         ));
     }
+
+    /**
+     * API endpoint for dashboard stats (real-time data)
+     */
+    public function apiDashboardStats()
+    {
+        $today = Carbon::today();
+        
+        $todaySales = $this->getTodaySales($today);
+        $topProducts = $this->getTopProductsToday($today, 5);
+        $salesByHour = $this->getSalesByHour();
+        $salesTrend = $this->getSalesTrend();
+        
+        return response()->json([
+            'today_sales' => $todaySales,
+            'top_products' => $topProducts,
+            'sales_by_hour' => $salesByHour,
+            'sales_trend' => $salesTrend,
+        ]);
+    }
     
     private function getTodaySales(Carbon $date)
     {
@@ -293,6 +313,36 @@ class DashboardController extends Controller
             ];
         }
         
+        return $result;
+    }
+
+    /**
+     * Get sales trend for last 7 days
+     */
+    private function getSalesTrend()
+    {
+        $today = Carbon::today();
+        $result = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = $today->copy()->subDays($i);
+            $startOfDay = $date->copy()->startOfDay();
+            $endOfDay = $date->copy()->endOfDay();
+
+            $sales = Order::whereBetween('OrderDateTime', [$startOfDay, $endOfDay])
+                ->select(
+                    DB::raw('COUNT(*) as order_count'),
+                    DB::raw('SUM(GrandTotal) as total_sales')
+                )
+                ->first();
+
+            $result[] = [
+                'date' => $date->toDateString(),
+                'order_count' => $sales->order_count ?? 0,
+                'total_sales' => $sales->total_sales ?? 0,
+            ];
+        }
+
         return $result;
     }
 }

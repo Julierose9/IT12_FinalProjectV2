@@ -590,13 +590,6 @@
             <div class="action-title">History</div>
             <div class="action-desc">Past transactions</div>
         </a>
-        <a href="#" class="action-card danger" id="endShiftBtn">
-            <div class="action-icon">
-                <i class="fas fa-sign-out-alt"></i>
-            </div>
-            <div class="action-title">End Shift</div>
-            <div class="action-desc">Shift report</div>
-        </a>
     </div>
     <div class="row">
         <div class="col-lg-8">
@@ -659,199 +652,202 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const salesByHourCtx = document.getElementById('salesByHourChart');
     if (salesByHourCtx) {
-        const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
-        const salesData = Array.from({length: 24}, () => Math.floor(Math.random() * 1000) + 500);
-        
-        new Chart(salesByHourCtx, {
-            type: 'bar',
-            data: {
-                labels: hours,
-                datasets: [{
-                    label: 'Sales (₱)',
-                    data: salesData,
-                    backgroundColor: 'rgba(59, 49, 131, 0.7)',
-                    borderColor: '#3b3183',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
+        fetch('{{ route("cashier.api.dashboard.stats") }}')
+            .then(response => response.json())
+            .then(data => {
+                const hours = data.sales_by_hour.map(item => `${String(item.hour).padStart(2, '0')}:00`);
+                const salesData = data.sales_by_hour.map(item => item.sales || 0);
+                
+                new Chart(salesByHourCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: hours,
+                        datasets: [{
+                            label: 'Sales (₱)',
+                            data: salesData,
+                            backgroundColor: 'rgba(59, 49, 131, 0.7)',
+                            borderColor: '#3b3183',
+                            borderWidth: 1
+                        }]
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `Sales: ₱${context.raw.toLocaleString()}`;
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Sales: ₱${context.raw.toLocaleString()}`;
+                                    }
+                                }
                             }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
                         },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₱' + value.toLocaleString();
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₱' + value.toLocaleString();
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-        });
+                });
+            })
+            .catch(error => console.log('Error loading sales by hour:', error));
     }
 
     const topProductsCtx = document.getElementById('topProductsChart');
     if (topProductsCtx) {
-        const productNames = ['Makeup Kit', 'Perfume', 'Gift Box', 'Candle Set', 'Handbag'];
-        const productSales = [1250, 980, 870, 650, 520];
-        
-        new Chart(topProductsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: productNames,
-                datasets: [{
-                    data: productSales,
-                    backgroundColor: [
-                        'rgba(59, 49, 131, 0.8)',
-                        'rgba(35, 176, 122, 0.8)',
-                        'rgba(240, 138, 36, 0.8)',
-                        'rgba(224, 82, 82, 0.8)',
-                        'rgba(2, 132, 199, 0.8)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            pointStyle: 'circle'
-                        }
+        fetch('{{ route("cashier.api.dashboard.stats") }}')
+            .then(response => response.json())
+            .then(data => {
+                const productNames = data.top_products.map(p => p.ProductName);
+                const productSales = data.top_products.map(p => parseFloat(p.total_sales) || 0);
+                const colors = [
+                    'rgba(59, 49, 131, 0.8)',
+                    'rgba(35, 176, 122, 0.8)',
+                    'rgba(240, 138, 36, 0.8)',
+                    'rgba(224, 82, 82, 0.8)',
+                    'rgba(2, 132, 199, 0.8)'
+                ];
+                
+                new Chart(topProductsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: productNames,
+                        datasets: [{
+                            data: productSales,
+                            backgroundColor: colors.slice(0, productNames.length),
+                            borderWidth: 1
+                        }]
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ₱${context.raw.toLocaleString()}`;
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ₱${context.raw.toLocaleString()}`;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-        });
+                });
+            })
+            .catch(error => console.log('Error loading top products:', error));
     }
 
     const salesTrendCtx = document.getElementById('salesTrendChart');
     if (salesTrendCtx) {
-        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Today'];
-        const salesTrendData = [4500, 5200, 4800, 6100, 5800, 7200, 6800];
-        const ordersTrendData = [12, 15, 14, 18, 16, 22, 20];
-        
-        new Chart(salesTrendCtx, {
-            type: 'line',
-            data: {
-                labels: days,
-                datasets: [
-                    {
-                        label: 'Sales (₱)',
-                        data: salesTrendData,
-                        borderColor: '#3b3183',
-                        backgroundColor: 'rgba(59, 49, 131, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y'
+        fetch('{{ route("cashier.api.dashboard.stats") }}')
+            .then(response => response.json())
+            .then(data => {
+                const days = data.sales_trend.map(item => {
+                    const date = new Date(item.date);
+                    return date.toLocaleDateString('en-US', { weekday: 'short' });
+                });
+                const salesTrendData = data.sales_trend.map(item => parseFloat(item.total_sales) || 0);
+                const ordersTrendData = data.sales_trend.map(item => item.order_count || 0);
+                
+                new Chart(salesTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: days,
+                        datasets: [
+                            {
+                                label: 'Sales (₱)',
+                                data: salesTrendData,
+                                borderColor: '#3b3183',
+                                backgroundColor: 'rgba(59, 49, 131, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Orders',
+                                data: ordersTrendData,
+                                borderColor: '#23b07a',
+                                backgroundColor: 'rgba(35, 176, 122, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y1'
+                            }
+                        ]
                     },
-                    {
-                        label: 'Orders',
-                        data: ordersTrendData,
-                        borderColor: '#23b07a',
-                        backgroundColor: 'rgba(35, 176, 122, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Sales (₱)'
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
                         },
-                        ticks: {
-                            callback: function(value) {
-                                return '₱' + value.toLocaleString();
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Sales (₱)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₱' + value.toLocaleString();
+                                    }
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Orders'
+                                },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
                             }
                         }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Orders'
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                        },
                     }
-                }
-            }
-        });
+                });
+            })
+            .catch(error => console.log('Error loading sales trend:', error));
     }
-
-    document.getElementById('endShiftBtn')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (confirm('Are you sure you want to end your shift? This will generate a shift report.')) {
-            const btn = this;
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            btn.disabled = true;
-            
-            setTimeout(() => {
-                alert('Shift report generated successfully!');
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-            }, 1500);
-        }
-    });
 
     setInterval(() => {
         console.log('Refreshing dashboard data...');

@@ -416,20 +416,11 @@
     }
     .table tbody tr:hover { background-color: #f8f9fa; }
     
-    /* Status badges */
-    .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
-    .status-completed { background: #e8f5e8; color: var(--success-color); }
-    .status-pending { background: #fff3cd; color: var(--warning-color); }
-    .status-cancelled { background: #f8d7da; color: var(--danger-color); }
-    .status-paid { background: #e8f5e8; color: var(--success-color); }
-    .status-unpaid { background: #f8d7da; color: var(--danger-color); }
+    /* Status text colors */
+    .status-text {
+        font-weight: 600;
+    }
     
-    /* Payment method badges */
-    .method-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
-    .method-cash { background: #e8f5e8; color: var(--success-color); }
-    .method-gcash { background: #e0f2fe; color: #0284c7; }
-    .method-card { background: #efeaff; color: var(--primary-color); }
-
     /* Pagination */
     .pagination-container {
         display: flex;
@@ -554,11 +545,6 @@
             font-size: 0.8rem;
         }
         
-        .status-badge, .method-badge {
-            padding: 4px 8px;
-            font-size: 0.7rem;
-        }
-        
         .date-picker-container .input-group {
             flex-direction: column;
         }
@@ -601,11 +587,6 @@
         .table th:nth-child(5), .table td:nth-child(5),
         .table th:nth-child(6), .table td:nth-child(6) {
             display: none;
-        }
-        
-        .status-badge, .method-badge {
-            padding: 3px 6px;
-            font-size: 0.65rem;
         }
         
         .pagination .page-link {
@@ -1009,24 +990,24 @@
                             $orderStatus = $order->OrderStatus ?? 'Pending';
                             $orderStatusClass = '';
                             if ($orderStatus == 'Completed') {
-                                $orderStatusClass = 'status-completed';
+                                $orderStatusClass = 'text-success';
                             } elseif ($orderStatus == 'Cancelled') {
-                                $orderStatusClass = 'status-cancelled';
+                                $orderStatusClass = 'text-danger';
                             } else {
-                                $orderStatusClass = 'status-pending';
+                                $orderStatusClass = 'text-warning';
                             }
 
                             $paymentStatus = $order->payment ? ($order->payment->PaymentStatus ?? 'Unpaid') : 'Unpaid';
-                            $paymentStatusClass = $paymentStatus == 'Paid' ? 'status-paid' : 'status-unpaid';
+                            $paymentStatusClass = $paymentStatus == 'Paid' ? 'text-success' : 'text-danger';
 
                             $paymentMethod = $order->payment ? ($order->payment->PaymentType ?? 'Cash') : 'Cash';
                             $paymentMethodClass = '';
                             if ($paymentMethod == 'Cash') {
-                                $paymentMethodClass = 'method-cash';
+                                $paymentMethodClass = 'text-success';
                             } elseif ($paymentMethod == 'GCash') {
-                                $paymentMethodClass = 'method-gcash';
+                                $paymentMethodClass = 'text-primary';
                             } else {
-                                $paymentMethodClass = 'method-card';
+                                $paymentMethodClass = 'text-info';
                             }
 
                             $orderDate = $order->OrderDateTime ?? $order->created_at ?? now();
@@ -1044,9 +1025,15 @@
                                 $itemsCount = $order->order_items_count ?? 0;
                             }
 
-                            $cashierName = $order->cashier->EmployeeName ?? 
-                                         ($order->employee->EmployeeName ?? 
-                                         ($order->user->name ?? 'Unknown'));
+                            $cashierName = $order->employee->EmployeeFName ?? '';
+                            $cashierLastName = $order->employee->EmployeeLName ?? '';
+                            if ($cashierName && $cashierLastName) {
+                                $cashierName = $cashierName . ' ' . $cashierLastName;
+                            } elseif ($order->employee->EmployeeName ?? false) {
+                                $cashierName = $order->employee->EmployeeName;
+                            } else {
+                                $cashierName = 'Unknown';
+                            }
                         @endphp
                         <tr>
                             <td>
@@ -1062,17 +1049,17 @@
                                 <strong>{{ $formattedAmount }}</strong>
                             </td>
                             <td>
-                                <span class="method-badge {{ $paymentMethodClass }}">
+                                <span class="{{ $paymentMethodClass }}">
                                     {{ $paymentMethod }}
                                 </span>
                             </td>
                             <td>
-                                <span class="status-badge {{ $paymentStatusClass }}">
+                                <span class="{{ $paymentStatusClass }}">
                                     {{ $paymentStatus }}
                                 </span>
                             </td>
                             <td>
-                                <span class="status-badge {{ $orderStatusClass }}">
+                                <span class="{{ $orderStatusClass }}">
                                     {{ $orderStatus }}
                                 </span>
                             </td>
@@ -1590,22 +1577,22 @@
                             <h6>Order Information</h6>
                             <p><strong>Order ID:</strong> #${orderData.OrderID || orderData.id || 'N/A'}</p>
                             <p><strong>Date:</strong> ${formattedDate}</p>
-                            <p><strong>Cashier:</strong> ${orderData.cashier?.EmployeeName || orderData.employee?.EmployeeName || 'Unknown'}</p>
+                            <p><strong>Cashier:</strong> ${(orderData.employee?.EmployeeFName || '') + ' ' + (orderData.employee?.EmployeeLName || '') || orderData.employee?.EmployeeName || 'Unknown'}</p>
                         </div>
                         <div class="col-md-6">
                             <h6>Status</h6>
                             <p><strong>Order Status:</strong> 
-                                <span class="badge ${getOrderStatusClass(orderData.OrderStatus)}">
+                                <span class="${getOrderStatusClass(orderData.OrderStatus)}">
                                     ${orderData.OrderStatus || 'Pending'}
                                 </span>
                             </p>
                             <p><strong>Payment Status:</strong> 
-                                <span class="badge ${getPaymentStatusClass(orderData.PaymentStatus)}">
+                                <span class="${getPaymentStatusClass(orderData.PaymentStatus)}">
                                     ${orderData.PaymentStatus || 'Unpaid'}
                                 </span>
                             </p>
                             <p><strong>Payment Method:</strong> 
-                                <span class="badge ${getPaymentMethodClass(orderData.PaymentType)}">
+                                <span class="${getPaymentMethodClass(orderData.PaymentType)}">
                                     ${orderData.PaymentType || 'Cash'}
                                 </span>
                             </p>
@@ -1715,22 +1702,22 @@
 
         function getOrderStatusClass(status) {
             switch(status) {
-                case 'Completed': return 'bg-success';
-                case 'Cancelled': return 'bg-danger';
-                default: return 'bg-warning';
+                case 'Completed': return 'text-success';
+                case 'Cancelled': return 'text-danger';
+                default: return 'text-warning';
             }
         }
 
         function getPaymentStatusClass(status) {
-            return status === 'Paid' ? 'bg-success' : 'bg-danger';
+            return status === 'Paid' ? 'text-success' : 'text-danger';
         }
 
         function getPaymentMethodClass(method) {
             switch(method) {
-                case 'Cash': return 'bg-success';
-                case 'GCash': return 'bg-primary';
-                case 'Card': return 'bg-info';
-                default: return 'bg-secondary';
+                case 'Cash': return 'text-success';
+                case 'GCash': return 'text-primary';
+                case 'Card': return 'text-info';
+                default: return 'text-secondary';
             }
         }
 

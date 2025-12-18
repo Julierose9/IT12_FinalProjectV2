@@ -986,11 +986,6 @@
                     <i class="fas fa-download me-1"></i>
                     <span class="export-btn-text">Export PDF</span>
                 </button>
-                @if(request()->hasAny(['date', 'method', 'range']))
-                    <a href="{{ route('cashier.daily.sales') }}" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="fas fa-sync-alt"></i> Reset
-                    </a>
-                @endif
 
             </div>
         </div>
@@ -1249,71 +1244,17 @@
 
         setTimeout(animateProgressBars, 300);
 
-        // ========== CSV EXPORT FUNCTION ==========
-        window.exportCSV = function() {
-            const table = document.getElementById('salesTable');
-            let csv = [];
+        // ========== PDF EXPORT FUNCTION ==========
+        window.exportPDF = function() {
+            const date = "{{ request('date', $selectedDate->format('Y-m-d')) }}";
+            const method = "{{ request('method', '') }}";
+            const range = "{{ request('range', '') }}";
             
-            let headerRow = [];
-            const headers = table.querySelectorAll('thead th');
-            headers.forEach(header => {
-                headerRow.push(header.innerText);
-            });
-            csv.push(headerRow.join(','));
+            let url = "{{ route('cashier.daily.sales.export') }}?date=" + date;
+            if (method) url += "&method=" + method;
+            if (range) url += "&range=" + range;
             
-            const rows = table.querySelectorAll('tbody tr');
-            rows.forEach(row => {
-                let rowData = [];
-                const cells = row.querySelectorAll('td');
-                cells.forEach((cell, index) => {
-                    if (index === 3) {
-                        const percentage = cell.querySelector('.text-muted')?.innerText || '0%';
-                        rowData.push(percentage.replace('%', '%'));
-                    } else {
-                        rowData.push(cell.innerText.replace(/[₱,]/g, ''));
-                    }
-                });
-                csv.push(rowData.join(','));
-            });
-            
-            const footer = table.querySelector('tfoot');
-            if (footer) {
-                let footerRow = [];
-                const footerCells = footer.querySelectorAll('th, td');
-                footerCells.forEach(cell => {
-                    footerRow.push(cell.innerText.replace(/[₱,]/g, ''));
-                });
-                csv.push(footerRow.join(','));
-            }
-            
-            const csvContent = csv.join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            
-            @php
-                $exportDate = $selectedDate->format('Y-m-d');
-                $fileName = "daily-sales-{$exportDate}.csv";
-            @endphp
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', '{{ $fileName }}');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            const exportBtn = document.getElementById('exportBtn');
-            const originalHTML = exportBtn.innerHTML;
-            exportBtn.innerHTML = '<i class="fas fa-check me-1"></i> Exported!';
-            exportBtn.classList.remove('btn-success');
-            exportBtn.classList.add('btn-primary');
-            
-            setTimeout(() => {
-                exportBtn.innerHTML = originalHTML;
-                exportBtn.classList.remove('btn-primary');
-                exportBtn.classList.add('btn-success');
-            }, 2000);
+            window.location.href = url;
         };
 
         // Initialize Bootstrap tooltips

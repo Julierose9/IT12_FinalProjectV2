@@ -75,16 +75,20 @@ class StockInController extends Controller
             $product->save();
 
             // Update or Create Pricing
-            Pricing::updateOrCreate(
-                ['ProductID' => $product->ProductID, 'IsActive' => 'yes'],
-                [
-                    'OriginalPrice' => $request->OriginalPrice,
-                    'MarkupRate' => $request->MarkupRate,
-                    'RetailPrice' => $request->RetailPrice,
-                    'EffectiveDate' => now(),
-                    'IsActive' => 'yes'
-                ]
-            );
+            // First, deactivate old pricing records for this product
+            Pricing::where('ProductID', $product->ProductID)
+                ->where('IsActive', 'yes')
+                ->update(['IsActive' => 'no']);
+            
+            // Create new pricing record with auto-generated ID
+            Pricing::create([
+                'ProductID' => $product->ProductID,
+                'OriginalPrice' => $request->OriginalPrice,
+                'MarkupRate' => $request->MarkupRate,
+                'RetailPrice' => $request->RetailPrice,
+                'EffectiveDate' => now(),
+                'IsActive' => 'yes'
+            ]);
         });
 
         return redirect()->route('admin.stockin')->with('success', 'Stock added successfully!');

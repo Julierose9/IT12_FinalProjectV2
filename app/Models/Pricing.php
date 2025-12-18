@@ -11,8 +11,8 @@ class Pricing extends Model
 
     protected $table = 'pricing';
     protected $primaryKey = 'PricingID';
-    public $incrementing = true;
-    protected $keyType = 'int';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'ProductID',
@@ -37,13 +37,14 @@ class Pricing extends Model
         
         static::creating(function ($model) {
             if (empty($model->PricingID)) {
-                $latest = Pricing::latest('PricingID')->first();
-                $nextNumber = 1;
+                // Get the highest numeric part of existing PricingIDs
+                $highest = Pricing::selectRaw("CAST(SUBSTRING(PricingID, 4) AS UNSIGNED) as num")
+                    ->orderByRaw("CAST(SUBSTRING(PricingID, 4) AS UNSIGNED) DESC")
+                    ->first();
                 
-                if ($latest) {
-                    // Extract number from existing PricingID (e.g., PRC001 -> 1)
-                    $lastNumber = (int) substr($latest->PricingID, 3); // Skip 'PRC'
-                    $nextNumber = $lastNumber + 1;
+                $nextNumber = 1;
+                if ($highest && $highest->num) {
+                    $nextNumber = $highest->num + 1;
                 }
                 
                 $model->PricingID = 'PRC' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
