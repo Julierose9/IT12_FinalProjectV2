@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Schema;
+use Mpdf\Mpdf; // Correct MPDF class
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
+
+
 
 class TransactionController extends Controller
 {
@@ -82,12 +87,10 @@ class TransactionController extends Controller
         // Clone query for summary calculations
         $summaryQuery = clone $query;
         
-        // Check what columns exist in the orders table
-        // First, let's try to get one order to see the structure
+    
         $sampleOrder = Order::first();
         if ($sampleOrder) {
-            // Debug the column names
-            // dd($sampleOrder->toArray());
+           
         }
         
         // Calculate total amount - check which column has the total
@@ -249,11 +252,35 @@ class TransactionController extends Controller
         
         return $this->exportToPDF($orders, $totalAmount, $totalOrders);
     }
+
+private function exportToPDF($orders, $totalAmount, $totalOrders, $dateFrom = null, $dateTo = null)
+{
+    $html = view('admin.transaction_pdf', [
+        'orders' => $orders,
+        'totalAmount' => $totalAmount,
+        'totalOrders' => $totalOrders,
+        'dateFrom' => $dateFrom,
+        'dateTo' => $dateTo
+    ])->render();
     
-    private function exportToPDF($orders, $totalAmount, $totalOrders)
-    {
-        $pdf = Pdf::loadView('admin.transaction_pdf', compact('orders', 'totalAmount', 'totalOrders'))
-            ->setPaper('a4', 'landscape');
-        return $pdf->download('transaction_report_' . now()->format('Y-m-d_H-i-s') . '.pdf');
-    }
+    $mpdf = new Mpdf([
+        'mode' => 'utf-8',
+        'format' => 'A4-L', // Landscape
+        'margin_left' => 10,
+        'margin_right' => 10,
+        'margin_top' => 15,
+        'margin_bottom' => 15,
+        'margin_header' => 10,
+        'margin_footer' => 10
+    ]);
+    
+    $mpdf->WriteHTML($html);
+    
+    $filename = 'transaction_report_' . ($dateFrom ?? 'all') . '_to_' . ($dateTo ?? 'all') . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+    
+    return response($mpdf->Output($filename, 'D'), 200, [
+        'Content-Type' => 'application/pdf',
+        'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+    ]);
+}
 }

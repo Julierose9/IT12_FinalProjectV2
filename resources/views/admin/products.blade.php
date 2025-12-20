@@ -34,7 +34,7 @@
     }
     .sidebar.mobile-open { transform: translateX(0); }
     .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-    .brand img { width: 40px; height: 40px; object-fit: contain; }
+    .brand img { width: 100px; height: 100px; object-fit: contain; }
     .sidebar .nav-link {
       color: #5b5f72; padding: 12px 8px; border-radius: 10px;
       font-size: 0.95rem; display: flex; align-items: center;
@@ -321,7 +321,7 @@
         background: #5a6268;
     }
 
-    /* Active filter indicator */
+    /* Available filter indicator */
     .active-filters {
         display: none;
         align-items: center;
@@ -681,11 +681,11 @@
                     </div>
                     <div class="filter-option">
                       <input type="checkbox" id="status-active">
-                      <label for="status-active">Active</label>
+                      <label for="status-active">Available</label>
                     </div>
                     <div class="filter-option">
                       <input type="checkbox" id="status-inactive">
-                      <label for="status-inactive">Inactive</label>
+                      <label for="status-inactive">Phase Out</label>
                     </div>
                   </div>
                 </div>
@@ -699,7 +699,7 @@
             </div>
           </div>
           
-          <!-- Active Filters Display -->
+          <!-- Available Filters Display -->
           <div class="active-filters" id="activeFilters">
             <!-- Filter tags will be dynamically added here -->
           </div>
@@ -847,16 +847,25 @@
             <span class="badge bg-light text-dark">{{ $product->category->CategoryName ?? $product->category_name ?? 'Uncategorized' }}</span>
         </td>
         <td>
-            <small class="text-muted">{{ $product->supplier->SupplierName ?? $product->supplier_name ?? 'N/A' }}</small>
+            @php
+                $supplierId = $product->SupplierID ?? $product->supplier_id ?? null;
+                $supplierName = $product->supplier->SupplierName ?? $product->supplier_name ?? 'N/A';
+            @endphp
+            @if($supplierId)
+                <div><strong>{{ $supplierId }}</strong></div>
+                <small class="text-muted">{{ $supplierName }}</small>
+            @else
+                <small class="text-muted">{{ $supplierName }}</small>
+            @endif
         </td>
         <td>
             @php
-                $status = $product->ProductStatus ?? $product->product_status ?? 'Active';
+                $status = $product->ProductStatus ?? $product->product_status ?? 'Available';
             @endphp
             @if(strtolower($status) === 'inactive')
-            <span class="status-badge status-inactive">Inactive</span>
+            <span class="status-badge status-inactive">Phase Out</span>
             @else
-            <span class="status-badge status-active">Active</span>
+            <span class="status-badge status-active">Available</span>
             @endif
         </td>
         <td>
@@ -868,7 +877,7 @@
                     $categoryId = $product->CategoryID ?? $product->category_id ?? '';
                     $supplierId = $product->SupplierID ?? $product->supplier_id ?? '';
                     $skuNumber = $product->SKUNumber ?? $product->sku_number ?? '';
-                    $productStatus = $product->ProductStatus ?? $product->product_status ?? 'Active';
+                    $productStatus = $product->ProductStatus ?? $product->product_status ?? 'Available';
                 @endphp
                 
                 @if($productId)
@@ -999,8 +1008,8 @@
               <div class="mb-3">
                 <label for="ProductStatus" class="form-label required">Status</label>
                 <select class="form-select" id="ProductStatus" name="ProductStatus" required>
-                  <option value="Active" selected>Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="Available" selected>Available</option>
+                  <option value="Phase Out">Phase Out</option>
                 </select>
               </div>
             </div>
@@ -1097,8 +1106,8 @@
               <div class="mb-3">
                 <label for="edit_ProductStatus" class="form-label required">Status</label>
                 <select class="form-select" id="edit_ProductStatus" name="ProductStatus" required>
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="Available">Available</option>
+                  <option value="Phase Out">Phase Out</option>
                 </select>
               </div>
             </div>
@@ -1371,13 +1380,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update status
         currentFilters.status = [];
         if (document.getElementById('status-all').checked) {
-            currentFilters.status.push('Active', 'Inactive');
+            currentFilters.status.push('Available', 'Phase Out');
         } else {
             if (document.getElementById('status-active').checked) {
-                currentFilters.status.push('Active');
+                currentFilters.status.push('Available');
             }
             if (document.getElementById('status-inactive').checked) {
-                currentFilters.status.push('Inactive');
+                currentFilters.status.push('Phase Out');
             }
         }
     }
@@ -1484,8 +1493,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update status checkboxes
         document.getElementById('status-all').checked = currentFilters.status.length === 2;
-        document.getElementById('status-active').checked = currentFilters.status.includes('Active');
-        document.getElementById('status-inactive').checked = currentFilters.status.includes('Inactive');
+        document.getElementById('status-active').checked = currentFilters.status.includes('Available');
+        document.getElementById('status-inactive').checked = currentFilters.status.includes('Phase Out');
     }
     
     function filterProducts() {

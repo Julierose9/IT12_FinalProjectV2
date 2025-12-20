@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Stock In | Dora's Oshoppe</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -51,7 +52,7 @@
         .sidebar.collapsed .nav-link i { margin-right: 0; }
 
         .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-shrink: 0; }
-        .brand img { width: 40px; height: 40px; object-fit: contain; }
+        .brand img { width: 100px; height: 100px; object-fit: contain; }
         .brand-text { flex: 1; }
 
         .sidebar .nav-link { 
@@ -756,9 +757,9 @@
                             <td><span class="badge bg-primary fs-6">{{ $stock->Qty }}</span></td>
                             <td>
                                 @if($stock->ProdStatus == 'Received')
-                                    <span class="status-badge status-received">Good</span>
+                                    <span class="status-badge status-received">Received</span>
                                 @elseif($stock->ProdStatus == 'Defective')
-                                    <span class="status-badge status-defective">Damaged</span>
+                                    <span class="status-badge status-defective">Defective</span>
                                 @elseif($stock->ProdStatus == 'Expired')
                                     <span class="status-badge status-expired">Expired</span>
                                 @else
@@ -767,17 +768,23 @@
                             </td>
                             <td>{{ \Carbon\Carbon::parse($stock->DateRcvd)->format('M d, Y') }}</td>
                             <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-sm btn-outline-primary view-stock" 
-                                            data-stock-id="{{ $stock->StockInID }}">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger delete-stock" 
-                                            data-stock-id="{{ $stock->StockInID }}">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
+    <div class="action-buttons">
+        <button class="btn btn-sm btn-outline-primary view-stock" 
+                data-stock-id="{{ $stock->StockInID }}">
+            <i class="fas fa-eye"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-warning edit-stock" 
+                data-stock-id="{{ $stock->StockInID }}"
+                data-product-name="{{ $stock->product->ProductName ?? 'N/A' }}"
+                data-current-qty="{{ $stock->Qty }}">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger delete-stock" 
+        data-stock-id="{{ $stock->StockInID }}">  
+    <i class="fas fa-trash"></i>
+</button>
+    </div>
+</td>
                         </tr>
                         @empty
                         <tr>
@@ -812,24 +819,27 @@
                         <div class="col-md-8">
                             <label class="form-label required">Product</label>
                             <select class="form-select" name="ProductID" id="productSelect" required>
-                                <option value="">-- Select Product --</option>
-                                @foreach($existingProducts as $product)
-                                    <option value="{{ $product->ProductID }}"
-                                        data-sku="{{ $product->SKUNumber }}"
-                                        data-supplier-name="{{ $product->supplier?->SupplierName }}"
-                                        data-supplier-id="{{ $product->SupplierID }}"
-                                        data-category-id="{{ $product->CategoryID }}"
-                                        data-category-name="{{ $product->category?->CategoryName }}"
-                                        data-size="{{ $product->Size }}"
-                                        data-type="{{ $product->Type }}"
-                                        data-current-stock="{{ $product->StockQty ?? 0 }}"
-                                        data-reorder-level="{{ $product->ReorderLevel ?? 10 }}"
-                                        data-cost-price="{{ $product->OriginalPrice ?? 0 }}"
-                                        data-markup-rate="{{ $product->MarkupRate ?? 30 }}">
-                                        {{ $product->ProductID }} - {{ $product->ProductName }}
-                                    </option>
-                                @endforeach
-                            </select>
+    <option value="">Select Product</option>
+    @foreach($existingProducts as $product)
+    @php
+    $pricing = $product->pricing?->first();
+@endphp
+        <option value="{{ $product->ProductID }}"
+            data-sku="{{ $product->SKUNumber ?? 'N/A' }}"
+            data-supplier-name="{{ $product->supplier?->SupplierName ?? 'No Supplier' }}"
+            data-supplier-id="{{ $product->supplier?->SupplierID ?? '' }}"
+            data-category-id="{{ $product->category?->CategoryID ?? '' }}"
+            data-category-name="{{ $product->category?->CategoryName ?? '' }}"
+            data-size="{{ $product->Size ?? '' }}"
+            data-type="{{ $product->Type ?? '' }}"
+            data-current-stock="{{ $product->StockQty ?? 0 }}"
+            data-reorder-level="{{ $product->ReorderLevel ?? 10 }}"
+            data-cost-price="{{ $pricing?->OriginalPrice ?? 0 }}"
+            data-markup-rate="{{ $pricing?->MarkupRate ?? 30 }}">
+            {{ $product->ProductID }} - {{ $product->ProductName }}
+        </option>
+    @endforeach
+</select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">SKU Number</label>
@@ -997,6 +1007,175 @@
     </div>
 </div>
 
+<!-- Edit Stock Modal (with conditional fields) -->
+<div class="modal fade" id="editStockModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i ></i>Edit Stock Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form id="editStockForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <!-- Product Information (Read-only) -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Product</label>
+                            <input type="text" class="form-control" id="editProductName" readonly>
+                            <input type="hidden" id="editProductId" name="ProductID">
+                            <input type="hidden" id="editCategoryId" name="CategoryID">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">SKU Number</label>
+                            <input type="text" class="form-control" id="editSkuDisplay" readonly>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Information (Read-only) -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label">Supplier Information</label>
+                            <div class="form-control readonly-field">
+                                <strong id="editSupplierDisplay">-</strong>
+                            </div>
+                            <input type="hidden" name="SupplierID" id="editSupplierId">
+                        </div>
+                    </div>
+
+                    <!-- Conditional Fields Row -->
+                    <div class="row mb-3">
+                        <!-- Expiration Date (Conditional: Beauty category) -->
+                        <div class="col-md-4" id="editExpirationField" style="display:none;">
+                            <label class="form-label">Expiration Date</label>
+                            <input type="date" class="form-control" name="ExpirationDate" id="editExpirationDate">
+                        </div>
+
+                        <!-- Size (Conditional: RTW category) -->
+                        <div class="col-md-4" id="editSizeField" style="display:none;">
+                            <label class="form-label">Size</label>
+                            <input type="text" class="form-control" name="Size" id="editSizeInput" placeholder="e.g., S, M, L, XL">
+                        </div>
+
+                        <!-- Type (Conditional: Jewelry, Accessories, School Supplies, Bags) -->
+                        <div class="col-md-4" id="editTypeField" style="display:none;">
+                            <label class="form-label">Type</label>
+                            <input type="text" class="form-control" name="Type" id="editTypeInput" placeholder="e.g., Necklace, Earring, etc.">
+                        </div>
+                    </div>
+
+                    <!-- Quantity & Date -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label required">Quantity</label>
+                            <input type="number" min="1" class="form-control" id="editQty" name="Qty" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Reorder Level</label>
+                            <input type="number" min="1" class="form-control" name="ReorderLevel" id="editReorderLevel">
+                            <small class="text-muted">Updates the product's reorder level</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label required">Date Received</label>
+                            <input type="datetime-local" class="form-control" name="DateRcvd" id="editDateReceived" required>
+                        </div>
+                    </div>
+
+                    <!-- Stock Information -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="id-info">
+                                <div class="row text-center">
+                                    <div class="col-md-4 border-end">
+                                        <small class="text-muted d-block">Current Product Stock</small>
+                                        <strong id="editProductStock" class="fs-5">0</strong> units
+                                    </div>
+                                    <div class="col-md-4 border-end">
+                                        <small class="text-muted d-block">After Updating</small>
+                                        <strong id="editAfterUpdate" class="fs-5">0</strong> units
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">Reorder Level</small>
+                                        <strong id="editReorderLevelDisplay" class="fs-5">0</strong> units
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Warning -->
+                    <div class="alert alert-warning mb-3" id="editReorderAlert" style="display:none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <div>
+                            <strong>Low Stock Warning!</strong>
+                            <span id="editReorderText" class="small d-block"></span>
+                        </div>
+                    </div>
+
+                    <!-- Status Selection -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label class="form-label required">Product Status</label>
+                            <select class="form-control readonly-field" name="ProdStatus" required id="editProdStatusSelect">
+                                <option value="Received">Good Condition</option>
+                                <option value="Defective">Damaged/Defective</option>
+                                <option value="Expired">Expired</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Pricing Section -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Pricing Information</h6>
+                        <div class="row g-3">
+                            <!-- Cost Price -->
+                            <div class="col-md-4">
+                                <label class="form-label required">Cost Price (₱)</label>
+                                <input type="number" step="0.01" min="0" class="form-control" 
+                                       id="editCostPrice" name="OriginalPrice" required placeholder="0.00">
+                            </div>
+
+                            <!-- Markup Rate -->
+                            <div class="col-md-4">
+                                <label class="form-label required">Markup Rate (%)</label>
+                                <input type="number" step="0.1" min="0" class="form-control" 
+                                       id="editMarkupRate" name="MarkupRate" required placeholder="30">
+                            </div>
+
+                            <!-- Retail Price (Calculated) -->
+                            <div class="col-md-4">
+                                <label class="form-label required">Retail Price (₱)</label>
+                                <input type="text" class="form-control" id="editRetailPriceDisplay" readonly>
+                                <input type="hidden" name="RetailPrice" id="editRetailPriceHidden">
+                            </div>
+                        </div>
+                        <div class="row mt-2 text-center">
+                            <div class="col-md-4">
+                                <small class="text-muted">Cost: <span id="editCostSummary">₱0.00</span></small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Markup: <span id="editMarkupSummary">0%</span></small>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Retail: <span id="editRetailSummary">₱0.00</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i ></i>Update Stock
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteStockModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1011,11 +1190,10 @@
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteStockForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete Record</button>
-                </form>
+                <!-- Remove the form entirely - we'll handle it with JavaScript -->
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    Delete Record
+                </button>
             </div>
         </div>
     </div>
@@ -1029,12 +1207,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     
-    sidebarToggle.addEventListener('click', () => {
+    sidebarToggle?.addEventListener('click', () => {
         sidebar.classList.toggle('mobile-open');
         sidebarOverlay.classList.toggle('active');
     });
     
-    sidebarOverlay.addEventListener('click', () => {
+    sidebarOverlay?.addEventListener('click', () => {
         sidebar.classList.remove('mobile-open');
         sidebarOverlay.classList.remove('active');
     });
@@ -1071,15 +1249,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Apply filters
-    applyFiltersBtn?.addEventListener('click', function() {
+    applyFiltersBtn?.addEventListener('click', () => {
         filterMenu.classList.remove('show');
         filterToggle.classList.remove('active');
         applyFilters();
     });
     
-    // Clear filters
-    clearFiltersBtn?.addEventListener('click', function() {
+    clearFiltersBtn?.addEventListener('click', () => {
         document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(cb => {
             cb.checked = cb.id.includes('-all');
         });
@@ -1087,7 +1263,6 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilters();
     });
     
-    // Search functionality
     searchInput?.addEventListener('input', applyFilters);
     
     function applyFilters() {
@@ -1095,14 +1270,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const statusFilters = [];
         const categoryFilters = [];
         
-        // Get status filters
         if (!document.getElementById('status-all').checked) {
             if (document.getElementById('status-received').checked) statusFilters.push('Received');
             if (document.getElementById('status-defective').checked) statusFilters.push('Defective');
             if (document.getElementById('status-expired').checked) statusFilters.push('Expired');
         }
         
-        // Get category filters
         if (!document.getElementById('category-all').checked) {
             @foreach($categories as $cat)
             if (document.getElementById('category-{{ $cat->CategoryID }}')?.checked) {
@@ -1111,7 +1284,6 @@ document.addEventListener('DOMContentLoaded', function() {
             @endforeach
         }
         
-        // Filter rows
         const rows = tableBody.querySelectorAll('tr');
         let visibleCount = 0;
         
@@ -1126,56 +1298,51 @@ document.addEventListener('DOMContentLoaded', function() {
             const status = row.dataset.status;
             const category = row.dataset.category;
             
-            // Check search
             const searchMatch = searchTerm === '' || text.includes(searchTerm);
-            
-            // Check status
             const statusMatch = statusFilters.length === 0 || statusFilters.includes(status);
-            
-            // Check category
             const categoryMatch = categoryFilters.length === 0 || categoryFilters.includes(category);
             
-            // Show/hide row
-            if (searchMatch && statusMatch && categoryMatch) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
+            row.style.display = (searchMatch && statusMatch && categoryMatch) ? '' : 'none';
+            if (searchMatch && statusMatch && categoryMatch) visibleCount++;
         });
     }
     
-    // ========== ADD STOCK MODAL FUNCTIONALITY ==========
-    // Form elements
+    // ========== HELPER FUNCTIONS ==========
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        
+        const topbar = document.querySelector('.topbar');
+        topbar.parentNode.insertBefore(alertDiv, topbar.nextSibling);
+        
+        setTimeout(() => {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alertDiv);
+            bsAlert.close();
+        }, 5000);
+    }
+    
+    // ========== ADD STOCK MODAL ==========
     const productSelect = document.getElementById('productSelect');
     const skuDisplay = document.getElementById('skuDisplay');
     const supplierDisplay = document.getElementById('supplierDisplay');
     const supplierIdHidden = document.getElementById('supplierIdHidden');
-    
-    // Conditional fields containers
     const expirationField = document.getElementById('expirationField');
     const sizeField = document.getElementById('sizeField');
     const typeField = document.getElementById('typeField');
-    
-    // Conditional fields inputs
     const expirationDate = document.getElementById('expirationDate');
     const sizeInput = document.getElementById('sizeInput');
     const typeInput = document.getElementById('typeInput');
-    
-    // Stock information
     const currentStockEl = document.getElementById('currentStock');
     const afterAddingEl = document.getElementById('afterAdding');
     const reorderLevelDisplay = document.getElementById('reorderLevelDisplay');
     const reorderLevelInput = document.getElementById('reorderLevelInput');
-    
-    // Low stock warning
     const reorderAlert = document.getElementById('reorderAlert');
     const reorderText = document.getElementById('reorderText');
-    
-    // Quantity input
     const qtyInput = document.getElementById('qtyInput');
-    
-    // Pricing fields
     const costPrice = document.getElementById('costPrice');
     const markupRate = document.getElementById('markupRate');
     const retailPriceDisplay = document.getElementById('retailPriceDisplay');
@@ -1183,93 +1350,63 @@ document.addEventListener('DOMContentLoaded', function() {
     const costSummary = document.getElementById('costSummary');
     const markupSummary = document.getElementById('markupSummary');
     const retailSummary = document.getElementById('retailSummary');
-    
-    // Date received
     const dateReceived = document.getElementById('dateReceived');
     const prodStatusSelect = document.getElementById('prodStatusSelect');
     
-    // Set default date-time to current
+    // Set current datetime
     const now = new Date();
     const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     dateReceived.value = localDateTime;
-
-    // Product selection handler
+    
     productSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         
         if (selectedOption.value) {
-            // Update displayed info
             skuDisplay.value = selectedOption.dataset.sku || 'N/A';
             supplierDisplay.textContent = selectedOption.dataset.supplierName || 'No Supplier';
             supplierIdHidden.value = selectedOption.dataset.supplierId || '';
             
-            // Get category info
             const categoryId = selectedOption.dataset.categoryId || '';
             const categoryName = selectedOption.dataset.categoryName || '';
             
-            // Handle conditional fields based on category
+            hideAllConditionalFields();
             handleConditionalFields(categoryId, categoryName, selectedOption);
-            
-            // Update stock information
             updateStockInformation(selectedOption);
-            
-            // Update pricing
             updatePricingInformation(selectedOption);
-            
-            // Check for low stock
             checkReorderLevel();
         } else {
-            // Clear all fields if no product selected
             resetForm();
         }
     });
-
-    // Handle conditional fields based on category
-    function handleConditionalFields(categoryId, categoryName, selectedOption) {
-        // Reset all conditional fields
-        hideAllConditionalFields();
-        
-        // Beauty & Skincare category (show expiration date)
-        // Assuming Beauty category has ID 3 or contains 'beauty'/'skincare' in name
-        if (categoryId == '3' || categoryName.toLowerCase().includes('beauty') || 
-            categoryName.toLowerCase().includes('skincare')) {
-            expirationField.style.display = 'block';
-            // Set default expiration date (2 years from now)
-            const twoYears = new Date();
-            twoYears.setFullYear(twoYears.getFullYear() + 2);
-            expirationDate.valueAsDate = twoYears;
-        }
-        
-        // RTW/Clothing category (show size)
-        if (categoryName.toLowerCase().includes('rtw') || 
-            categoryName.toLowerCase().includes('clothing') ||
-            categoryName.toLowerCase().includes('apparel')) {
-            sizeField.style.display = 'block';
-            sizeInput.value = selectedOption.dataset.size || '';
-        }
-        
-        // Jewelry, Accessories, School Supplies, Bags category (show type)
-        const typeCategories = ['jewelry', 'accessories', 'school supplies', 'bags', 'stationery'];
-        const categoryLower = categoryName.toLowerCase();
-        
-        if (typeCategories.some(typeCat => categoryLower.includes(typeCat))) {
-            typeField.style.display = 'block';
-            typeInput.value = selectedOption.dataset.type || '';
-        }
-    }
-
-    // Hide all conditional fields
+    
     function hideAllConditionalFields() {
         expirationField.style.display = 'none';
         sizeField.style.display = 'none';
         typeField.style.display = 'none';
-        
         expirationDate.value = '';
         sizeInput.value = '';
         typeInput.value = '';
     }
-
-    // Update stock information
+    
+    function handleConditionalFields(categoryId, categoryName, selectedOption) {
+        const lowerName = categoryName.toLowerCase();
+        if (categoryId == '3' || lowerName.includes('beauty') || lowerName.includes('skincare')) {
+            expirationField.style.display = 'block';
+            const twoYears = new Date();
+            twoYears.setFullYear(twoYears.getFullYear() + 2);
+            expirationDate.valueAsDate = twoYears;
+        }
+        if (lowerName.includes('rtw') || lowerName.includes('clothing') || lowerName.includes('apparel')) {
+            sizeField.style.display = 'block';
+            sizeInput.value = selectedOption.dataset.size || '';
+        }
+        const typeCategories = ['jewelry', 'accessories', 'school supplies', 'bags', 'stationery'];
+        if (typeCategories.some(cat => lowerName.includes(cat))) {
+            typeField.style.display = 'block';
+            typeInput.value = selectedOption.dataset.type || '';
+        }
+    }
+    
     function updateStockInformation(selectedOption) {
         const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
         const reorderLevel = parseInt(selectedOption.dataset.reorderLevel) || 10;
@@ -1280,15 +1417,13 @@ document.addEventListener('DOMContentLoaded', function() {
         reorderLevelDisplay.textContent = reorderLevel;
         reorderLevelInput.value = reorderLevel;
         
-        // Only add quantity if status is "Received"
         if (status === 'Received') {
             afterAddingEl.textContent = currentStock + qty;
         } else {
             afterAddingEl.textContent = currentStock;
         }
     }
-
-    // Update pricing information
+    
     function updatePricingInformation(selectedOption) {
         const cost = parseFloat(selectedOption.dataset.costPrice) || 0;
         const markup = parseFloat(selectedOption.dataset.markupRate) || 30;
@@ -1297,18 +1432,14 @@ document.addEventListener('DOMContentLoaded', function() {
         markupRate.value = markup;
         calculateRetailPrice();
     }
-
-    // Calculate retail price
+    
     function calculateRetailPrice() {
         const cost = parseFloat(costPrice.value) || 0;
         const markup = parseFloat(markupRate.value) || 0;
-        
         if (cost > 0 && markup >= 0) {
             const retail = cost + (cost * markup / 100);
             retailPriceDisplay.value = '₱' + retail.toFixed(2);
             retailPriceHidden.value = retail.toFixed(2);
-            
-            // Update summary
             costSummary.textContent = '₱' + cost.toFixed(2);
             markupSummary.textContent = markup + '%';
             retailSummary.textContent = '₱' + retail.toFixed(2);
@@ -1320,8 +1451,7 @@ document.addEventListener('DOMContentLoaded', function() {
             retailSummary.textContent = '₱0.00';
         }
     }
-
-    // Check reorder level
+    
     function checkReorderLevel() {
         const currentStock = parseInt(currentStockEl.textContent) || 0;
         const reorderLevel = parseInt(reorderLevelDisplay.textContent) || 10;
@@ -1337,37 +1467,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 reorderAlert.style.display = 'flex';
                 if (newTotal === 0) {
                     reorderText.textContent = 'Product will be OUT OF STOCK after this entry!';
-                } else if (newTotal < reorderLevel) {
-                    reorderText.textContent = `Stock will be BELOW reorder level (${reorderLevel} units) after adding.`;
                 } else {
-                    reorderText.textContent = `Stock will be AT reorder level (${reorderLevel} units) after adding.`;
+                    reorderText.textContent = `Stock will be ${newTotal < reorderLevel ? 'BELOW' : 'AT'} reorder level (${reorderLevel} units) after adding.`;
                 }
             } else {
                 reorderAlert.style.display = 'none';
             }
         } else {
-            // For Defective/Expired items, stock doesn't increase
             afterAddingEl.textContent = currentStock;
             afterAddingEl.className = 'fs-5 text-primary';
             reorderAlert.style.display = 'none';
         }
     }
-
-    // Reset form function
+    
     function resetForm() {
         skuDisplay.value = '';
         supplierDisplay.textContent = '-';
         supplierIdHidden.value = '';
-        
         hideAllConditionalFields();
-        
         currentStockEl.textContent = '0';
         afterAddingEl.textContent = '0';
         reorderLevelDisplay.textContent = '0';
         reorderLevelInput.value = '10';
-        
         reorderAlert.style.display = 'none';
-        
         costPrice.value = '';
         markupRate.value = '30';
         retailPriceDisplay.value = '';
@@ -1375,115 +1497,67 @@ document.addEventListener('DOMContentLoaded', function() {
         costSummary.textContent = '₱0.00';
         markupSummary.textContent = '0%';
         retailSummary.textContent = '₱0.00';
-        
         qtyInput.value = '1';
     }
-
-    // Quantity change handler
-    qtyInput.addEventListener('input', function() {
+    
+    qtyInput.addEventListener('input', () => {
         const selectedOption = productSelect.options[productSelect.selectedIndex];
-        if (selectedOption.value) {
+        if (selectedOption?.value) {
             updateStockInformation(selectedOption);
             checkReorderLevel();
         }
     });
-
-    // Status change handler
-    prodStatusSelect.addEventListener('change', function() {
+    
+    prodStatusSelect.addEventListener('change', () => {
         const selectedOption = productSelect.options[productSelect.selectedIndex];
-        if (selectedOption.value) {
+        if (selectedOption?.value) {
             updateStockInformation(selectedOption);
             checkReorderLevel();
         }
     });
-
-    // Reorder level change handler
-    reorderLevelInput.addEventListener('input', function() {
-        reorderLevelDisplay.textContent = this.value || '0';
+    
+    reorderLevelInput.addEventListener('input', () => {
+        reorderLevelDisplay.textContent = reorderLevelInput.value || '0';
     });
-
-    // Pricing calculation listeners
+    
     costPrice.addEventListener('input', calculateRetailPrice);
     markupRate.addEventListener('input', calculateRetailPrice);
-
-    // Initialize calculation on page load
-    calculateRetailPrice();
-
-    // Initialize form reset when modal is closed
-    const addStockModal = document.getElementById('addStockModal');
-    if (addStockModal) {
-        addStockModal.addEventListener('hidden.bs.modal', function() {
-            productSelect.selectedIndex = 0;
-            resetForm();
-            dateReceived.value = localDateTime;
+    
+    document.getElementById('addStockModal')?.addEventListener('hidden.bs.modal', () => {
+        productSelect.selectedIndex = 0;
+        resetForm();
+        dateReceived.value = localDateTime;
+    });
+    
+    // ========== VIEW STOCK DETAILS ==========
+    document.querySelectorAll('.view-stock').forEach(btn => {
+        btn.addEventListener('click', function() {
+            loadStockDetails(this.dataset.stockId);
+        });
+    });
+    
+    function loadStockDetails(stockId) {
+        const viewContent = document.getElementById('viewStockContent');
+        viewContent.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3 text-muted">Loading...</p></div>`;
+        const modal = new bootstrap.Modal(document.getElementById('viewStockModal'));
+        modal.show();
+        
+        fetch(`/admin/stockin/${stockId}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                viewContent.innerHTML = formatStockDetails(data);
+            } else {
+                viewContent.innerHTML = `<div class="alert alert-danger">${data.error || 'Error loading details'}</div>`;
+            }
+        })
+        .catch(() => {
+            viewContent.innerHTML = `<div class="alert alert-danger">Failed to load details.</div>`;
         });
     }
     
-    // ========== VIEW STOCK DETAILS ==========
-    document.querySelectorAll('.view-stock').forEach(button => {
-        button.addEventListener('click', function() {
-            const stockId = this.dataset.stockId;
-            loadStockDetails(stockId);
-        });
-    });
-
-    // Function to load stock details
-    function loadStockDetails(stockId) {
-        const viewContent = document.getElementById('viewStockContent');
-        
-        // Show loading state
-        viewContent.innerHTML = `
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-3 text-muted">Loading stock details...</p>
-            </div>
-        `;
-        
-        // Show modal
-        const viewModal = new bootstrap.Modal(document.getElementById('viewStockModal'));
-        viewModal.show();
-        
-        // Load stock details via AJAX
-        fetch(`/admin/stockin/${stockId}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Format the stock details HTML
-                    const html = formatStockDetails(data);
-                    viewContent.innerHTML = html;
-                } else {
-                    viewContent.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            ${data.error || 'Error loading stock details'}
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading stock details:', error);
-                viewContent.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        Error loading stock details. Please try again.
-                    </div>
-                `;
-            });
-    }
-
-    // Function to format stock details
     function formatStockDetails(data) {
         const stock = data.stock_in;
         const product = data.product;
@@ -1491,7 +1565,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const supplier = product?.supplier;
         const category = product?.category;
         
-        // Helper functions
         const getValue = (value, fallback = 'N/A') => value !== null && value !== undefined ? value : fallback;
         const formatDate = (dateString) => {
             if (!dateString) return 'N/A';
@@ -1510,7 +1583,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         };
         
-        // Status badge
         let statusBadge = '';
         if (stock.ProdStatus === 'Received') {
             statusBadge = '<span class="badge bg-success">Received</span>';
@@ -1522,7 +1594,6 @@ document.addEventListener('DOMContentLoaded', function() {
             statusBadge = `<span class="badge bg-secondary">${stock.ProdStatus}</span>`;
         }
         
-        // Check if low stock
         const isLowStock = product && product.StockQty && product.ReorderLevel && product.StockQty <= product.ReorderLevel;
         
         return `
@@ -1647,61 +1718,436 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
     }
+    
+// ========== EDIT STOCK MODAL FUNCTIONALITY ==========
+let currentEditStockId = null;
+let originalEditQty = 0;
+let currentEditStatus = 'Received';
 
+// Edit button click handler
+document.addEventListener('click', e => {
+    if (e.target.closest('.edit-stock')) {
+        const btn = e.target.closest('.edit-stock');
+        currentEditStockId = btn.dataset.stockId;
+        
+        // Get product details from the row
+        const row = btn.closest('tr');
+        const productName = btn.dataset.productName;
+        const currentQty = btn.dataset.currentQty;
+        
+        // Store original values
+        originalEditQty = parseInt(currentQty);
+        
+        // Populate basic fields
+        document.getElementById('editProductName').value = productName;
+        document.getElementById('editQty').value = currentQty;
+        
+        // Fetch complete stock details via AJAX
+        fetchStockDetailsForEdit(currentEditStockId);
+    }
+});
+
+// Fetch stock details for editing
+function fetchStockDetailsForEdit(stockId) {
+    // Show loading state
+    const editModal = new bootstrap.Modal(document.getElementById('editStockModal'));
+    editModal.show();
+    
+    // Set loading message
+    document.getElementById('editProductName').value = 'Loading...';
+    
+    fetch(`/admin/stockin/${stockId}`, {
+        headers: { 
+            'X-Requested-With': 'XMLHttpRequest', 
+            'Accept': 'application/json' 
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            populateEditForm(data);
+        } else {
+            showAlert('danger', data.error || 'Error loading stock details');
+            editModal.hide();
+        }
+    })
+    .catch(error => {
+        console.error('Error loading stock details:', error);
+        showAlert('danger', 'Failed to load stock details');
+        editModal.hide();
+    });
+}
+
+// Populate the edit form with data
+function populateEditForm(data) {
+    const stock = data.stock_in;
+    const product = data.product;
+    const pricing = data.pricing;
+    const category = product?.category;
+    
+    // Set form action
+    document.getElementById('editStockForm').action = `/admin/stockin/${currentEditStockId}`;
+    
+    // Populate product info
+    document.getElementById('editProductName').value = product?.ProductName || 'N/A';
+    document.getElementById('editProductId').value = product?.ProductID || '';
+    document.getElementById('editSkuDisplay').value = product?.SKUNumber || 'N/A';
+    document.getElementById('editSupplierDisplay').textContent = product?.supplier?.SupplierName || 'No Supplier';
+    document.getElementById('editSupplierId').value = product?.supplier?.SupplierID || '';
+    
+    // Store category info
+    const categoryId = category?.CategoryID || '';
+    const categoryName = category?.CategoryName || '';
+    document.getElementById('editCategoryId').value = categoryId;
+    
+    // Handle conditional fields based on category
+    handleEditConditionalFields(categoryId, categoryName, product);
+    
+    // Populate conditional fields if they exist
+    if (stock.ExpirationDate) {
+        document.getElementById('editExpirationDate').value = stock.ExpirationDate.split('T')[0];
+    }
+    if (product?.Size) {
+        document.getElementById('editSizeInput').value = product.Size;
+    }
+    if (product?.Type) {
+        document.getElementById('editTypeInput').value = product.Type;
+    }
+    
+    // Populate quantity and dates
+    document.getElementById('editQty').value = stock.Qty;
+    document.getElementById('editDateReceived').value = stock.DateRcvd ? stock.DateRcvd.replace(' ', 'T').substring(0, 16) : '';
+    
+    // Populate product stock info
+    document.getElementById('editProductStock').textContent = product?.StockQty || 0;
+    document.getElementById('editReorderLevel').value = product?.ReorderLevel || 10;
+    document.getElementById('editReorderLevelDisplay').textContent = product?.ReorderLevel || 10;
+    
+    // Populate status
+    document.getElementById('editProdStatusSelect').value = stock.ProdStatus;
+    currentEditStatus = stock.ProdStatus;
+    
+    // Populate pricing
+    document.getElementById('editCostPrice').value = pricing?.OriginalPrice || 0;
+    document.getElementById('editMarkupRate').value = pricing?.MarkupRate || 30;
+    calculateEditRetailPrice();
+    
+    // Calculate stock after update
+    calculateEditStockAfterUpdate();
+}
+
+// Handle conditional fields in edit modal
+function handleEditConditionalFields(categoryId, categoryName, product) {
+    // Hide all conditional fields first
+    hideAllEditConditionalFields();
+    
+    if (!categoryName) return;
+    
+    const lowerName = categoryName.toLowerCase();
+    
+    // Beauty & Skincare category (show expiration date)
+    if (categoryId == '3' || lowerName.includes('beauty') || lowerName.includes('skincare')) {
+        document.getElementById('editExpirationField').style.display = 'block';
+    }
+    
+    // RTW/Clothing category (show size)
+    if (lowerName.includes('rtw') || lowerName.includes('clothing') || lowerName.includes('apparel')) {
+        document.getElementById('editSizeField').style.display = 'block';
+    }
+    
+    // Jewelry, Accessories, School Supplies, Bags category (show type)
+    const typeCategories = ['jewelry', 'accessories', 'school supplies', 'bags', 'stationery'];
+    if (typeCategories.some(cat => lowerName.includes(cat))) {
+        document.getElementById('editTypeField').style.display = 'block';
+    }
+}
+
+function hideAllEditConditionalFields() {
+    document.getElementById('editExpirationField').style.display = 'none';
+    document.getElementById('editSizeField').style.display = 'none';
+    document.getElementById('editTypeField').style.display = 'none';
+}
+
+// Calculate retail price for edit modal
+function calculateEditRetailPrice() {
+    const cost = parseFloat(document.getElementById('editCostPrice').value) || 0;
+    const markup = parseFloat(document.getElementById('editMarkupRate').value) || 0;
+    
+    if (cost > 0 && markup >= 0) {
+        const retail = cost + (cost * markup / 100);
+        document.getElementById('editRetailPriceDisplay').value = '₱' + retail.toFixed(2);
+        document.getElementById('editRetailPriceHidden').value = retail.toFixed(2);
+        document.getElementById('editCostSummary').textContent = '₱' + cost.toFixed(2);
+        document.getElementById('editMarkupSummary').textContent = markup + '%';
+        document.getElementById('editRetailSummary').textContent = '₱' + retail.toFixed(2);
+    } else {
+        document.getElementById('editRetailPriceDisplay').value = '';
+        document.getElementById('editRetailPriceHidden').value = '';
+        document.getElementById('editCostSummary').textContent = '₱0.00';
+        document.getElementById('editMarkupSummary').textContent = '0%';
+        document.getElementById('editRetailSummary').textContent = '₱0.00';
+    }
+}
+
+// Calculate stock after update
+function calculateEditStockAfterUpdate() {
+    const currentProductStock = parseInt(document.getElementById('editProductStock').textContent) || 0;
+    const newQty = parseInt(document.getElementById('editQty').value) || 0;
+    const reorderLevel = parseInt(document.getElementById('editReorderLevelDisplay').textContent) || 10;
+    const status = document.getElementById('editProdStatusSelect').value;
+    
+    // Calculate stock adjustment
+    let newProductStock = currentProductStock;
+    
+    if (status === 'Received') {
+        if (currentEditStatus === 'Received') {
+            // Both old and new are "Received" - adjust by difference
+            newProductStock = currentProductStock + (newQty - originalEditQty);
+        } else if (currentEditStatus !== 'Received') {
+            // Old was not Received, new is Received - add new quantity
+            newProductStock = currentProductStock + newQty;
+        }
+    } else {
+        if (currentEditStatus === 'Received') {
+            // Old was Received, new is not Received - subtract original quantity
+            newProductStock = currentProductStock - originalEditQty;
+        }
+        // If neither old nor new is Received, stock doesn't change
+    }
+    
+    // Update display
+    document.getElementById('editAfterUpdate').textContent = Math.max(0, newProductStock);
+    
+    // Check low stock warning
+    if (status === 'Received' && newProductStock <= reorderLevel) {
+        document.getElementById('editReorderAlert').style.display = 'flex';
+        if (newProductStock === 0) {
+            document.getElementById('editReorderText').textContent = 'Product will be OUT OF STOCK after this update!';
+        } else if (newProductStock < reorderLevel) {
+            document.getElementById('editReorderText').textContent = `Stock will be BELOW reorder level (${reorderLevel} units) after updating.`;
+        } else {
+            document.getElementById('editReorderText').textContent = `Stock will be AT reorder level (${reorderLevel} units) after updating.`;
+        }
+        document.getElementById('editAfterUpdate').className = 'fs-5 text-danger';
+    } else {
+        document.getElementById('editReorderAlert').style.display = 'none';
+        document.getElementById('editAfterUpdate').className = 'fs-5 text-primary';
+    }
+}
+
+// Event listeners for edit modal calculations
+document.getElementById('editQty')?.addEventListener('input', calculateEditStockAfterUpdate);
+document.getElementById('editProdStatusSelect')?.addEventListener('change', function() {
+    currentEditStatus = this.value;
+    calculateEditStockAfterUpdate();
+});
+document.getElementById('editReorderLevel')?.addEventListener('input', function() {
+    const value = this.value || 10;
+    document.getElementById('editReorderLevelDisplay').textContent = value;
+    calculateEditStockAfterUpdate();
+});
+document.getElementById('editCostPrice')?.addEventListener('input', calculateEditRetailPrice);
+document.getElementById('editMarkupRate')?.addEventListener('input', calculateEditRetailPrice);
+
+// Edit form submission
+document.getElementById('editStockForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+    submitBtn.disabled = true;
+    
+    // Get all form data
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Include _method for Laravel
+    data._method = 'PUT';
+    
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Update the row in the table
+            updateStockRow(currentEditStockId, data.updatedStock || data.stock_in);
+            
+            showAlert('success', data.message || 'Stock updated successfully!');
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('editStockModal')).hide();
+            
+            // Refresh page after 1.5 seconds to show updated data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showAlert('danger', data.error || 'Update failed');
+        }
+    })
+    .catch(error => {
+        console.error('Update error:', error);
+        showAlert('danger', error.error || error.message || 'Update failed');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+// Function to update table row after edit
+function updateStockRow(stockId, updatedData) {
+    const row = document.getElementById(`stock-row-${stockId}`);
+    if (!row) return;
+    
+    // Update quantity cell
+    if (row.cells[2]) {
+        row.cells[2].innerHTML = `<span class="badge bg-primary fs-6">${updatedData.Qty}</span>`;
+    }
+    
+    // Update edit button data attribute
+    const editButton = row.querySelector('.edit-stock');
+    if (editButton) {
+        editButton.dataset.currentQty = updatedData.Qty;
+    }
+    
+    // Update status cell
+    if (row.cells[3]) {
+        let statusBadge = '';
+        if (updatedData.ProdStatus === 'Received') {
+            statusBadge = '<span class="status-badge status-received">Good</span>';
+        } else if (updatedData.ProdStatus === 'Defective') {
+            statusBadge = '<span class="status-badge status-defective">Damaged</span>';
+        } else if (updatedData.ProdStatus === 'Expired') {
+            statusBadge = '<span class="status-badge status-expired">Expired</span>';
+        } else {
+            statusBadge = `<span class="badge bg-secondary">${updatedData.ProdStatus}</span>`;
+        }
+        row.cells[3].innerHTML = statusBadge;
+        row.dataset.status = updatedData.ProdStatus;
+    }
+    
+    // Update date cell
+    if (row.cells[4] && updatedData.DateRcvd) {
+        const date = new Date(updatedData.DateRcvd);
+        row.cells[4].textContent = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+    }
+    
+    // Re-apply filters
+    applyFilters();
+}    
     // ========== DELETE STOCK FUNCTIONALITY ==========
     let currentStockIdToDelete = null;
+    
+    // Debug: Check all delete buttons on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('=== DEBUG: Checking delete buttons ===');
+        document.querySelectorAll('.delete-stock').forEach((btn, index) => {
+            console.log(`Delete button ${index}:`, {
+                dataset: btn.dataset,
+                hasDataStockId: !!btn.dataset.stockId,
+                hasDataId: !!btn.dataset.id
+            });
+        });
+    });
     
     // Add event listeners to delete buttons
     document.addEventListener('click', function(e) {
         if (e.target.closest('.delete-stock')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             const button = e.target.closest('.delete-stock');
-            currentStockIdToDelete = button.dataset.stockId;
-            showDeleteConfirmation();
+            
+            // Get stock ID - check multiple possible attributes
+            currentStockIdToDelete = 
+                button.dataset.stockId || 
+                button.dataset.id ||
+                button.getAttribute('data-stock-id') ||
+                button.getAttribute('data-id');
+            
+            console.log('Delete clicked, Stock ID:', currentStockIdToDelete);
+            
+            if (!currentStockIdToDelete) {
+                console.error('No stock ID found on delete button');
+                console.log('Button HTML:', button.outerHTML);
+                showAlert('danger', 'Error: Could not identify stock record');
+                return;
+            }
+            
+            // Update modal display with stock ID
+            const deleteIdDisplay = document.getElementById('deleteStockIdDisplay');
+            if (deleteIdDisplay) {
+                deleteIdDisplay.textContent = currentStockIdToDelete;
+            }
+            
+            // Show the confirmation modal
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteStockModal'));
+            deleteModal.show();
         }
     });
-
-    // Show delete confirmation modal
-    function showDeleteConfirmation() {
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteStockModal'));
-        deleteModal.show();
+    
+    // Handle the confirmation button click
+    document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
+        if (!currentStockIdToDelete) {
+            showAlert('danger', 'No stock record selected');
+            return;
+        }
         
-        // Set up the delete form action
-        const deleteForm = document.getElementById('deleteStockForm');
-        deleteForm.action = `/admin/stockin/${currentStockIdToDelete}`;
-    }
-
-    // Handle delete form submission
-    document.getElementById('deleteStockForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const form = this;
-        const stockId = currentStockIdToDelete;
+        const confirmBtn = this;
+        const originalText = confirmBtn.innerHTML;
         
         // Show loading state
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
-        submitBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+        confirmBtn.disabled = true;
         
-        fetch(form.action, {
-            method: 'POST',
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        console.log('Deleting stock ID:', currentStockIdToDelete);
+        console.log('URL:', `/admin/stockin/${currentStockIdToDelete}`);
+        
+        // Send DELETE request using AJAX
+        fetch(`/admin/stockin/${currentStockIdToDelete}`, {
+            method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ _method: 'DELETE' })
+                'Content-Type': 'application/json',
+            }
         })
         .then(response => {
+            console.log('Response status:', response.status);
             if (!response.ok) {
-                return response.json().then(err => { throw err; });
+                throw new Error(`HTTP ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-                if (data.success) {
+            console.log('Response data:', data);
+            
+            if (data.success) {
                 // Remove the row from the table
-                const row = document.getElementById(`stock-row-${stockId}`);
+                const row = document.getElementById(`stock-row-${currentStockIdToDelete}`);
                 if (row) {
                     row.remove();
                 }
@@ -1714,63 +2160,128 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteModal.hide();
                 
                 // Check if table is now empty
-                const remainingRows = tableBody.querySelectorAll('tr');
-                if (remainingRows.length === 0 || (remainingRows.length === 1 && remainingRows[0].cells.length > 2)) {
-                    // Add empty state row
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.innerHTML = `
-                        <td colspan="6" class="text-center py-5 text-muted">
-                            <i class="fas fa-box-open fa-2x mb-3"></i>
-                            <h5>No stock records found</h5>
-                            <p class="mb-0">Add your first stock record using the "Add Stock" button</p>
-                        </td>
-                    `;
-                    tableBody.appendChild(emptyRow);
-                }
+                setTimeout(() => {
+                    const tableBody = document.getElementById('stockTableBody');
+                    const rows = tableBody.querySelectorAll('tr');
+                    
+                    // Check if we have any data rows (not counting empty state row)
+                    let hasDataRows = false;
+                    rows.forEach(row => {
+                        if (row.cells.length === 6) { // Data rows have 6 cells
+                            hasDataRows = true;
+                        }
+                    });
+                    
+                    if (!hasDataRows) {
+                        // Add empty state row
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-box-open fa-2x mb-3"></i>
+                                    <h5>No stock records found</h5>
+                                    <p class="mb-0">Add your first stock record using the "Add Stock" button</p>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }, 100);
+                
+                // OPTION 1: Refresh the page after 2 seconds to get latest data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+                
+                // OPTION 2: Or fetch latest stock data without page refresh (more advanced)
+                // fetchLatestStockData();
+                
             } else {
                 showAlert('danger', data.error || 'Failed to delete stock record');
             }
         })
         .catch(error => {
             console.error('Delete error:', error);
-            showAlert('danger', error.error || error.message || 'Failed to delete stock record');
+            showAlert('danger', error.message || 'Failed to delete stock record');
         })
         .finally(() => {
             // Reset button state
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+            currentStockIdToDelete = null;
         });
     });
-
-    // Helper function to show alerts
-    function showAlert(type, message) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        // Insert after topbar
-        const topbar = document.querySelector('.topbar');
-        topbar.parentNode.insertBefore(alertDiv, topbar.nextSibling);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            const bsAlert = bootstrap.Alert.getOrCreateInstance(alertDiv);
-            bsAlert.close();
-        }, 5000);
+    
+    // OPTIONAL: Function to fetch latest stock data without page refresh
+    function fetchLatestStockData() {
+        fetch('/admin/stockin', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html',
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Parse the HTML to extract just the table body
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableBody = doc.getElementById('stockTableBody');
+            
+            if (newTableBody) {
+                // Replace the table body with fresh data
+                document.getElementById('stockTableBody').innerHTML = newTableBody.innerHTML;
+                
+                // Re-attach event listeners to new buttons
+                attachEventListenersToNewRows();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching latest data:', error);
+        });
     }
-
+    
+    function attachEventListenersToNewRows() {
+        // Re-attach event listeners to new delete buttons
+        document.querySelectorAll('.delete-stock').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const button = e.target.closest('.delete-stock');
+                currentStockIdToDelete = button.dataset.stockId || button.dataset.id;
+                
+                if (currentStockIdToDelete) {
+                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteStockModal'));
+                    deleteModal.show();
+                }
+            });
+        });
+        
+        // Re-attach event listeners to edit buttons
+        document.querySelectorAll('.edit-stock').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const button = e.target.closest('.edit-stock');
+                currentEditStockId = button.dataset.stockId;
+                document.getElementById('editProductName').value = button.dataset.productName;
+                document.getElementById('editCurrentQty').value = button.dataset.currentQty;
+                document.getElementById('editNewQty').value = button.dataset.currentQty;
+                document.getElementById('editStockForm').action = `/admin/stockin/${currentEditStockId}`;
+                new bootstrap.Modal(document.getElementById('editStockModal')).show();
+            });
+        });
+        
+        // Re-attach event listeners to view buttons
+        document.querySelectorAll('.view-stock').forEach(btn => {
+            btn.addEventListener('click', function() {
+                loadStockDetails(this.dataset.stockId);
+            });
+        });
+    }
+    
     // Auto-hide alerts after 5 seconds
     setTimeout(() => {
         document.querySelectorAll('.alert:not(.alert-warning):not(.alert-info)').forEach(alert => {
-            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-            bsAlert.close();
+            bootstrap.Alert.getOrCreateInstance(alert).close();
         });
     }, 5000);
-});
-</script>
+});</script>
 </body>
 </html>

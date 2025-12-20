@@ -40,7 +40,7 @@ class PullOutController extends Controller
         $products = Product::with(['supplier', 'category', 'pricing' => function($query) {
             $query->where('IsActive', 'yes')->latest('EffectiveDate')->first();
         }])
-        ->where('ProductStatus', 'Active')
+        ->where('ProductStatus', 'Available')
         ->get()
         ->map(function ($product) {
             // Calculate total stock in quantity for this product
@@ -63,7 +63,7 @@ class PullOutController extends Controller
         ->values(); // Reset array keys
         
         // Get active employees
-        $employees = Employee::where('EmployeeStatus', 'Active')->get();
+        $employees = Employee::where('EmployeeStatus', 'Available')->get();
         
         return view('admin.pullout', compact(
             'pullOuts', 

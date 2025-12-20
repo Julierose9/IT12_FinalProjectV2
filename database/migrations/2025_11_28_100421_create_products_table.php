@@ -17,7 +17,7 @@ return new class extends Migration
         $table->string('ProductName');
         $table->text('ProductDescription')->nullable();
         $table->integer('ReorderLevel')->default(0);
-        $table->enum('ProductStatus', ['Active', 'Inactive']);
+        $table->enum('ProductStatus', ['Available', 'Phase Out'])->default('Available');
 
         $table->string('SupplierID', 10);
         $table->string('CategoryID', 10);

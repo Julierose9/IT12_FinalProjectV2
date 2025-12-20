@@ -76,8 +76,8 @@
     }
 
     .brand img { 
-      width: 40px; 
-      height: 40px;
+      width: 100px; 
+      height: 100px;
       object-fit: contain;
     }
 
@@ -1201,24 +1201,14 @@
             
             <div class="col-md-6">
               <div class="mb-3">
-                <label for="EmployeeID" class="form-label required">Employee</label>
-                <select class="form-select" id="EmployeeID" name="EmployeeID" required>
-                  <option value="">Select Employee</option>
-                  @if(count($employees) > 0)
-                    @foreach($employees as $employee)
-                      @php
-                        $empName = ($employee->EmployeeFName ?? $employee->EmpFName ?? '') . ' ' . 
-                                   ($employee->EmployeeLName ?? $employee->EmpLName ?? '');
-                      @endphp
-                      <option value="{{ $employee->EmployeeID }}"
-                        @if($currentEmployee && $currentEmployee->EmployeeID == $employee->EmployeeID)
-                          selected
-                        @endif>
-                        {{ trim($empName) }} ({{ $employee->EmployeeID }})
-                      </option>
-                    @endforeach
-                  @endif
-                </select>
+              <label class="form-label">Employee</label>
+                            <div class="form-control readonly-field">
+                                <strong>{{ $employeeName ?? 'Cashier' }}</strong> 
+                                @if($employeeId)
+                                <br><small>ID: {{ $employeeId }}</small>
+                                @endif
+                            </div>
+                            <input type="hidden" name="EmployeeID" value="{{ $employeeId }}">
               </div>
             </div>
           </div>
@@ -1848,6 +1838,7 @@
       bsAlert.close();
     }, 5000);
   }
+  
 </script>
 </body>
 </html>

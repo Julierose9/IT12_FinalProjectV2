@@ -31,7 +31,7 @@
     }
     .sidebar.mobile-open { transform: translateX(0); }
     .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-    .brand img { width: 40px; height: 40px; object-fit: contain; }
+    .brand img { width: 100px; height: 100px; object-fit: contain; }
     .sidebar .nav-link {
       color: #5b5f72; padding: 12px 8px; border-radius: 10px;
       font-size: 0.95rem; display: flex; align-items: center;
@@ -386,85 +386,6 @@
     .stock-medium { background: #f08a24; }
     .stock-low { background: #e05252; }
 
-    /* Tab Navigation */
-    .nav-tabs {
-      border-bottom: 1px solid #dee2e6;
-      margin-bottom: 20px;
-    }
-    
-    .nav-tabs .nav-link {
-      color: #5b5f72;
-      border: none;
-      padding: 12px 24px;
-      font-weight: 500;
-      border-radius: 8px 8px 0 0;
-    }
-    
-    .nav-tabs .nav-link:hover {
-      border-color: transparent;
-      color: var(--primary-color);
-    }
-    
-    .nav-tabs .nav-link.active {
-      background-color: #fff;
-      border-bottom: 3px solid var(--primary-color);
-      color: var(--primary-color);
-      font-weight: 600;
-    }
-
-    /* Tabs content */
-    .tab-content {
-      padding: 0;
-    }
-
-    /* Transaction History Modal */
-    .transaction-history-modal .modal-body {
-      max-height: 70vh;
-      overflow-y: auto;
-    }
-
-    .transaction-item {
-      border-bottom: 1px solid #eef2f7;
-      padding: 12px 0;
-    }
-
-    .transaction-item:last-child {
-      border-bottom: none;
-    }
-
-    .item-name {
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .item-details {
-      display: flex;
-      justify-content: space-between;
-      color: #6c757d;
-      font-size: 0.875rem;
-    }
-
-    .transaction-summary {
-      background-color: #f8f9fa;
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 20px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .summary-row.total {
-      font-weight: 600;
-      font-size: 1.1rem;
-      border-top: 1px solid #dee2e6;
-      padding-top: 12px;
-      margin-top: 12px;
-    }
-
     /* Responsive */
     @media (max-width: 991.98px) {
       .sidebar { transform: translateX(-100%); width: 280px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
@@ -475,10 +396,6 @@
       .user-section, .filter-container { align-items: stretch; min-width: 100%; }
       .search-input { min-width: 100%; }
       .filter-menu { right: auto; left: 0; }
-      .nav-tabs .nav-link {
-        padding: 8px 16px;
-        font-size: 0.875rem;
-      }
     }
   </style>
 </head>
@@ -506,19 +423,118 @@
         }
     }
 
-    // Get inventory data
-    $products = $products ?? collect([]);
+    // Fetch all products with their current stock calculations
+    $allProducts = \App\Models\Product::with(['category', 'pricing'])
+        ->get()
+        ->map(function($product) {
+            // Calculate total stock in quantity for this product
+            $totalStockIn = \App\Models\StockIn::where('ProductID', $product->ProductID)
+                ->where('ProdStatus', 'Received')
+                ->sum('Qty');
+            
+            // Calculate total pulled out quantity for this product
+            $totalPullOut = 0;
+            try {
+                // Try different table names
+                if (\Schema::hasTable('pull_outs')) {
+                    $totalPullOut = \App\Models\PullOut::where('ProductID', $product->ProductID)
+                        ->sum('PullOutQty');
+                } elseif (\Schema::hasTable('pullouts')) {
+                    $totalPullOut = DB::table('pullouts')
+                        ->where('ProductID', $product->ProductID)
+                        ->sum('PullOutQty');
+                }
+            } catch (\Exception $e) {
+                $totalPullOut = 0;
+            }
+            
+            $product->current_stock = max(0, $totalStockIn - $totalPullOut);
+            $product->total_stock_in = $totalStockIn;
+            $product->total_pull_out = $totalPullOut;
+            
+            return $product;
+        });
+
+    // Apply search filter
+    if (request('search')) {
+        $search = strtolower(request('search'));
+        $allProducts = $allProducts->filter(function($product) use ($search) {
+            return str_contains(strtolower($product->ProductID ?? ''), $search) ||
+                   str_contains(strtolower($product->ProductName ?? ''), $search) ||
+                   str_contains(strtolower($product->SKUNumber ?? ''), $search) ||
+                   ($product->category && str_contains(strtolower($product->category->CategoryName ?? ''), $search));
+        });
+    }
+    
+    // Apply category filter
+    if (request('categories')) {
+        $categories = request('categories');
+        $allProducts = $allProducts->filter(function($product) use ($categories) {
+            return in_array($product->CatID, $categories);
+        });
+    }
+    
+    // Apply stock status filter
+    if (request('stock_status')) {
+        $stockStatus = request('stock_status');
+        $allProducts = $allProducts->filter(function($product) use ($stockStatus) {
+            $currentStock = $product->current_stock ?? 0;
+            $reorderLevel = $product->ReorderLvl ?? 5;
+            
+            if (in_array('out', $stockStatus) && $currentStock <= 0) {
+                return true;
+            }
+            if (in_array('low', $stockStatus) && $currentStock > 0 && $currentStock <= $reorderLevel) {
+                return true;
+            }
+            if (in_array('instock', $stockStatus) && $currentStock > $reorderLevel) {
+                return true;
+            }
+            return false;
+        });
+    }
+    
+    // Sort by stock status and product name
+    $allProducts = $allProducts->sort(function($a, $b) {
+        $stockA = $a->current_stock ?? 0;
+        $stockB = $b->current_stock ?? 0;
+        $reorderA = $a->ReorderLvl ?? 5;
+        $reorderB = $b->ReorderLvl ?? 5;
+        
+        // Sort by stock status priority
+        if ($stockA <= 0 && $stockB > 0) return 1;
+        if ($stockA > 0 && $stockB <= 0) return -1;
+        if ($stockA <= $reorderA && $stockB > $reorderB) return 1;
+        if ($stockA > $reorderA && $stockB <= $reorderB) return -1;
+        
+        // Then sort by product name
+        return strcmp($a->ProductName ?? '', $b->ProductName ?? '');
+    });
+    
+    // Manual pagination
+    $currentPage = request('page', 1);
+    $perPage = 15;
+    $offset = ($currentPage - 1) * $perPage;
+    $products = $allProducts->slice($offset, $perPage);
+    $totalProducts = $allProducts->count();
+    
     $lowStockCount = 0;
     $outOfStockCount = 0;
     
-    foreach ($products as $product) {
+    // Calculate stock counts
+    foreach ($allProducts as $product) {
         $currentStock = $product->current_stock ?? 0;
+        $reorderLevel = $product->ReorderLvl ?? 5;
+        
         if ($currentStock <= 0) {
             $outOfStockCount++;
-        } elseif ($currentStock <= ($product->ReorderLvl ?? 5)) {
+        } elseif ($currentStock <= $reorderLevel) {
             $lowStockCount++;
         }
     }
+    
+    // Get categories for filter dropdown
+    $categories = \App\Models\Category::orderBy('CategoryName')->get();
 @endphp
 
 <!-- Mobile Toggle & Overlay -->
@@ -644,7 +660,7 @@
                     @foreach($categories ?? [] as $category)
                     <div class="filter-option">
                       <input type="checkbox" name="categories[]" id="category-{{ $category->CatID ?? $category->id }}" value="{{ $category->CatID ?? $category->id }}" {{ in_array($category->CatID ?? $category->id, request('categories', [])) || !request('categories') ? 'checked' : '' }}>
-                      <label for="category-{{ $category->CatID ?? $category->id }}">{{ $category->CatName }}</label>
+                      <label for="category-{{ $category->CatID ?? $category->id }}">{{ $category->CategoryName ?? $category->CatName }}</label>
                     </div>
                     @endforeach
                   </div>
@@ -693,218 +709,177 @@
     </div>
   @endif
 
-  
-
-  {{-- Tab Navigation --}}
-  <ul class="nav nav-tabs" id="inventoryTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab">
-        <i ></i>Products Inventory
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactions" type="button" role="tab">
-        <i ></i>Stock Transactions
-      </button>
-    </li>
-  </ul>
-
-  {{-- Tab Content --}}
-  <div class="tab-content" id="inventoryTabsContent">
-    {{-- Products Tab --}}
-    <div class="tab-pane fade show active" id="products" role="tabpanel">
-      <div class="card table-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <h5 class="card-title mb-0">Current Inventory</h5>
-            <div class="d-flex gap-2">
-              <a href="{{ route('admin.reports.inventory.export') . '?' . http_build_query(request()->except('page')) }}" class="btn btn-danger">
-                <i class="fas fa-file-pdf me-1"></i> Export PDF
-              </a>
-            </div>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table table-hover align-middle" id="inventoryTable">
-              <thead class="table-light">
-                <tr>
-                  <th>Product ID</th>
-                  <th>Product Name</th>
-                  <th>Category</th>
-                  <th>Current Stock</th>
-                  <th>Reorder Level</th>
-                  <th>Status</th>
-                  <th>Price</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="inventoryTableBody">
-                @forelse($paginatedProducts ?? $products as $product)
-                <tr data-stock="{{ $product->current_stock }}" 
-                    data-category="{{ $product->CatID }}">
-                  <td><strong>{{ $product->ProductID }}</strong></td>
-                  <td>
-                    <div class="fw-semibold">{{ $product->ProductName }}</div>
-                    <small class="text-muted">SKU: {{ $product->SKUNumber }}</small>
-                  </td>
-                  <td>{{ $product->category?->CategoryName ?? 'Uncategorized' }}</td>
-                  <td>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                      <strong>{{ $product->current_stock ?? 0 }}</strong>
-                      <span class="text-muted" style="font-size: 0.75rem;">units</span>
-                      <div class="stock-bar">
-                        @php
-                          $currentStock = $product->current_stock ?? 0;
-                          $reorderLevel = $product->ReorderLvl ?? 5;
-                          $maxStock = max($reorderLevel * 3, $currentStock, 1);
-                          $percent = $currentStock > 0 ? min(100, ($currentStock / $maxStock) * 100) : 0;
-                          $fill = 'stock-high';
-                          if ($currentStock <= 0) {
-                            $fill = 'stock-low';
-                          } elseif ($currentStock <= $reorderLevel) {
-                            $fill = 'stock-low';
-                          } elseif ($currentStock <= $reorderLevel * 2) {
-                            $fill = 'stock-medium';
-                          }
-                        @endphp
-                        <div class="stock-fill {{ $fill }}" style="width:{{ $percent }}%"></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{{ $product->ReorderLvl ?? 5 }}</td>
-                  <td>
-                    @php
-                      $currentStock = $product->current_stock ?? 0;
-                      $reorderLevel = $product->ReorderLvl ?? 5;
-                    @endphp
-                    @if($currentStock <= 0)
-                      <span class="status-badge status-out">Out of Stock</span>
-                    @elseif($currentStock <= $reorderLevel)
-                      <span class="status-badge status-low">Low Stock</span>
-                    @else
-                      <span class="status-badge status-instock">In Stock</span>
-                    @endif
-                  </td>
-                  <td>
-                    <div>₱{{ number_format($product->pricing->RetailPrice ?? 0, 2) }}</div>
-                    <small class="text-muted">Cost: ₱{{ number_format($product->pricing->OriginalPrice ?? 0, 2) }}</small>
-                  </td>
-                  <td>
-                    <div class="action-buttons">
-                      <button class="btn btn-sm btn-outline-primary view-transaction-history" 
-                              data-bs-toggle="modal" 
-                              data-bs-target="#transactionHistoryModal"
-                              data-product-id="{{ $product->ProductID }}">
-                        <i class="fas fa-history"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                @empty
-                <tr>
-                  <td colspan="8" class="text-center py-5">
-                    <div class="empty-state">
-                      <i class="fas fa-box fa-2x mb-3"></i>
-                      <h5>No products found</h5>
-                      <p class="mb-0">Add products to see them here</p>
-                    </div>
-                  </td>
-                </tr>
-                @endforelse
-              </tbody>
-            </table>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center mt-4">
-            <div class="text-muted">
-              @if(isset($paginatedProducts))
-                Total: {{ $paginatedProducts->total() }} product(s) | 
-                Showing: {{ $paginatedProducts->firstItem() ?? 0 }}-{{ $paginatedProducts->lastItem() ?? 0 }} |
-              @else
-                Total: {{ $products->count() }} product(s) | 
-              @endif
-              @if($lowStockCount > 0)
-                <span class="text-warning">{{ $lowStockCount }} low stock</span> |
-              @endif
-              @if($outOfStockCount > 0)
-                <span class="text-danger">{{ $outOfStockCount }} out of stock</span>
-              @endif
-            </div>
-            
-            {{-- Pagination --}}
-            @if(isset($paginatedProducts) && $paginatedProducts->hasPages())
-              <nav>
-                {{ $paginatedProducts->withQueryString()->links() }}
-              </nav>
-            @endif
-          </div>
+  {{-- Products Inventory --}}
+  <div class="card table-card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h5 class="card-title mb-0">Current Inventory</h5>
+        <div class="d-flex gap-2">
+          <a href="{{ route('admin.reports.inventory.export') . '?' . http_build_query(request()->except('page')) }}" class="btn btn-danger">
+            <i class="fas fa-file-pdf me-1"></i> Export PDF
+          </a>
         </div>
       </div>
-    </div>
 
-    {{-- Transactions Tab --}}
-    <div class="tab-pane fade" id="transactions" role="tabpanel">
-      <div class="card table-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="card-title mb-0">Stock Transaction History</h5>
-          </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="inventoryTable">
+          <thead class="table-light">
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Current Stock</th>
+              <th>Reorder Level</th>
+              <th>Status</th>
+              <th>Price</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody">
+            @forelse($products as $product)
+              @php
+                $currentStock = $product->current_stock ?? 0;
+                $reorderLevel = $product->ReorderLvl ?? 5;
+                
+                // Calculate stock bar percentage
+                $maxStock = max($reorderLevel * 3, $currentStock, 1);
+                $percent = $currentStock > 0 ? min(100, ($currentStock / $maxStock) * 100) : 0;
+                
+                // Determine stock bar color
+                $fill = 'stock-high';
+                if ($currentStock <= 0) {
+                    $fill = 'stock-low';
+                } elseif ($currentStock <= $reorderLevel) {
+                    $fill = 'stock-low';
+                } elseif ($currentStock <= $reorderLevel * 2) {
+                    $fill = 'stock-medium';
+                }
+              @endphp
+              
+              <tr data-stock="{{ $currentStock }}" 
+                  data-category="{{ $product->CatID }}">
+                <td><strong>{{ $product->ProductID ?? 'N/A' }}</strong></td>
+                <td>
+                  <div class="fw-semibold">{{ $product->ProductName ?? 'Unnamed Product' }}</div>
+                  <small class="text-muted">SKU: {{ $product->SKUNumber ?? 'N/A' }}</small>
+                </td>
+                <td>{{ $product->category?->CategoryName ?? $product->category?->CatName ?? 'Uncategorized' }}</td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <strong>{{ $product->StockQty ?? 0 }}</strong>
+                    <span class="text-muted" style="font-size: 0.75rem;">units</span>
+                    <div class="stock-bar">
+                      @php
+                        $currentStock = $product->StockQty ?? 0;
+                        $reorderLevel = $product->ReorderLvl ?? 5;
+                        $maxStock = max($reorderLevel * 3, $currentStock, 1);
+                        $percent = $currentStock > 0 ? min(100, ($currentStock / $maxStock) * 100) : 0;
+                        $fill = 'stock-high';
+                        if ($currentStock <= 0) {
+                            $fill = 'stock-low';
+                        } elseif ($currentStock <= $reorderLevel) {
+                            $fill = 'stock-low';
+                        } elseif ($currentStock <= $reorderLevel * 2) {
+                            $fill = 'stock-medium';
+                        }
+                      @endphp
+                      <div class="stock-fill {{ $fill }}" style="width:{{ $percent }}%"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ $product->ReorderLvl ?? 10 }}</td>
+                <td>
+                  @if($currentStock <= 0)
+                    <span class="status-badge status-out">Out of Stock</span>
+                  @elseif($currentStock <= $reorderLevel)
+                    <span class="status-badge status-low">Low Stock</span>
+                  @else
+                    <span class="status-badge status-instock">In Stock</span>
+                  @endif
+                </td>
+                <td>
+                  @if($product->pricing)
+                    <div>₱{{ number_format($product->pricing->RetailPrice ?? 0, 2) }}</div>
+                    <small class="text-muted">Cost: ₱{{ number_format($product->pricing->OriginalPrice ?? 0, 2) }}</small>
+                  @elseif($product->price)
+                    <div>₱{{ number_format($product->price ?? 0, 2) }}</div>
+                    <small class="text-muted">Cost: ₱{{ number_format($product->cost_price ?? 0, 2) }}</small>
+                  @else
+                    <div>₱0.00</div>
+                    <small class="text-muted">Cost: ₱0.00</small>
+                  @endif
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary view-transaction-history" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#transactionHistoryModal"
+                            data-product-id="{{ $product->ProductID }}">
+                      <i class="fas fa-history"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="8" class="text-center py-5">
+                  <div class="empty-state">
+                    <i class="fas fa-box fa-2x mb-3"></i>
+                    <h5>No products found</h5>
+                    <p class="mb-0">Add products to see them here</p>
+                  </div>
+                </td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
 
-          <div class="table-responsive">
-            <table class="table table-hover align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>Date</th>
-                  <th>Type</th>
-                  <th>Product</th>
-                  <th>Quantity</th>
-                  <th>Reference</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                @forelse($recentMovements ?? [] as $movement)
-                <tr>
-                  <td>{{ \Carbon\Carbon::parse($movement->ChangeDateTime)->format('M d, Y h:i A') }}</td>
-                  <td>
-                    @if($movement->ChangeType == 'Decrease')
-                      <span class="badge bg-danger">Sale</span>
-                    @elseif($movement->ChangeType == 'Increase')
-                      <span class="badge bg-success">Stock In</span>
-                    @else
-                      <span class="badge bg-secondary">{{ $movement->ChangeType }}</span>
-                    @endif
-                  </td>
-                  <td>{{ $movement->product->ProductName ?? 'Product #' . $movement->ProductID }}</td>
-                  <td>
-                    @if($movement->ChangeType == 'Decrease')
-                      <span class="text-danger">-{{ $movement->QtyChange }}</span>
-                    @else
-                      <span class="text-success">+{{ $movement->QtyChange }}</span>
-                    @endif
-                  </td>
-                  <td>
-                    @if($movement->reference_type == 'order')
-                      Order #{{ $movement->reference_id }}
-                    @elseif($movement->reference_type == 'stock_in')
-                      Stock In #{{ $movement->reference_id }}
-                    @elseif($movement->reference_type == 'pullout')
-                      Pullout #{{ $movement->reference_id }}
-                    @else
-                      {{ $movement->reference_id ?? '-' }}
-                    @endif
-                  </td>
-                  <td>{{ $movement->notes ?? '-' }}</td>
-                </tr>
-                @empty
-                <tr>
-                  <td colspan="6" class="text-center py-5 text-muted">No stock transactions found</td>
-                </tr>
-                @endforelse
-              </tbody>
-            </table>
-          </div>
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted">
+          Total: {{ $totalProducts }} product(s) | 
+          Showing: {{ ($currentPage - 1) * $perPage + 1 }}-{{ min($currentPage * $perPage, $totalProducts) }} |
+          @if($lowStockCount > 0)
+            <span class="text-warning">{{ $lowStockCount }} low stock</span> |
+          @endif
+          @if($outOfStockCount > 0)
+            <span class="text-danger">{{ $outOfStockCount }} out of stock</span>
+          @endif
         </div>
+        
+        {{-- Manual Pagination --}}
+        @if($totalProducts > $perPage)
+          @php
+            $totalPages = ceil($totalProducts / $perPage);
+            $queryParams = request()->except('page');
+          @endphp
+          <nav>
+            <ul class="pagination mb-0">
+              {{-- Previous Page Link --}}
+              <li class="page-item {{ $currentPage == 1 ? 'disabled' : '' }}">
+                <a class="page-link" href="?page={{ $currentPage - 1 }}&{{ http_build_query($queryParams) }}">
+                  &laquo;
+                </a>
+              </li>
+              
+              {{-- Page Numbers --}}
+              @for($i = 1; $i <= $totalPages; $i++)
+                <li class="page-item {{ $i == $currentPage ? 'active' : '' }}">
+                  <a class="page-link" href="?page={{ $i }}&{{ http_build_query($queryParams) }}">
+                    {{ $i }}
+                  </a>
+                </li>
+              @endfor
+              
+              {{-- Next Page Link --}}
+              <li class="page-item {{ $currentPage == $totalPages ? 'disabled' : '' }}">
+                <a class="page-link" href="?page={{ $currentPage + 1 }}&{{ http_build_query($queryParams) }}">
+                  &raquo;
+                </a>
+              </li>
+            </ul>
+          </nav>
+        @endif
       </div>
     </div>
   </div>
@@ -1002,38 +977,42 @@ document.addEventListener('DOMContentLoaded', function() {
   // View transaction history for product
   document.querySelectorAll('.view-transaction-history').forEach(button => {
     button.addEventListener('click', function() {
-      const productId = this.dataset.productId;
-      
-      // Show loading
-      document.getElementById('transactionHistoryContent').innerHTML = `
-        <div class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-          <p class="mt-2">Loading transaction history...</p>
-        </div>
-      `;
-      
-      // Load transaction history via AJAX
-      fetch(`/admin/inventory/${productId}/transactions`, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'text/html'
-        }
-      })
+        const productId = this.dataset.productId;
+        const modalContent = document.getElementById('transactionHistoryContent');
+        
+        // Show loading
+        modalContent.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading transaction history...</p>
+            </div>
+        `;
+        
+        // Load transaction history via AJAX
+        fetch(`/admin/inventory/${productId}/transactions`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html'
+            }
+        })
         .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.text();
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.status);
+            }
+            return response.text();
         })
         .then(html => {
-          document.getElementById('transactionHistoryContent').innerHTML = html;
+            modalContent.innerHTML = html;
         })
         .catch(error => {
-          console.error('Error:', error);
-          document.getElementById('transactionHistoryContent').innerHTML = 
-            '<div class="alert alert-danger">Error loading transaction history. Please try again.</div>';
+            console.error('Error:', error);
+            modalContent.innerHTML = 
+                `<div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading transaction history: ${error.message}
+                </div>`;
         });
     });
   });

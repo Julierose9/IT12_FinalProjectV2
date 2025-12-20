@@ -73,7 +73,6 @@ class SupplierController extends Controller
     
         $request->validate([
             'SupplierName'      => 'required|string|max:255',
-            // Exactly 11 digits, starting with 09 (e.g. 09123456789)
             'SupplierContactNo' => 'required|string|size:11|regex:/^09\d{9}$/',
             'Address'           => 'required|string',
             'Status'            => 'required|in:Active,Inactive'

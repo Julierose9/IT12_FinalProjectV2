@@ -17,12 +17,19 @@ use App\Http\Controllers\Cashier\DashboardController;
 use App\Http\Controllers\Cashier\TransactionHistoryController;
 use App\Http\Controllers\Admin\DashboardAdminController;
 use App\Http\Controllers\Admin\TransactionController;
+use Illuminate\Http\Request; // ← added for password reset
 
 // ==================== PUBLIC ROUTES ====================
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+    
+    // Password reset routes
+    Route::post('/verify-email', [LoginController::class, 'verifyEmail'])->name('password.email');
+    Route::post('/reset-password', [LoginController::class, 'resetPassword'])->name('password.reset');
 Route::get('/', fn() => redirect()->route('login'));
 
 // ==================== PROTECTED ROUTES (auth required) ====================
@@ -50,20 +57,17 @@ Route::middleware('auth')->group(function () {
         Route::delete('/supplier/{id}', [SupplierController::class, 'destroy'])->name('supplier.destroy');
 
         // ==================== EMPLOYEES ====================
-        // Resourceful routes for employees
         Route::get('/employees', [EmployeeController::class, 'index'])->name('employees');
         Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
         Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
         Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
         Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
         
-        // Special routes for inactive cashier management
         Route::post('/employees/{employee}/remove-inactive', [EmployeeController::class, 'removeInactiveCashier'])
             ->name('employees.removeInactive');
         Route::post('/employees/batch-remove-inactive', [EmployeeController::class, 'batchRemoveInactiveCashiers'])
             ->name('employees.batchRemoveInactive');
         
-        // Employee API endpoints
         Route::get('/employees/api/list', [EmployeeController::class, 'getEmployees'])->name('employees.api.list');
 
         // ==================== PRODUCTS ====================
@@ -77,13 +81,13 @@ Route::middleware('auth')->group(function () {
         Route::put('/products/{id}/update-pricing', [ProductController::class, 'updateSinglePricing'])->name('products.update-single-pricing');
         Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
         
-      // ==================== STOCK IN ROUTES ====================
-Route::get('/stockin', [StockInController::class, 'index'])->name('stockin');
-Route::post('/stockin', [StockInController::class, 'store'])->name('stockin.store');
-Route::get('/stockin/{id}', [StockInController::class, 'show'])->name('stockin.show');      
-Route::delete('/stockin/{id}', [StockInController::class, 'destroy'])->name('stockin.destroy'); // Add this line
-Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPricing'])
-    ->name('api.product.pricing');
+        // ==================== STOCK IN ROUTES ====================
+        Route::get('/stockin', [StockInController::class, 'index'])->name('stockin');
+        Route::post('/stockin', [StockInController::class, 'store'])->name('stockin.store');
+        Route::get('/stockin/{id}', [StockInController::class, 'show'])->name('stockin.show');      
+        Route::delete('/stockin/{id}', [StockInController::class, 'destroy'])->name('stockin.destroy');
+        Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPricing'])
+            ->name('api.product.pricing');
 
         // ==================== PULLOUT ROUTES ====================
         Route::get('/pullout', [PullOutController::class, 'index'])->name('pullout');
@@ -132,12 +136,19 @@ Route::get('/api/product-pricing/{id}', [StockInController::class, 'getProductPr
         Route::get('/sales/{id}', [OrderController::class, 'show'])->name('sales.show');
         Route::put('/sales/{id}/archive', [OrderController::class, 'archive'])->name('sales.archive');
         Route::get('/api/product/{id}', [OrderController::class, 'getProductDetails'])->name('api.product.details');
-        Route::get('/payments', [PaymentController::class, 'index'])->name('payments');
-        Route::get('/payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
+            Route::get('/payments', [PaymentController::class, 'index'])->name('payments');
+            Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+            Route::get('/payments/{id}', [PaymentController::class, 'show'])->name('payments.show');
+            Route::put('/payments/{id}', [PaymentController::class, 'update'])->name('payments.update');
+            Route::delete('/payments/{id}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+            Route::get('/orders/{orderId}/payments', [PaymentController::class, 'getOrderPayments'])->name('orders.payments');
+            Route::get('/payments/{id}/receipt', [PaymentController::class, 'printReceipt'])->name('payments.receipt');
+            Route::post('/payments/{id}/refund', [PaymentController::class, 'refund'])->name('payments.refund');
+        
         Route::get('/transaction-history', [TransactionHistoryController::class, 'index'])->name('transaction.history');
     });
 
-}); // End of auth middleware group
+}); 
 
 // ==================== LOGOUT ROUTE ====================
 Route::post('/logout', function () {

@@ -14,10 +14,12 @@
     :root {
       --sidebar-width: 240px;
       --primary-color: #3b3183;
+      --primary-light: #efeaff;
       --secondary-color: #6c757d;
       --success-color: #23b07a;
       --danger-color: #e05252;
       --warning-color: #f08a24;
+      --info-color: #17a2b8;
       --light-bg: #f5f7fb;
       --card-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
@@ -80,8 +82,8 @@
     }
 
     .brand img { 
-      width: 40px; 
-      height: 40px;
+      width: 100px; 
+      height: 100px;
       object-fit: contain;
     }
 
@@ -100,7 +102,7 @@
     }
 
     .sidebar .nav-link.active { 
-      background: #efeaff; 
+      background: var(--primary-light); 
       color: var(--primary-color); 
       font-weight: 600; 
     }
@@ -185,7 +187,6 @@
       gap: 20px;
     }
 
-    /* ========== UPDATED LAYOUT ========== */
     .page-header-container {
       display: flex;
       justify-content: space-between;
@@ -200,7 +201,6 @@
       min-width: 300px;
     }
 
-    /* ========== USER SECTION STYLES (ORIGINAL) ========== */
     .user-section {
       display: flex;
       flex-direction: column;
@@ -243,7 +243,6 @@
       object-fit: cover;
     }
 
-    /* User dropdown for sign out */
     .user-dropdown {
       position: relative;
     }
@@ -303,8 +302,7 @@
       padding: 0 28px 28px 28px;
     }
 
-    /* ========== SEARCH & FILTER STYLES ========== */
-    .search-filter-section {
+    .date-filter-section {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -314,209 +312,36 @@
       margin-top: 20px;
     }
 
-    /* Filter container styling */
-    .filter-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
-      width: 100%;
-    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+}
 
-    /* Search and filter in one line */
-    .search-filter-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      flex-wrap: nowrap;
-    }
 
-    /* Search input takes available space */
-    .search-input {
-      flex: 1;
-      min-width: 250px;
-      max-width: 500px;
-    }
-
-    /* Date Picker Container */
+    /* Date picker styling */
     .date-picker-container {
       flex-shrink: 0;
+      position: relative;
     }
 
     .date-picker-container .input-group {
       width: auto;
-      min-width: 200px;
+      min-width: 220px;
     }
 
     .date-picker-container .form-control {
-      width: 150px;
+      width: 170px;
+      padding-right: 40px;
     }
 
-    .date-picker-container .btn {
-      padding: 8px 12px;
-    }
-
-    /* Filter toggle button without text */
-    .filter-toggle {
-      background: #fff;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s ease;
-    }
-
-    .filter-toggle:hover {
-      background: #f8f9fa;
-      border-color: #adb5bd;
-    }
-
-    .filter-toggle.active {
+    .date-picker-container .input-group-text {
       background: var(--primary-color);
-      color: white;
       border-color: var(--primary-color);
-    }
-
-    /* Filter Menu */
-    .filter-menu {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background: white;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 20px;
-      min-width: 300px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      margin-top: 8px;
-      display: none;
-      z-index: 1000;
-    }
-
-    .filter-section {
-      margin-bottom: 16px;
-    }
-    
-    .filter-section:last-child {
-      margin-bottom: 0;
-    }
-    
-    .filter-section-title {
-      font-weight: 600;
-      font-size: 0.875rem;
-      margin-bottom: 8px;
-      color: var(--primary-color);
-    }
-    
-    .filter-options {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    
-    .filter-option {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 0;
-      cursor: pointer;
-    }
-    
-    .filter-option input[type="checkbox"],
-    .filter-option input[type="radio"] {
-      margin: 0;
-    }
-    
-    .filter-option label {
-      cursor: pointer;
-      font-size: 0.875rem;
-      margin: 0;
-    }
-    
-    .filter-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid #eef2f7;
-      flex-wrap: nowrap;
-      justify-content: space-between;
-    }
-
-    .btn-apply, .btn-clear {
-      flex: 1;
-      min-width: 0;
-      white-space: nowrap;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-apply {
-      background: var(--primary-color);
       color: white;
-    }
-
-    .btn-apply:hover {
-      background: #2a2265;
-    }
-
-    .btn-clear {
-      background: var(--secondary-color);
-      color: white;
-    }
-
-    .btn-clear:hover {
-      background: #5a6268;
-    }
-
-    .active-filters {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      width: 100%;
-      justify-content: flex-end;
-    }
-    
-    .active-filters.has-filters {
-      display: flex;
-    }
-    
-    .filter-tag {
-      background: #e9ecef;
-      border: 1px solid #dee2e6;
-      border-radius: 16px;
-      padding: 4px 12px;
-      font-size: 0.8rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .filter-tag-remove {
-      background: none;
-      border: none;
       cursor: pointer;
-      color: var(--secondary-color);
-      padding: 0;
-      width: 16px;
-      height: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    /* Stats Cards - Quick Links */
+    /* Stats Cards with Updated Colors */
     .stat-card { 
       border-radius: 12px; 
       transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -561,6 +386,15 @@
       flex-shrink: 0;
     }
     
+    .icon-primary,
+.icon-success,
+.icon-warning,
+.icon-danger,
+.icon-info {
+  background: rgba(59, 49, 131, 0.12); /* soft purple */
+  color: var(--primary-color);
+}
+    
     .card-small { 
       border-radius: 12px; 
       height: 100%;
@@ -570,8 +404,8 @@
     
     .chart-container {
       position: relative;
-      height: 100%;
-      min-height: 200px;
+      height: 250px; /* Fixed height to prevent stretching */
+      width: 100%;
     }
     
     .mobile-menu-toggle {
@@ -641,7 +475,7 @@
     
     @media (max-width: 1200px) {
       .chart-container {
-        min-height: 180px;
+        height: 220px;
       }
     }
     
@@ -690,16 +524,8 @@
         left: 0;
       }
       
-      .search-filter-section {
-        flex-wrap: wrap;
-      }
-      
-      .search-input {
-        min-width: 100%;
-      }
-      
-      .date-picker-container {
-        flex: 1;
+      .date-filter-container {
+        align-items: stretch;
       }
       
       .date-picker-container .input-group {
@@ -708,23 +534,6 @@
       
       .date-picker-container .form-control {
         width: 100%;
-      }
-      
-      .filter-container {
-        align-items: stretch;
-      }
-      
-      .active-filters {
-        justify-content: flex-start;
-      }
-
-      .user-dropdown {
-        width: 100%;
-      }
-
-      .user-dropdown-toggle {
-        width: 100%;
-        justify-content: space-between;
       }
 
       .main-content {
@@ -738,7 +547,7 @@
       }
       
       .chart-container {
-        min-height: 160px;
+        height: 200px;
       }
       
       .content-wrap {
@@ -750,18 +559,12 @@
         padding: 20px 12px 0 12px;
       }
 
-      .search-filter-section {
+      .date-filter-section {
         flex-direction: column;
       }
 
-      .date-picker-container,
-      .filter-dropdown {
+      .date-picker-container {
         width: 100%;
-      }
-      
-      .filter-toggle {
-        width: 100%;
-        justify-content: center;
       }
 
       .main-content {
@@ -794,6 +597,10 @@
 
       .main-content {
         padding: 0 8px 8px 8px;
+      }
+      
+      .chart-container {
+        height: 180px;
       }
     }
   </style>
@@ -911,14 +718,14 @@
 
 <main class="content-wrap" id="contentWrap">
   <div class="topbar">
-    <!-- UPDATED: Page header with user dropdown on same line -->
+    <!-- Page header with user dropdown on same line -->
     <div class="page-header-container">
       <div class="page-title-section">
         <h4 class="mb-1">Dashboard</h4>
         <p class="text-muted mb-0">Overview of your inventory and sales</p>
       </div>
 
-      <!-- User Section - Now on same line with title -->
+      <!-- User Section -->
       <div class="user-section">
         <!-- User Info Section with Dropdown -->
         <div class="user-dropdown">
@@ -945,136 +752,19 @@
           </div>
         </div>
         
-        <!-- Filter Container with Search/Filter and Active Filters -->
-        <div class="filter-container">
-          <!-- Search and Filter Section -->
-          <div class="search-filter-section">
-            <!-- Expanded Search Bar -->
-            <div class="input-group search-input">
-              <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
-              <input type="text" class="form-control" placeholder="Search products, suppliers..." id="searchInput">
-            </div>
-            
-            <!-- Date Picker -->
+        <!-- Date Filter Container -->
+        <div class="date-filter-container">
+          <div class="date-filter-section">
+            <!-- Date Picker Only -->
             <div class="date-picker-container">
               <div class="input-group">
                 <input type="date" class="form-control" id="dateFilter" value="{{ $today }}">
-                <button class="btn btn-outline-primary" type="button" id="applyDateFilter">
-                  <i class="fas fa-calendar-check"></i>
-                </button>
+                <span class="input-group-text" id="calendarTrigger">
+  <i class="fas fa-calendar-alt"></i>
+</span>
+
               </div>
             </div>
-            
-            <!-- Relevant Filter Dropdown -->
-            <div class="filter-dropdown">
-              <button class="filter-toggle" id="filterToggle">
-                <i class="fas fa-filter"></i>
-                <i class="fas fa-chevron-down ms-1" style="font-size: 0.8rem;"></i>
-              </button>
-              
-              <div class="filter-menu" id="filterMenu">
-                <!-- Time Period Filter -->
-                <div class="filter-section">
-                  <div class="filter-section-title">Time Period</div>
-                  <div class="filter-options">
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-today" checked>
-                      <label for="period-today">Today</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-week">
-                      <label for="period-week">This Week</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-month">
-                      <label for="period-month">This Month</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-quarter">
-                      <label for="period-quarter">This Quarter</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="timePeriod" id="period-year">
-                      <label for="period-year">This Year</label>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Category Filter -->
-                <div class="filter-section">
-                  <div class="filter-section-title">Category</div>
-                  <div class="filter-options">
-                    <div class="filter-option">
-                      <input type="checkbox" id="category-all" checked>
-                      <label for="category-all">All Categories</label>
-                    </div>
-                    @if(isset($categories) && count($categories) > 0)
-                      @foreach($categories as $category)
-                        <div class="filter-option">
-                          <input type="checkbox" id="category-{{ $category->CategoryID }}">
-                          <label for="category-{{ $category->CategoryID }}">{{ $category->CategoryName }}</label>
-                        </div>
-                      @endforeach
-                    @else
-                      <div class="text-muted" style="font-size: 0.8rem;">No categories available</div>
-                    @endif
-                  </div>
-                </div>
-                
-                <!-- Stock Status Filter -->
-                <div class="filter-section">
-                  <div class="filter-section-title">Stock Status</div>
-                  <div class="filter-options">
-                    <div class="filter-option">
-                      <input type="radio" name="stockStatus" id="status-all" checked>
-                      <label for="status-all">All Items</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="stockStatus" id="status-low">
-                      <label for="status-low">Low Stock</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="stockStatus" id="status-normal">
-                      <label for="status-normal">Normal Stock</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="stockStatus" id="status-high">
-                      <label for="status-high">High Stock</label>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Expiry Status Filter -->
-                <div class="filter-section">
-                  <div class="filter-section-title">Expiry Status</div>
-                  <div class="filter-options">
-                    <div class="filter-option">
-                      <input type="radio" name="expiryStatus" id="expiry-all" checked>
-                      <label for="expiry-all">All Items</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="expiryStatus" id="expiry-near">
-                      <label for="expiry-near">Near Expiry</label>
-                    </div>
-                    <div class="filter-option">
-                      <input type="radio" name="expiryStatus" id="expiry-safe">
-                      <label for="expiry-safe">Safe</label>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="filter-actions">
-                  <button class="btn-apply" id="applyFilters">Apply Filters</button>
-                  <button class="btn-clear" id="clearFilters">Reset Filters</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Active Filters Display -->
-          <div class="active-filters" id="activeFilters">
-            <!-- Filter tags will be dynamically added here -->
           </div>
         </div>
       </div>
@@ -1082,20 +772,20 @@
   </div>
 
   <div class="main-content">
-    <!-- Stats Cards with Quick Links -->
+    <!-- Stats Cards with Quick Links - Updated Colors -->
     <div class="row g-3 mb-4">
       <div class="col-xl-3 col-md-6">
         <a href="{{ route('admin.products') }}" class="stat-card">
           <div class="card p-3">
             <span class="stat-badge">View Products</span>
             <div class="d-flex">
-              <div class="stat-icon me-3" style="background:#f3d6ff;">
-                <i class="fas fa-box" style="color:#5a3e6b;"></i>
+              <div class="stat-icon me-3 icon-primary">
+                <i class="fas fa-box"></i>
               </div>
               <div class="flex-fill d-flex flex-column">
                 <small class="text-muted">Total Products</small>
                 <div class="mt-auto text-end" style="font-weight:700; font-size:20px;" id="totalProducts">
-                  {{ $totalProducts ?? 0 }}
+                  {{ $stats['totalProducts'] ?? 0 }}
                 </div>
               </div>
             </div>
@@ -1108,13 +798,13 @@
           <div class="card p-3">
             <span class="stat-badge">View Pullouts</span>
             <div class="d-flex">
-              <div class="stat-icon me-3" style="background:#fff2e0;">
-                <i class="fas fa-arrow-up" style="color:#f08a24;"></i>
+              <div class="stat-icon me-3 icon-info">
+                <i class="fas fa-arrow-up"></i>
               </div>
               <div class="flex-fill d-flex flex-column">
                 <small class="text-muted">Stock Out Today</small>
                 <div class="mt-auto text-end" style="font-weight:700; font-size:20px;" id="stockOutToday">
-                  {{ $stockOutToday ?? 0 }}
+                  {{ $stats['stockOutToday'] ?? 0 }}
                 </div>
               </div>
             </div>
@@ -1127,13 +817,13 @@
           <div class="card p-3">
             <span class="stat-badge">Check Expiry</span>
             <div class="d-flex">
-              <div class="stat-icon me-3" style="background:#fff8e1;">
-                <i class="fas fa-clock" style="color:#ff9800;"></i>
+              <div class="stat-icon me-3 icon-warning">
+                <i class="fas fa-clock"></i>
               </div>
               <div class="flex-fill d-flex flex-column">
                 <small class="text-muted">Products Near Expiry</small>
                 <div class="mt-auto text-end" style="font-weight:700; font-size:20px;" id="nearExpiry">
-                  {{ $nearExpiry ?? 0 }}
+                  {{ $stats['nearExpiry'] ?? 0 }}
                 </div>
               </div>
             </div>
@@ -1146,13 +836,13 @@
           <div class="card p-3">
             <span class="stat-badge">Restock Items</span>
             <div class="d-flex">
-              <div class="stat-icon me-3" style="background:#fff0f0;">
-                <i class="fas fa-exclamation-triangle" style="color:#e05252;"></i>
+              <div class="stat-icon me-3 icon-danger">
+                <i class="fas fa-exclamation-triangle"></i>
               </div>
               <div class="flex-fill d-flex flex-column">
                 <small class="text-muted">Low Stock Items</small>
                 <div class="mt-auto text-end" style="font-weight:700; font-size:20px;" id="lowStock">
-                  {{ $lowStock ?? 0 }}
+                  {{ $stats['lowStock'] ?? 0 }}
                 </div>
               </div>
             </div>
@@ -1161,101 +851,113 @@
       </div>
     </div>
 
+    <!-- SIMPLIFIED GRAPHS SECTION -->
     <div class="row g-3">
-      <div class="col-lg-8">
+      <!-- Stock Movement Chart -->
+      <div class="col-lg-6">
         <div class="card p-3 card-small mb-3">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <strong>Stock Movement Trend</strong>
-            <small class="text-muted" id="trendPeriod">This week</small>
+            <strong>Stock Movement</strong>
+            <small class="text-muted" id="trendPeriod">Last 7 Days</small>
           </div>
           <div class="chart-container">
             <canvas id="trendChart"></canvas>
           </div>
         </div>
+      </div>
 
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div class="card p-3 card-small">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <strong>Sales by Category</strong>
-                <small class="text-muted" id="salesPeriod">Monthly</small>
-              </div>
-              <div class="chart-container">
-                <canvas id="pieChart"></canvas>
-              </div>
-            </div>
+      <!-- Sales by Category Chart -->
+      <div class="col-lg-6">
+        <div class="card p-3 card-small mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <strong>Sales by Category</strong>
+            <small class="text-muted" id="salesPeriod">This Month</small>
           </div>
-          <div class="col-md-6">
-            <div class="card p-3 card-small">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <strong>Inventory Value</strong>
-                <small class="text-muted" id="valuePeriod">By Category</small>
-              </div>
-              <div class="chart-container">
-                <canvas id="doughnutChart"></canvas>
-              </div>
-            </div>
+          <div class="chart-container">
+            <canvas id="salesChart"></canvas>
           </div>
         </div>
       </div>
 
-      <div class="col-lg-4">
-        <div class="card p-3 card-small mb-3">
+      <!-- Top Moving Products -->
+      <div class="col-lg-8">
+        <div class="card p-3 card-small">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <strong>Top Moving Products</strong>
             <small class="text-muted" id="topProductsPeriod">This Week</small>
           </div>
-          <ul class="list-unstyled mb-0" id="topProductsList">
-            @if(isset($topProducts) && count($topProducts) > 0)
-              @foreach($topProducts as $product)
-                <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                  <div>
-                    <div style="font-weight:600">{{ $product->ProductName }}</div>
-                    <small class="text-muted">SKU: {{ $product->SKUNumber }}</small>
-                  </div>
-                  <div>
-                    <span class="badge bg-light text-dark">{{ $product->total_sold ?? 0 }} units</span>
-                  </div>
-                </li>
-              @endforeach
-            @else
-              <li class="text-center py-3 text-muted">No data available</li>
-            @endif
-          </ul>
-        </div>
-
-        <div class="card p-3 card-small">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <strong>Inventory Turnover Rate</strong>
-            <small class="text-muted" id="turnoverPeriod">Monthly</small>
-          </div>
-          <div class="chart-container">
-            <canvas id="areaChart"></canvas>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th class="text-end">Units Sold</th>
+                  <th class="text-end">Stock</th>
+                </tr>
+              </thead>
+              <tbody id="topProductsList">
+                @if(isset($topProducts) && count($topProducts) > 0)
+                  @foreach($topProducts as $product)
+                  <tr>
+                    <td>
+                      <div style="font-weight:600">{{ $product->ProductName }}</div>
+                      <small class="text-muted">SKU: {{ $product->SKUNumber }}</small>
+                    </td>
+                    <td>{{ $product->category->CategoryName ?? 'N/A' }}</td>
+                    <td class="text-end">
+                      <span class="badge bg-primary">{{ $product->total_sold ?? 0 }}</span>
+                    </td>
+                    <td class="text-end">
+                      @php
+                        $stockClass = 'bg-success';
+                        if($product->Stock <= 10) {
+                          $stockClass = 'bg-danger';
+                        } elseif($product->Stock <= 20) {
+                          $stockClass = 'bg-warning';
+                        }
+                      @endphp
+                      <span class="badge {{ $stockClass }}">{{ $product->Stock ?? 0 }}</span>
+                    </td>
+                  </tr>
+                  @endforeach
+                @else
+                  <tr>
+                    <td colspan="4" class="text-center text-muted py-3">
+                      <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                      No sales data available
+                    </td>
+                  </tr>
+                @endif
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="row g-3 mt-3">
-      <div class="col-md-6">
+      <!-- Inventory Status -->
+      <div class="col-lg-4">
         <div class="card p-3 card-small">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <strong>Stock vs Recorded</strong>
-            <small class="text-muted">Discrepancy Analysis</small>
+            <strong>Inventory Status</strong>
+            <small class="text-muted">Current</small>
           </div>
           <div class="chart-container">
-            <canvas id="barChart"></canvas>
+            <canvas id="inventoryChart"></canvas>
           </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card p-3 card-small">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <strong>Supplier Performance</strong>
-            <small class="text-muted">Delivery Timeliness</small>
-          </div>
-          <div class="chart-container">
-            <canvas id="radarChart"></canvas>
+          <div class="row mt-3 text-center">
+            <div class="col-4">
+              <div class="text-success fw-bold" id="healthyStock">{{ $stats['healthyStock'] ?? 0 }}</div>
+              <small class="text-muted">Healthy</small>
+            </div>
+            <div class="col-4">
+              <div class="text-warning fw-bold" id="warningStock">{{ $stats['warningStock'] ?? 0 }}</div>
+              <small class="text-muted">Low</small>
+            </div>
+            <div class="col-4">
+              <div class="text-danger fw-bold" id="criticalStock">{{ $stats['criticalStock'] ?? 0 }}</div>
+              <small class="text-muted">Critical</small>
+            </div>
           </div>
         </div>
       </div>
@@ -1318,443 +1020,352 @@
     });
   });
 
-  // ========== FILTER FUNCTIONALITY ==========
-  const filterToggle = document.getElementById('filterToggle');
-  const filterMenu = document.getElementById('filterMenu');
-  const activeFilters = document.getElementById('activeFilters');
-  const searchInput = document.getElementById('searchInput');
+  // ========== DATE FILTER FUNCTIONALITY ==========
   const dateFilter = document.getElementById('dateFilter');
-  const applyDateFilter = document.getElementById('applyDateFilter');
-  
-  let currentFilters = {
-    timePeriod: 'Today',
-    categories: ['All Categories'],
-    stockStatus: 'All Items',
-    expiryStatus: 'All Items',
-    date: '{{ $today }}',
-    search: ''
-  };
-  
-  // Filter toggle
-  filterToggle.addEventListener('click', function(e) {
-    e.stopPropagation();
-    const isVisible = filterMenu.style.display === 'block';
-    filterMenu.style.display = isVisible ? 'none' : 'block';
-    filterToggle.classList.toggle('active', !isVisible);
-  });
-  
-  // Close filter menu when clicking outside
-  document.addEventListener('click', function() {
-    filterMenu.style.display = 'none';
-    filterToggle.classList.remove('active');
-  });
-  
-  // Prevent closing when clicking inside filter menu
-  filterMenu.addEventListener('click', function(e) {
-    e.stopPropagation();
-  });
-  
-  // Apply filters button
-  document.getElementById('applyFilters').addEventListener('click', function() {
-    filterMenu.style.display = 'none';
-    filterToggle.classList.remove('active');
-    
-    updateCurrentFilters();
-    updateActiveFilters();
-    applyDashboardFilters();
-  });
-  
-  // Clear filters button
-  document.getElementById('clearFilters').addEventListener('click', function() {
-    // Reset all checkboxes and radio buttons
-    document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(checkbox => {
-      checkbox.checked = false;
-    });
-    
-    document.querySelectorAll('.filter-option input[type="radio"]').forEach(radio => {
-      radio.checked = false;
-    });
-    
-    // Set default values
-    document.getElementById('period-today').checked = true;
-    document.getElementById('category-all').checked = true;
-    document.getElementById('status-all').checked = true;
-    document.getElementById('expiry-all').checked = true;
-    
-    searchInput.value = '';
-    dateFilter.value = '{{ $today }}';
-    
-    currentFilters = {
-      timePeriod: 'Today',
-      categories: ['All Categories'],
-      stockStatus: 'All Items',
-      expiryStatus: 'All Items',
-      date: '{{ $today }}',
-      search: ''
-    };
-    
-    updateActiveFilters();
-    resetDashboardData();
-  });
-  
-  // Apply date filter
-  applyDateFilter.addEventListener('click', function() {
-    currentFilters.date = dateFilter.value;
-    applyDashboardFilters();
-    
-    // Add date filter tag
-    updateActiveFilters();
-  });
-  
-  // Search input event (debounced)
-  let searchTimeout;
-  searchInput.addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      currentFilters.search = this.value.toLowerCase();
-      applyDashboardFilters();
-      updateActiveFilters();
-    }, 500);
-  });
-  
-  function updateCurrentFilters() {
-    // Time period
-    if (document.getElementById('period-today').checked) {
-      currentFilters.timePeriod = 'Today';
-    } else if (document.getElementById('period-week').checked) {
-      currentFilters.timePeriod = 'This Week';
-    } else if (document.getElementById('period-month').checked) {
-      currentFilters.timePeriod = 'This Month';
-    } else if (document.getElementById('period-quarter').checked) {
-      currentFilters.timePeriod = 'This Quarter';
-    } else if (document.getElementById('period-year').checked) {
-      currentFilters.timePeriod = 'This Year';
-    }
-    
-    // Categories
-    currentFilters.categories = [];
-    if (document.getElementById('category-all').checked) {
-      currentFilters.categories.push('All Categories');
-    } else {
-      @if(isset($categories))
-        @foreach($categories as $category)
-          if (document.getElementById('category-{{ $category->CategoryID }}').checked) {
-            currentFilters.categories.push('{{ $category->CategoryName }}');
-          }
-        @endforeach
-      @endif
-    }
-    
-    // Stock status
-    if (document.getElementById('status-all').checked) {
-      currentFilters.stockStatus = 'All Items';
-    } else if (document.getElementById('status-low').checked) {
-      currentFilters.stockStatus = 'Low Stock';
-    } else if (document.getElementById('status-normal').checked) {
-      currentFilters.stockStatus = 'Normal Stock';
-    } else if (document.getElementById('status-high').checked) {
-      currentFilters.stockStatus = 'High Stock';
-    }
-    
-    // Expiry status
-    if (document.getElementById('expiry-all').checked) {
-      currentFilters.expiryStatus = 'All Items';
-    } else if (document.getElementById('expiry-near').checked) {
-      currentFilters.expiryStatus = 'Near Expiry';
-    } else if (document.getElementById('expiry-safe').checked) {
-      currentFilters.expiryStatus = 'Safe';
-    }
-    
-    currentFilters.search = searchInput.value.toLowerCase();
+
+  const calendarTrigger = document.getElementById('calendarTrigger');
+
+// Open date picker when calendar icon is clicked
+calendarTrigger.addEventListener('click', () => {
+  if (dateFilter.showPicker) {
+    dateFilter.showPicker(); // Chrome, Edge, Brave
+  } else {
+    dateFilter.focus(); // Fallback
   }
+});
+
   
-  function updateActiveFilters() {
-    activeFilters.innerHTML = '';
-    
-    const hasCustomFilters = 
-      currentFilters.timePeriod !== 'Today' ||
-      currentFilters.categories.length !== 1 || 
-      currentFilters.categories[0] !== 'All Categories' ||
-      currentFilters.stockStatus !== 'All Items' ||
-      currentFilters.expiryStatus !== 'All Items' ||
-      currentFilters.date !== '{{ $today }}' ||
-      currentFilters.search !== '';
-    
-    if (!hasCustomFilters) {
-      activeFilters.classList.remove('has-filters');
-      return;
-    }
-    
-    activeFilters.classList.add('has-filters');
-    
-    // Time period filter tag
-    if (currentFilters.timePeriod !== 'Today') {
-      const timeTag = createFilterTag(`Period: ${currentFilters.timePeriod}`, 'time-period');
-      activeFilters.appendChild(timeTag);
-    }
-    
-    // Category filter tags
-    if (currentFilters.categories.length > 0 && 
-      (currentFilters.categories.length > 1 || currentFilters.categories[0] !== 'All Categories')) {
-      currentFilters.categories.forEach(category => {
-        const categoryTag = createFilterTag(`Category: ${category}`, `category-${category.toLowerCase().replace(/\s+/g, '-')}`);
-        activeFilters.appendChild(categoryTag);
-      });
-    }
-    
-    // Stock status filter tag
-    if (currentFilters.stockStatus !== 'All Items') {
-      const stockTag = createFilterTag(`Stock: ${currentFilters.stockStatus}`, 'stock-status');
-      activeFilters.appendChild(stockTag);
-    }
-    
-    // Expiry status filter tag
-    if (currentFilters.expiryStatus !== 'All Items') {
-      const expiryTag = createFilterTag(`Expiry: ${currentFilters.expiryStatus}`, 'expiry-status');
-      activeFilters.appendChild(expiryTag);
-    }
-    
-    // Date filter tag
-    if (currentFilters.date !== '{{ $today }}') {
-      const dateTag = createFilterTag(`Date: ${currentFilters.date}`, 'date');
-      activeFilters.appendChild(dateTag);
-    }
-    
-    // Search filter tag
-    if (currentFilters.search !== '') {
-      const searchTag = createFilterTag(`Search: "${currentFilters.search}"`, 'search');
-      activeFilters.appendChild(searchTag);
-    }
-  }
-  
-  function createFilterTag(text, filterType) {
-    const tag = document.createElement('div');
-    tag.className = 'filter-tag';
-    
-    const span = document.createElement('span');
-    span.textContent = text;
-    
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'filter-tag-remove';
-    removeBtn.setAttribute('data-filter', filterType);
-    removeBtn.innerHTML = '×';
-    removeBtn.addEventListener('click', function() {
-      removeFilter(filterType);
-    });
-    
-    tag.appendChild(span);
-    tag.appendChild(removeBtn);
-    
-    return tag;
-  }
-  
-  function removeFilter(filterType) {
-    if (filterType === 'time-period') {
-      currentFilters.timePeriod = 'Today';
-      document.getElementById('period-today').checked = true;
-    } else if (filterType.startsWith('category-')) {
-      currentFilters.categories = ['All Categories'];
-      document.getElementById('category-all').checked = true;
-      @if(isset($categories))
-        @foreach($categories as $category)
-          document.getElementById('category-{{ $category->CategoryID }}').checked = false;
-        @endforeach
-      @endif
-    } else if (filterType === 'stock-status') {
-      currentFilters.stockStatus = 'All Items';
-      document.getElementById('status-all').checked = true;
-    } else if (filterType === 'expiry-status') {
-      currentFilters.expiryStatus = 'All Items';
-      document.getElementById('expiry-all').checked = true;
-    } else if (filterType === 'date') {
-      currentFilters.date = '{{ $today }}';
-      dateFilter.value = '{{ $today }}';
-    } else if (filterType === 'search') {
-      currentFilters.search = '';
-      searchInput.value = '';
-    }
-    
-    updateActiveFilters();
-    applyDashboardFilters();
-  }
-  
-  function applyDashboardFilters() {
+  // Auto-apply date filter on change
+  dateFilter.addEventListener('change', function() {
+    applyDateFilter(this.value);
+  });
+
+  async function applyDateFilter(date) {
     // Show loading state
     showLoading();
     
-    // Update chart labels with current filter
-    updateChartPeriods(currentFilters.timePeriod);
-    
-    // In a real application, you would make an AJAX call here
-    // For now, we'll simulate loading and update
-    setTimeout(() => {
-      // Update stats based on filters (simulated)
-      updateStatsBasedOnFilters(currentFilters);
+    try {
+      // Fetch data for selected date
+      const response = await fetch('/api/dashboard-data?date=' + date, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      });
       
-      // Update charts
-      updateCharts(currentFilters);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
       
+      const data = await response.json();
+      
+      // Update dashboard with real data
+      updateDashboardWithData(data);
       hideLoading();
       
       // Show success message
-      showToast('Dashboard filters applied!');
-    }, 1000);
-  }
-  
-  function resetDashboardData() {
-    // Reset to default data
-    updateChartPeriods('Today');
-    resetStats();
-    resetCharts();
-    
-    showToast('Filters cleared! Dashboard reset to default view.');
+      showToast(`Dashboard updated for ${formatDate(date)}`);
+      
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      hideLoading();
+      showError('Failed to update dashboard data');
+    }
   }
 
-  function updateChartPeriods(period) {
-    const periodText = period === 'Today' ? 'Today' : 
-                      period === 'This Week' ? 'This week' :
-                      period === 'This Month' ? 'This month' :
-                      period === 'This Quarter' ? 'This quarter' :
-                      period === 'This Year' ? 'This year' : 'Today';
-    
-    document.getElementById('trendPeriod').textContent = periodText;
-    document.getElementById('salesPeriod').textContent = periodText;
-    document.getElementById('valuePeriod').textContent = periodText;
-    document.getElementById('topProductsPeriod').textContent = periodText;
-    document.getElementById('turnoverPeriod').textContent = periodText;
+  async function loadInitialDashboardData() {
+    try {
+      // Fetch initial dashboard data
+      const response = await fetch('/api/dashboard-data', {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      
+      const data = await response.json();
+      
+      // Initialize charts with real data
+      initializeChartsWithData(data);
+      
+    } catch (error) {
+      console.error('Error loading initial dashboard data:', error);
+      // Use fallback data if API fails
+      useFallbackData();
+    }
   }
 
-  // Update stats based on filters (simulated)
-  function updateStatsBasedOnFilters(filters) {
-    // In a real app, this would be an AJAX call to get updated stats
-    // For demo purposes, we'll just update with random values
+  function updateDashboardWithData(data) {
+    // Update stats
+    document.getElementById('totalProducts').textContent = data.stats.totalProducts || 0;
+    document.getElementById('stockOutToday').textContent = data.stats.stockOutToday || 0;
+    document.getElementById('nearExpiry').textContent = data.stats.nearExpiry || 0;
+    document.getElementById('lowStock').textContent = data.stats.lowStock || 0;
     
-    const totalProducts = document.getElementById('totalProducts');
-    const stockOutToday = document.getElementById('stockOutToday');
-    const nearExpiry = document.getElementById('nearExpiry');
-    const lowStock = document.getElementById('lowStock');
+    // Update inventory status
+    document.getElementById('healthyStock').textContent = data.stats.healthyStock || 0;
+    document.getElementById('warningStock').textContent = data.stats.warningStock || 0;
+    document.getElementById('criticalStock').textContent = data.stats.criticalStock || 0;
     
-    // Generate random values based on filters
-    const baseTotal = 150;
-    const baseStockOut = 24;
-    const baseNearExpiry = 8;
-    const baseLowStock = 12;
-    
-    // Adjust based on filters (simulated logic)
-    let multiplier = 1;
-    if (filters.timePeriod === 'This Week') multiplier = 0.8;
-    if (filters.timePeriod === 'This Month') multiplier = 1;
-    if (filters.timePeriod === 'This Quarter') multiplier = 1.2;
-    if (filters.timePeriod === 'This Year') multiplier = 1.5;
-    
-    if (filters.stockStatus === 'Low Stock') {
-      lowStock.textContent = Math.floor(baseLowStock * 1.5);
-      totalProducts.textContent = Math.floor(baseTotal * 0.9);
-    } else if (filters.stockStatus === 'High Stock') {
-      lowStock.textContent = Math.floor(baseLowStock * 0.5);
-      totalProducts.textContent = Math.floor(baseTotal * 1.1);
-    } else {
-      lowStock.textContent = baseLowStock;
-      totalProducts.textContent = baseTotal;
+    // Update charts if they exist
+    if (window.trendChart && data.charts.stockMovement) {
+      updateChartData(trendChart, data.charts.stockMovement.labels, data.charts.stockMovement.data);
     }
     
-    if (filters.expiryStatus === 'Near Expiry') {
-      nearExpiry.textContent = Math.floor(baseNearExpiry * 1.8);
-    } else {
-      nearExpiry.textContent = baseNearExpiry;
+    if (window.salesChart && data.charts.salesByCategory) {
+      updateChartData(salesChart, data.charts.salesByCategory.labels, data.charts.salesByCategory.data);
     }
     
-    stockOutToday.textContent = Math.floor(baseStockOut * multiplier);
-  }
-
-  // Reset stats to original
-  function resetStats() {
-    // Reset to original values (in real app, would fetch from server)
-    document.getElementById('totalProducts').textContent = '{{ $totalProducts ?? 0 }}';
-    document.getElementById('stockOutToday').textContent = '{{ $stockOutToday ?? 0 }}';
-    document.getElementById('nearExpiry').textContent = '{{ $nearExpiry ?? 0 }}';
-    document.getElementById('lowStock').textContent = '{{ $lowStock ?? 0 }}';
-  }
-
-  // Update charts based on filters
-  function updateCharts(filters) {
-    // In a real app, you would update chart data via AJAX
-    // For demo, we'll just regenerate with slightly different data
+    if (window.inventoryChart && data.charts.inventoryStatus) {
+      updateChartData(inventoryChart, data.charts.inventoryStatus.labels, data.charts.inventoryStatus.data);
+    }
     
-    const trendData = generateTrendData(filters.timePeriod);
+    // Update period labels
+    const formattedDate = formatDate(data.date || dateFilter.value);
+    document.getElementById('trendPeriod').textContent = `Week of ${formattedDate}`;
+    document.getElementById('salesPeriod').textContent = `Month of ${new Date(data.date || dateFilter.value).toLocaleString('default', { month: 'long' })}`;
+    
+    // Update top products table
+    updateTopProductsTable(data.topProducts || []);
+  }
+
+  function updateTopProductsTable(products) {
+    const tbody = document.getElementById('topProductsList');
+    if (!tbody) return;
+    
+    if (products.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center text-muted py-3">
+            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+            No sales data available
+          </td>
+        </tr>
+      `;
+      return;
+    }
+    
+    let html = '';
+    products.forEach(product => {
+      let stockClass = 'bg-success';
+      if (product.stock <= 10) {
+        stockClass = 'bg-danger';
+      } else if (product.stock <= 20) {
+        stockClass = 'bg-warning';
+      }
+      
+      html += `
+        <tr>
+          <td>
+            <div style="font-weight:600">${product.name}</div>
+            <small class="text-muted">SKU: ${product.sku}</small>
+          </td>
+          <td>${product.category || 'N/A'}</td>
+          <td class="text-end">
+            <span class="badge bg-primary">${product.sold || 0}</span>
+          </td>
+          <td class="text-end">
+            <span class="badge ${stockClass}">${product.stock || 0}</span>
+          </td>
+        </tr>
+      `;
+    });
+    
+    tbody.innerHTML = html;
+  }
+
+  function initializeChartsWithData(data) {
+    // Initialize Stock Movement Chart with real data
+    if (document.getElementById('trendChart') && data.charts.stockMovement) {
+      trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+          labels: data.charts.stockMovement.labels || ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+          datasets: [{
+            label: 'Stock Movements',
+            data: data.charts.stockMovement.data || [0, 0, 0, 0, 0, 0, 0],
+            borderColor: '#3b3183',
+            backgroundColor: 'rgba(59, 49, 131, 0.05)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: '#3b3183',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { 
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#3b3183',
+              titleColor: '#fff',
+              bodyColor: '#fff'
+            }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value;
+                }
+              },
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            x: { 
+              grid: { display: false } 
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize Sales by Category Chart with real data
+    if (document.getElementById('salesChart') && data.charts.salesByCategory) {
+      salesChart = new Chart(document.getElementById('salesChart'), {
+        type: 'bar',
+        data: {
+          labels: data.charts.salesByCategory.labels || [],
+          datasets: [{
+            label: 'Sales',
+            data: data.charts.salesByCategory.data || [],
+            backgroundColor: [
+              '#3b3183',
+              '#5a4fa3',
+              '#796dc3',
+              '#988ce3',
+              '#b7abff'
+            ],
+            borderWidth: 0,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { 
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#3b3183',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              callbacks: {
+                label: function(context) {
+                  return `${context.label}: ${context.parsed.y} sales`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true,
+              grid: { color: 'rgba(0,0,0,0.05)' },
+              ticks: {
+                callback: function(value) {
+                  return value;
+                }
+              }
+            },
+            x: { 
+              grid: { display: false } 
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize Inventory Status Chart with real data
+    if (document.getElementById('inventoryChart') && data.charts.inventoryStatus) {
+      inventoryChart = new Chart(document.getElementById('inventoryChart'), {
+        type: 'doughnut',
+        data: {
+          labels: data.charts.inventoryStatus.labels || ['Healthy', 'Low Stock', 'Critical'],
+          datasets: [{
+            data: data.charts.inventoryStatus.data || [0, 0, 0],
+            backgroundColor: [
+              '#23b07a',
+              '#f08a24',
+              '#e05252'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 15,
+                usePointStyle: true,
+                font: {
+                  size: 11
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  label += context.parsed + ' items';
+                  return label;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  function useFallbackData() {
+    // Fallback to server-side data
     if (window.trendChart) {
-      updateChartData(trendChart, trendData.labels, trendData.data);
+      updateChartData(trendChart, 
+        ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], 
+        [120, 150, 110, 180, 170, 210, 190]
+      );
     }
     
-    const turnoverData = generateTurnoverData(filters.timePeriod);
-    if (window.areaChart) {
-      updateChartData(areaChart, turnoverData.labels, turnoverData.data);
+    if (window.salesChart) {
+      updateChartData(salesChart,
+        ['Beauty', 'Clothing', 'Accessories', 'Gifts', 'Other'],
+        [35, 25, 20, 15, 5]
+      );
+    }
+    
+    if (window.inventoryChart) {
+      const healthy = parseInt('{{ $stats["healthyStock"] ?? 60 }}');
+      const warning = parseInt('{{ $stats["warningStock"] ?? 25 }}');
+      const critical = parseInt('{{ $stats["criticalStock"] ?? 15 }}');
+      
+      updateChartData(inventoryChart,
+        ['Healthy', 'Low Stock', 'Critical'],
+        [healthy, warning, critical]
+      );
     }
   }
 
-  // Reset charts to original
-  function resetCharts() {
-    // Reset charts to original data
-    if (window.trendChart) {
-      updateChartData(trendChart, ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], [120, 150, 110, 180, 170, 210, 190]);
-    }
-    if (window.areaChart) {
-      updateChartData(areaChart, ['Jan','Feb','Mar','Apr','May','Jun'], [30,45,28,55,40,65]);
-    }
-  }
-
-  // Utility functions
-  function generateTrendData(period) {
-    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    let data = [];
-    
-    // Generate different data based on period
-    switch(period) {
-      case 'Today':
-        data = [50, 60, 55, 70, 65, 80, 75];
-        break;
-      case 'This Week':
-        data = [120, 150, 110, 180, 170, 210, 190];
-        break;
-      case 'This Month':
-        data = [200, 220, 180, 240, 230, 280, 260];
-        break;
-      case 'This Quarter':
-        data = [300, 320, 280, 350, 340, 380, 360];
-        break;
-      case 'This Year':
-        data = [400, 420, 380, 450, 440, 480, 460];
-        break;
-      default:
-        data = [120, 150, 110, 180, 170, 210, 190];
-    }
-    
-    return { labels: days, data: data };
-  }
-
-  function generateTurnoverData(period) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun'];
-    let data = [];
-    
-    switch(period) {
-      case 'Today':
-      case 'This Week':
-        data = [10, 15, 8, 20, 15, 25];
-        break;
-      case 'This Month':
-        data = [30,45,28,55,40,65];
-        break;
-      case 'This Quarter':
-        data = [50,65,48,75,60,85];
-        break;
-      case 'This Year':
-        data = [70,85,68,95,80,105];
-        break;
-      default:
-        data = [30,45,28,55,40,65];
-    }
-    
-    return { labels: months, data: data };
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
   }
 
   function updateChartData(chart, labels, data) {
@@ -1765,30 +1376,40 @@
     }
   }
 
+  // Utility functions
   function showLoading() {
-    // Add loading state to stats cards
+    // Add subtle loading effect to stats cards
     document.querySelectorAll('.stat-card').forEach(card => {
-      card.style.opacity = '0.7';
+      card.style.opacity = '0.8';
     });
     
-    // Show loading spinner on filter button
-    const applyBtn = document.getElementById('applyFilters');
-    if (applyBtn) {
-      const originalHTML = applyBtn.innerHTML;
-      applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
-      applyBtn.disabled = true;
-      
-      setTimeout(() => {
-        applyBtn.innerHTML = originalHTML;
-        applyBtn.disabled = false;
-      }, 1000);
-    }
+    // Show loading indicator on charts
+    document.querySelectorAll('.chart-container').forEach(container => {
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'chart-loading';
+      loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      loadingDiv.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 20px;
+        color: var(--primary-color);
+        z-index: 10;
+      `;
+      container.appendChild(loadingDiv);
+    });
   }
 
   function hideLoading() {
-    // Remove loading state
+    // Remove loading effect
     document.querySelectorAll('.stat-card').forEach(card => {
       card.style.opacity = '1';
+    });
+    
+    // Remove loading indicators
+    document.querySelectorAll('.chart-loading').forEach(loading => {
+      loading.remove();
     });
   }
 
@@ -1800,12 +1421,12 @@
     
     toast.innerHTML = `
       <div class="toast show" role="alert">
-        <div class="toast-header">
-          <strong class="me-auto">Dashboard</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        <div class="toast-header bg-primary text-white">
+          <strong class="me-auto">Dashboard Updated</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
         </div>
         <div class="toast-body">
-          ${message}
+          <i class="fas fa-check-circle text-success me-2"></i>${message}
         </div>
       </div>
     `;
@@ -1816,6 +1437,32 @@
     setTimeout(() => {
       toast.remove();
     }, 3000);
+  }
+
+  function showError(message) {
+    // Create error toast
+    const toast = document.createElement('div');
+    toast.className = 'position-fixed bottom-0 end-0 p-3';
+    toast.style.zIndex = '1050';
+    
+    toast.innerHTML = `
+      <div class="toast show" role="alert">
+        <div class="toast-header bg-danger text-white">
+          <strong class="me-auto">Error</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+          <i class="fas fa-exclamation-circle me-2"></i>${message}
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      toast.remove();
+    }, 5000);
   }
 
   // Close dropdowns on window resize
@@ -1829,199 +1476,16 @@
     // Close dropdowns on mobile view
     if (window.innerWidth < 992) {
       userDropdownMenu.style.display = 'none';
-      filterMenu.style.display = 'none';
-      filterToggle.classList.remove('active');
     }
   });
 
-  // Chart instances (global for updates)
-  let trendChart, areaChart, pieChart, doughnutChart, barChart, radarChart;
-
-  // Chart initialization
+  // Load initial dashboard data when page loads
   document.addEventListener('DOMContentLoaded', function() {
-    // Trend Chart
-    if (document.getElementById('trendChart')) {
-      trendChart = new Chart(document.getElementById('trendChart'), {
-        type: 'line',
-        data: {
-          labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-          datasets: [{
-            label: 'Stock movements',
-            data: [120, 150, 110, 180, 170, 210, 190],
-            borderColor: '#4B50A3',
-            backgroundColor: 'rgba(75,80,163,0.14)',
-            tension: 0.35,
-            fill: true,
-            pointRadius: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 50 } },
-            x: { grid: { display: false } }
-          }
-        }
-      });
-    }
-
-    // Area Chart
-    if (document.getElementById('areaChart')) {
-      areaChart = new Chart(document.getElementById('areaChart'), {
-        type: 'line',
-        data: {
-          labels: ['Jan','Feb','Mar','Apr','May','Jun'],
-          datasets: [{
-            label: 'Turnover',
-            data: [30,45,28,55,40,65],
-            borderColor: '#23b07a',
-            backgroundColor: 'rgba(35,176,122,0.12)',
-            fill: true,
-            tension: 0.4
-          }]
-        },
-        options: { 
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } }, 
-          scales: { 
-            y: { beginAtZero: true },
-            x: { grid: { display: false } }
-          } 
-        }
-      });
-    }
-
-    // Bar Chart
-    if (document.getElementById('barChart')) {
-      barChart = new Chart(document.getElementById('barChart'), {
-        type: 'bar',
-        data: {
-          labels: ['Prod A','Prod B','Prod C','Prod D'],
-          datasets: [{
-            label: 'Discrepancy',
-            data: [5, 12, 8, 3],
-            backgroundColor: ['#ff8a8a','#ffd27a','#9ad0ff','#c7b3ff']
-          }]
-        },
-        options: { 
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } }, 
-          scales: { 
-            y: { beginAtZero: true },
-            x: { grid: { display: false } }
-          } 
-        }
-      });
-    }
-
-    // Pie Chart
-    if (document.getElementById('pieChart')) {
-      pieChart = new Chart(document.getElementById('pieChart'), {
-        type: 'pie',
-        data: {
-          labels: ['Beauty & Cosmetics', 'Clothing', 'Accessories', 'Gift Items'],
-          datasets: [{
-            data: [35, 25, 20, 20],
-            backgroundColor: [
-              '#FF6384',
-              '#36A2EB',
-              '#FFCE56',
-              '#4BC0C0'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                padding: 15,
-                usePointStyle: true
-              }
-            }
-          }
-        }
-      });
-    }
-
-    // Doughnut Chart
-    if (document.getElementById('doughnutChart')) {
-      doughnutChart = new Chart(document.getElementById('doughnutChart'), {
-        type: 'doughnut',
-        data: {
-          labels: ['Beauty', 'Clothing', 'Accessories', 'Gifts', 'Other'],
-          datasets: [{
-            data: [30, 25, 20, 15, 10],
-            backgroundColor: [
-              '#FF6384',
-              '#36A2EB',
-              '#FFCE56',
-              '#4BC0C0',
-              '#9966FF'
-            ],
-            borderWidth: 2,
-            borderColor: '#fff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                padding: 15,
-                usePointStyle: true
-              }
-            }
-          }
-        }
-      });
-    }
-
-    // Radar Chart
-    if (document.getElementById('radarChart')) {
-      radarChart = new Chart(document.getElementById('radarChart'), {
-        type: 'radar',
-        data: {
-          labels: ['Timeliness', 'Quality', 'Price', 'Communication', 'Reliability'],
-          datasets: [{
-            label: 'Supplier A',
-            data: [85, 90, 75, 80, 95],
-            backgroundColor: 'rgba(54, 162, 235, 0.2)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            pointBackgroundColor: 'rgba(54, 162, 235, 1)'
-          }, {
-            label: 'Supplier B',
-            data: [70, 85, 90, 65, 80],
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            borderColor: 'rgba(255, 99, 132, 1)',
-            pointBackgroundColor: 'rgba(255, 99, 132, 1)'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            r: {
-              angleLines: {
-                display: true
-              },
-              suggestedMin: 0,
-              suggestedMax: 100
-            }
-          }
-        }
-      });
-    }
+    // Load initial data from server
+    loadInitialDashboardData();
+    
+    // Auto-refresh dashboard every 5 minutes
+    setInterval(loadInitialDashboardData, 5 * 60 * 1000);
   });
 </script>
 </body>

@@ -16,6 +16,12 @@ class Payment extends Model
         'OrderID',
         'PaymentType',
         'ReferenceNumber',
+        'AmountPaid',      
+        'Balance',         
+        'PaymentStatus',   
+        'PaymentDate',     
+        'created_at',
+        'updated_at'
     ];
 
     // Ensure computed attributes are included when model is serialized to JSON

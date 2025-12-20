@@ -65,8 +65,8 @@
       flex-shrink: 0; 
     }
     .brand img { 
-      width: 40px; 
-      height: 40px;
+      width: 100px; 
+      height: 100px;
       object-fit: contain;
     }
     .brand-text {
@@ -1310,7 +1310,7 @@
       @csrf @method('PUT')
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Employee</h5>
+          <h5 class="modal-title"><i></i>Edit Employee</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">

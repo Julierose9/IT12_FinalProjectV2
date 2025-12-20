@@ -34,7 +34,7 @@ class ProductController extends Controller
             'ProductDescription' => 'nullable|string',
             'CategoryID'         => 'required|exists:categories,CategoryID',
             'SupplierID'         => 'required|exists:suppliers,SupplierID',
-            'ProductStatus'      => 'required|in:Active,Inactive',
+            'ProductStatus'      => 'required|in:Available,Phased Out',
         ]);
 
         DB::beginTransaction();
@@ -123,7 +123,7 @@ class ProductController extends Controller
             'ProductDescription' => 'nullable|string',
             'CategoryID'         => 'required|exists:categories,CategoryID',
             'SupplierID'         => 'required|exists:suppliers,SupplierID',
-            'ProductStatus'      => 'required|in:Active,Inactive',
+            'ProductStatus'      => 'required|in:Available,Phase Out',
         ]);
 
         try {

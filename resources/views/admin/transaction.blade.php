@@ -31,7 +31,7 @@
     }
     .sidebar.mobile-open { transform: translateX(0); }
     .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-    .brand img { width: 40px; height: 40px; object-fit: contain; }
+    .brand img { width: 100px; height: 100px; object-fit: contain; }
     .sidebar .nav-link {
       color: #5b5f72; padding: 12px 8px; border-radius: 10px;
       font-size: 0.95rem; display: flex; align-items: center;

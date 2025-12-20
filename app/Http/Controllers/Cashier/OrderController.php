@@ -28,7 +28,7 @@ class OrderController extends Controller
 
         // Get products with available stock
         $products = Product::with(['category', 'pricing'])
-            ->where('ProductStatus', 'Active')
+            ->where('ProductStatus', 'Available')
             ->get()
             ->map(function ($product) {
                 // Calculate available stock
@@ -73,21 +73,29 @@ class OrderController extends Controller
             'ProductID' => 'required|exists:products,ProductID',
             'Quantity' => 'required|integer|min:1',
             'EmployeeID' => 'required|exists:employees,EmployeeID',
-            // PaymentType is accepted but not stored (no payment columns in schema)
-            'PaymentType' => 'nullable|in:Cash,GCash',
+            'PaymentType' => 'required|in:Cash,GCash',
             'PaymentReference' => 'nullable|string|max:255',
             'AmountPaid' => 'nullable|numeric|min:0',
             'DiscountType' => 'nullable|in:None,Senior,PWD',
             'DiscountAmount' => 'nullable|numeric|min:0',
+        ], [
+            'PaymentReference.required_if' => 'GCash reference number is required when payment type is GCash',
         ]);
-
+    
+        // Add conditional validation for GCash
+        if ($request->PaymentType === 'GCash') {
+            $request->validate([
+                'PaymentReference' => 'required|string|max:255',
+            ]);
+        }
+    
         try {
             DB::beginTransaction();
-
+    
             // Get product with pricing
             $product = Product::with('pricing')->findOrFail($request->ProductID);
             $unitPrice = $product->pricing->RetailPrice ?? 0;
-
+    
             // Calculate available stock
             $stockInTotal = StockIn::where('ProductID', $product->ProductID)
                 ->where('ProdStatus', 'Received')
@@ -104,7 +112,7 @@ class OrderController extends Controller
                 ->sum('OrderQty');
             
             $availableStock = max(0, $stockInTotal - $pulledOutQty - $salesDeduction);
-
+    
             // Validate stock availability
             if ($request->Quantity > $availableStock) {
                 return response()->json([
@@ -112,89 +120,108 @@ class OrderController extends Controller
                     'message' => 'Insufficient stock. Available: ' . $availableStock
                 ], 400);
             }
-
+    
             // Calculate order totals
             $subTotal = $unitPrice * $request->Quantity;
             $discountAmount = $request->DiscountAmount ?? 0;
             $grandTotal = $subTotal - $discountAmount;
-
+    
             // Generate OrderID
             $lastOrder = Order::orderBy('OrderID', 'desc')->first();
             $lastId = $lastOrder ? intval(substr($lastOrder->OrderID, 3)) : 0;
             $orderId = 'ORD' . str_pad($lastId + 1, 4, '0', STR_PAD_LEFT);
-
-            // Determine payment info
-            $paymentMethod = $request->PaymentType ?? 'Cash';
+    
+            // Calculate payment info
             $amountPaid = $request->AmountPaid ?? $grandTotal;
             $balance = max(0, $grandTotal - $amountPaid);
-
-            // Create Order (also store payment summary fields for history)
-            $order = Order::create([
-                'OrderID'         => $orderId,
-                'EmployeeID'      => $request->EmployeeID,
-                'OrderDateTime'   => now(),
-                'OrderStatus'     => 'Completed',
-                'SubTotal'        => $subTotal,
-                'DiscountType'    => $request->DiscountType ?? 'None',
-                'DiscountRate'    => $request->DiscountType == 'None' ? 0 : 20,
-                'DiscountAmount'  => $discountAmount,
-                'GrandTotal'      => $grandTotal,
-                'PaymentMethod'   => $paymentMethod,
-                'PaymentStatus'   => $balance <= 0 ? 'Paid' : 'Unpaid',
-                'PaymentReference'=> $request->PaymentReference,
-                'AmountPaid'      => $amountPaid,
-                'Balance'         => $balance,
-            ]);
-
+    
+            // Create Order - Check what columns actually exist in your orders table
+            $orderData = [
+                'OrderID'          => $orderId,
+                'EmployeeID'       => $request->EmployeeID,
+                'OrderDateTime'    => now(),
+                'OrderStatus'      => 'Completed',
+                'SubTotal'         => $subTotal,
+                'DiscountType'     => $request->DiscountType ?? 'None',
+                'DiscountAmount'   => $discountAmount,
+                'GrandTotal'       => $grandTotal,
+            ];
+            
+            // Add optional fields if they exist in your schema
+            if (\Schema::hasColumn('orders', 'DiscountRate')) {
+                $orderData['DiscountRate'] = $request->DiscountType == 'None' ? 0 : 20;
+            }
+            
+            $order = Order::create($orderData);
+    
             // Generate OrderDetailID
             $lastDetail = OrderDetail::orderBy('OrderDetailsID', 'desc')->first();
             $lastDetailId = $lastDetail ? intval(substr($lastDetail->OrderDetailsID, 2)) : 0;
             $detailId = 'OD' . str_pad($lastDetailId + 1, 4, '0', STR_PAD_LEFT);
-
+    
             // Create OrderDetail
-            $orderDetail = OrderDetail::create([
+            OrderDetail::create([
                 'OrderDetailsID' => $detailId,
                 'OrderID' => $orderId,
                 'ProductID' => $request->ProductID,
                 'OrderQty' => $request->Quantity,
             ]);
-
+    
             // Generate PaymentID
             $lastPayment = Payment::orderBy('PaymentID', 'desc')->first();
             $lastPayId = $lastPayment ? intval(substr($lastPayment->PaymentID, 3)) : 0;
             $paymentId = 'PAY' . str_pad($lastPayId + 1, 4, '0', STR_PAD_LEFT);
-
-            // Create Payment record
-            Payment::create([
-                'PaymentID' => $paymentId,
-                'OrderID' => $orderId,
-                'PaymentType' => $request->paymentType ?? 'Cash',
-                'ReferenceNumber' => $request->gcashReference,
-            ]);
-
+    
+            // Create Payment record - ONLY include fields that exist in your payments table
+            $paymentData = [
+                'PaymentID'       => $paymentId,
+                'OrderID'         => $orderId,
+                'PaymentType'     => $request->PaymentType,
+                'ReferenceNumber' => $request->PaymentReference,
+            ];
+            
+            // Add additional fields if they exist in your payments table schema
+            if (\Schema::hasColumn('payments', 'AmountPaid')) {
+                $paymentData['AmountPaid'] = $amountPaid;
+            }
+            
+            if (\Schema::hasColumn('payments', 'Balance')) {
+                $paymentData['Balance'] = $balance;
+            }
+            
+            if (\Schema::hasColumn('payments', 'PaymentStatus')) {
+                $paymentData['PaymentStatus'] = $balance <= 0 ? 'Paid' : 'Unpaid';
+            }
+            
+            if (\Schema::hasColumn('payments', 'PaymentDate')) {
+                $paymentData['PaymentDate'] = now();
+            }
+            
+            Payment::create($paymentData);
+    
             // Generate InventoryMovementID
             $lastMovement = InventoryMovement::orderBy('InventoryID', 'desc')->first();
             $lastMovId = $lastMovement ? intval(substr($lastMovement->InventoryID, 3)) : 0;
             $movementId = 'INV' . str_pad($lastMovId + 1, 4, '0', STR_PAD_LEFT);
-
+    
             // Create InventoryMovement record for stock deduction (sale)
             InventoryMovement::create([
-                'InventoryID' => $movementId,
-                'ProductID' => $request->ProductID,
-                'QtyChange' => $request->Quantity,
-                'ChangeType' => 'Decrease',
+                'InventoryID'    => $movementId,
+                'ProductID'      => $request->ProductID,
+                'QtyChange'      => $request->Quantity,
+                'ChangeType'     => 'Decrease',
                 'ChangeDateTime' => now(),
             ]);
-
+    
             DB::commit();
-
+    
             return response()->json([
                 'success' => true,
                 'message' => 'Order created successfully!',
                 'orderId' => $orderId,
                 'grandTotal' => number_format($grandTotal, 2),
             ]);
-
+    
         } catch (\Exception $e) {
             DB::rollBack();
             
@@ -204,7 +231,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
     public function show($id)
     {
         $order = Order::with(['details.product.pricing', 'employee', 'payment'])

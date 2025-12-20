@@ -74,8 +74,8 @@
         }
 
         .brand img { 
-            width: 40px; 
-            height: 40px;
+            width: 100px; 
+            height: 100px;
             object-fit: contain;
         }
 
@@ -1129,7 +1129,6 @@
                             <th class="d-none d-md-table-cell">EMPLOYEE</th>
                             <th>ROLE</th>
                             <th>STATUS</th>
-                            <th class="d-none d-sm-table-cell">LAST LOGIN</th>
                             <th>ACTIONS</th>
                         </tr>
                     </thead>
@@ -1156,12 +1155,7 @@
                             <td>
                                 <span class="status-badge status-active">Active</span>
                             </td>
-                            <td class="d-none d-sm-table-cell">
-                                <small class="text-muted">
-                                    {{ \Carbon\Carbon::parse($account->updated_at)->format('M d, Y') }}<br>
-                                    {{ \Carbon\Carbon::parse($account->updated_at)->format('H:i') }}
-                                </small>
-                            </td>
+                           
                             <td>
                                 <div class="action-buttons">
                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewModal{{ $account->UserID }}" title="View">
@@ -1325,7 +1319,7 @@
                 @csrf @method('PUT')
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Account</h5>
+                        <h5 class="modal-title"><i ></i>Edit Account</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -1334,11 +1328,7 @@
                                 <label class="form-label">Email / Username</label>
                                 <input type="email" name="email" class="form-control" value="{{ $account->Username }}" required>
                             </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label">New Password (leave blank to keep current)</label>
-                                <input type="password" name="password" class="form-control" minlength="6">
-                                <small class="text-muted">Leave blank to keep current password</small>
-                            </div>
+                            
                             <div class="col-12 col-md-6">
                                 <label class="form-label">Role</label>
                                 <div class="readonly-field">{{ $account->Role }}</div>

@@ -22,7 +22,7 @@ class Order extends Model
         'DiscountRate',
         'DiscountAmount',
         'GrandTotal',
-        'PaymentMethod',
+        'PaymentType',
         'PaymentStatus',
         'PaymentReference',
         'AmountPaid',

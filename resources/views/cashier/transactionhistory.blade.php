@@ -28,7 +28,7 @@
     }
     .sidebar.mobile-open { transform: translateX(0); }
     .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-shrink: 0; }
-    .brand img { width: 80px; height: auto; object-fit: contain; }
+    .brand img { width: 100px; height: auto; object-fit: contain; }
     .sidebar .nav-link {
       color: #5b5f72; padding: 10px 8px; border-radius: 10px;
       font-size: 0.95rem; display: flex; align-items: center;
@@ -1037,7 +1037,7 @@
                         @endphp
                         <tr>
                             <td>
-                                <strong>#{{ $order->OrderID ?? $order->id ?? 'N/A' }}</strong>
+                                <strong>{{ $order->OrderID ?? $order->id ?? 'N/A' }}</strong>
                             </td>
                             <td>
                                 <small class="text-muted">{{ $formattedDate }}</small>

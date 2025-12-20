@@ -18,8 +18,8 @@ return new class extends Migration
         $table->string('Address')->nullable();
         $table->unsignedInteger('ProductSupplied')  // ProductSupplied counter
                   ->default(0);
-            $table->enum('Status', ['Active', 'Inactive', 'Pending'])
-                  ->default('Pending');
+            $table->enum('Status', ['Active', 'Inactive'])
+                  ->default('Active');
         $table->timestamps();
     });
     

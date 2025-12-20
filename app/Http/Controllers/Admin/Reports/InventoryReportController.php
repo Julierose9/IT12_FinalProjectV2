@@ -20,7 +20,7 @@ class InventoryReportController extends Controller
     {
         // Get all products with categories and pricing
         $query = Product::with(['category', 'pricing'])
-            ->where('ProductStatus', 'Active');
+            ->where('ProductStatus', 'Available');
         
         // Apply search filter
         if ($request->has('search') && $request->search != '') {
@@ -196,7 +196,7 @@ class InventoryReportController extends Controller
     {
         // Get all products with computed stock
         $products = Product::with(['category', 'pricing'])
-            ->where('ProductStatus', 'Active')
+            ->where('ProductStatus', 'Available')
             ->orderBy('ProductName')
             ->get()
             ->map(function($product) {
