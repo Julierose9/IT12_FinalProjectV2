@@ -146,6 +146,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/payments/{id}/refund', [PaymentController::class, 'refund'])->name('payments.refund');
         
         Route::get('/transaction-history', [TransactionHistoryController::class, 'index'])->name('transaction.history');
+        Route::get('cashier/transaction/{id}/receipt', [TransactionHistoryController::class, 'receipt'])->name('cashier.transaction.receipt');
     });
 
 }); 

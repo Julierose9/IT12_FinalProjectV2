@@ -67,4 +67,11 @@ class TransactionHistoryController extends Controller
         
         return view('cashier.transactionhistory', compact('orders'));
     }
+    public function receipt($id)
+{
+    $order = Order::with(['employee', 'details.product', 'payment'])
+        ->findOrFail($id);
+    
+    return view('cashier.receipt', compact('order'));
+}
 }

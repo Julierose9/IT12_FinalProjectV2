@@ -464,6 +464,22 @@
       margin-bottom: 0;
     }
 
+    /* Export Button */
+    .export-btn {
+      background: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .export-btn:hover {
+      background: #c0392b;
+    }
+
     /* Responsive */
     @media (max-width: 991.98px) {
       .sidebar { transform: translateX(-100%); width: 280px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
@@ -631,11 +647,13 @@
                     </div>
                   </div>
                   
-                  <div class="date-inputs" id="customDateRange">
+                  <div class="date-inputs" id="customDateRange" style="{{ request('time_period') == 'custom' ? 'display: flex;' : 'display: none;' }}">
                     <div class="date-input">
+                      <label class="form-label small mb-1">From</label>
                       <input type="date" name="start_date" id="dateFrom" value="{{ request('start_date') }}" placeholder="From Date">
                     </div>
                     <div class="date-input">
+                      <label class="form-label small mb-1">To</label>
                       <input type="date" name="end_date" id="dateTo" value="{{ request('end_date') }}" placeholder="To Date">
                     </div>
                   </div>
@@ -721,9 +739,9 @@
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h5 class="card-title mb-0">Transaction History</h5>
         <div class="d-flex gap-2">
-          <a href="{{ route('admin.transaction.export') . '?' . http_build_query(request()->except('page')) }}" class="btn btn-danger">
-            <i class="fas fa-file-pdf me-1"></i> Export PDF
-          </a>
+          <button class="export-btn" id="exportPdfBtn">
+            <i class="fas fa-file-pdf"></i> Export PDF
+          </button>
         </div>
       </div>
 
@@ -782,7 +800,6 @@
               </td>
               <td>
                 <div class="action-buttons">
-                  {{-- View Details Button --}}
                   <button class="btn btn-sm btn-outline-primary view-transaction" 
                           data-bs-toggle="modal" 
                           data-bs-target="#viewTransactionModal"
@@ -790,7 +807,6 @@
                     <i class="fas fa-eye"></i>
                   </button>
                   
-                  {{-- Print Receipt Button --}}
                   <button class="btn btn-sm btn-outline-secondary print-receipt" 
                           data-order-id="{{ $order->OrderID }}">
                     <i class="fas fa-print"></i>
@@ -820,7 +836,6 @@
           Total Amount: <strong>₱{{ number_format($totalAmount, 2) }}</strong>
         </div>
         
-        {{-- Pagination --}}
         @if($orders->hasPages())
           <nav>
             {{ $orders->withQueryString()->links() }}
@@ -847,6 +862,37 @@
         <button type="button" class="btn btn-primary print-receipt-modal">
           <i class="fas fa-print me-1"></i> Print Receipt
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Date Range Modal -->
+<div class="modal fade" id="exportDateRangeModal" tabindex="-1" aria-labelledby="exportDateRangeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exportDateRangeModalLabel">Select Date Range for Export</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="exportDateForm">
+          <div class="mb-3">
+            <label for="exportFromDate" class="form-label">From Date</label>
+            <input type="date" class="form-control" id="exportFromDate" name="start_date" value="{{ request('start_date') }}">
+          </div>
+          <div class="mb-3">
+            <label for="exportToDate" class="form-label">To Date</label>
+            <input type="date" class="form-control" id="exportToDate" name="end_date" value="{{ request('end_date') }}">
+          </div>
+          <div class="text-muted small">
+            Leave blank to export the current filtered view (all time).
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmExport">Export PDF</button>
       </div>
     </div>
   </div>
@@ -918,13 +964,10 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Clear filters button
   document.getElementById('clearFilters')?.addEventListener('click', function() {
-    // Reset form and submit
     filterForm.reset();
-    // Set default time period to 'all'
     document.getElementById('period-all').checked = true;
     document.getElementById('customDateRange').style.display = 'none';
     
-    // Remove all query parameters and submit
     const url = new URL(window.location.href);
     url.search = '';
     window.location.href = url.toString();
@@ -945,7 +988,6 @@ document.addEventListener('DOMContentLoaded', function() {
     button.addEventListener('click', function() {
       const orderId = this.dataset.orderId;
       
-      // Show loading
       document.getElementById('transactionDetailsContent').innerHTML = `
         <div class="text-center py-5">
           <div class="spinner-border text-primary" role="status">
@@ -955,23 +997,15 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       `;
       
-      // Load order details via AJAX
       fetch(`/admin/transaction/${orderId}/details`, {
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+          'Accept': 'text/html'
         }
       })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.text();
-        })
+        .then(response => response.text())
         .then(html => {
           document.getElementById('transactionDetailsContent').innerHTML = html;
-          
-          // Store order ID for print button
           document.querySelector('.print-receipt-modal').dataset.orderId = orderId;
         })
         .catch(error => {
@@ -993,26 +1027,42 @@ document.addEventListener('DOMContentLoaded', function() {
   // Print receipt (modal button)
   document.querySelector('.print-receipt-modal')?.addEventListener('click', function() {
     const orderId = this.dataset.orderId;
-    if (orderId) {
-      printReceipt(orderId);
-    }
+    if (orderId) printReceipt(orderId);
   });
   
   function printReceipt(orderId) {
-    // Open print window with receipt
     const url = `/admin/transaction/${orderId}/receipt`;
     const printWindow = window.open(url, '_blank');
-    
     setTimeout(() => {
-      if (printWindow) {
-        printWindow.print();
-      } else {
-        alert('Please allow pop-ups to print receipts');
-      }
+      if (printWindow) printWindow.print();
+      else alert('Please allow pop-ups to print receipts');
     }, 500);
   }
+
+  // Export PDF - Open date range modal
+  document.getElementById('exportPdfBtn')?.addEventListener('click', function() {
+    const modal = new bootstrap.Modal(document.getElementById('exportDateRangeModal'));
+    modal.show();
+  });
+
+  // Confirm export with selected dates
+  document.getElementById('confirmExport')?.addEventListener('click', function() {
+    const startDate = document.getElementById('exportFromDate').value;
+    const endDate = document.getElementById('exportToDate').value;
+
+    const currentUrl = new URL(window.location.href);
+    const params = new URLSearchParams(currentUrl.search);
+
+    if (startDate) params.set('start_date', startDate);
+    if (endDate) params.set('end_date', endDate);
+
+    const exportUrl = '{{ route('admin.transaction.export') }}?' + params.toString();
+    window.open(exportUrl, '_blank');
+
+    bootstrap.Modal.getInstance(document.getElementById('exportDateRangeModal')).hide();
+  });
   
-  // Auto-hide alerts after 5 seconds
+  // Auto-hide alerts
   setTimeout(() => {
     document.querySelectorAll('.alert').forEach(alert => {
       const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);

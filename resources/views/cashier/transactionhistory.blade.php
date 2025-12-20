@@ -1575,7 +1575,7 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h6>Order Information</h6>
-                            <p><strong>Order ID:</strong> #${orderData.OrderID || orderData.id || 'N/A'}</p>
+                            <p><strong>Order ID:</strong> ${orderData.OrderID || orderData.id || 'N/A'}</p>
                             <p><strong>Date:</strong> ${formattedDate}</p>
                             <p><strong>Cashier:</strong> ${(orderData.employee?.EmployeeFName || '') + ' ' + (orderData.employee?.EmployeeLName || '') || orderData.employee?.EmployeeName || 'Unknown'}</p>
                         </div>
@@ -1721,74 +1721,35 @@
             }
         }
 
-        function printOrderReceipt(orderData) {
-            const printWindow = window.open('', '_blank');
-            
-            const receiptHTML = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Receipt #${orderData.OrderID || orderData.id}</title>
-                    <style>
-                        body { font-family: 'Courier New', monospace; padding: 20px; }
-                        .receipt { max-width: 300px; margin: 0 auto; }
-                        .header { text-align: center; margin-bottom: 20px; }
-                        .store-name { font-weight: bold; font-size: 18px; }
-                        .order-info { margin: 10px 0; }
-                        .items-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-                        .items-table th, .items-table td { padding: 5px; text-align: left; }
-                        .total { font-weight: bold; font-size: 16px; margin-top: 10px; }
-                        .footer { text-align: center; margin-top: 20px; font-size: 12px; }
-                        @media print {
-                            body { padding: 0; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="receipt">
-                        <div class="header">
-                            <div class="store-name">Dora's Oshoppe</div>
-                            <div>Gift Shop</div>
-                            <div>-------------------</div>
-                        </div>
-                        
-                        <div class="order-info">
-                            <div>Order ID: #${orderData.OrderID || orderData.id}</div>
-                            <div>Date: ${new Date().toLocaleString()}</div>
-                            <div>Cashier: ${orderData.cashier?.EmployeeName || 'Unknown'}</div>
-                        </div>
-                        
-                        <table class="items-table">
-                            ${orderData.items?.map(item => `
-                                <tr>
-                                    <td>${item.product_name || item.ProductName}</td>
-                                    <td>x${item.quantity || item.Quantity}</td>
-                                    <td>₱${(parseFloat(item.price || item.Price) * (item.quantity || item.Quantity)).toFixed(2)}</td>
-                                </tr>
-                            `).join('') || ''}
-                        </table>
-                        
-                        <div class="total">
-                            <div>Total: ₱${orderData.TotalAmount?.toFixed(2) || '0.00'}</div>
-                        </div>
-                        
-                        <div class="footer">
-                            <div>Thank you for shopping with us!</div>
-                            <div>-------------------</div>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            printWindow.document.write(receiptHTML);
-            printWindow.document.close();
-            printWindow.focus();
+        // Print receipt function (used by both table buttons and modal)
+function printOrderReceipt(orderId) {
+    const url = `/cashier/transaction/${orderId}/receipt`; // New route to load receipt view
+    const printWindow = window.open(url, '_blank');
+    
+    if (printWindow) {
+        printWindow.onload = function() {
             setTimeout(() => {
                 printWindow.print();
-                printWindow.close();
-            }, 250);
-        }
+                // Optional: printWindow.close(); // Uncomment to auto-close after printing
+            }, 500);
+        };
+    } else {
+        alert('Please allow pop-ups to print receipts');
+    }
+}
+
+// Update your existing print buttons to use this function
+document.querySelectorAll('.print-receipt').forEach(button => {
+    button.addEventListener('click', function() {
+        const orderId = this.dataset.orderId;
+        printReceipt(orderId);
+    });
+});
+
+document.querySelector('.print-receipt-modal')?.addEventListener('click', function() {
+    const orderId = this.dataset.orderId;
+    if (orderId) printReceipt(orderId);
+});
 
         // ========== SEARCH FUNCTIONALITY WITH DEBOUNCE ==========
         let searchTimeout;

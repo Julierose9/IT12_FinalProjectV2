@@ -3,252 +3,307 @@
 <head>
     <meta charset="utf-8">
     <title>Inventory Report - Dora's Oshoppe</title>
+
     <style>
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: DejaVu Sans, Helvetica, Arial, sans-serif;
             font-size: 11px;
-            line-height: 1.5;
-            color: #333;
+            color: #2c2c2c;
+            line-height: 1.6;
             margin: 0;
-            padding: 30px;
+            padding: 0;
             background: #fff;
         }
+
         .container {
-            max-width: 100%;
-            margin: 0 auto;
+            width: 100%;
+            padding: 20px 30px;
         }
+
+        /* HEADER */
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 3px double #3b3183;
+            display: table;
+            width: 100%;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #3b3183;
+            padding-bottom: 10px;
         }
+
         .logo {
-            width: 120px;
-            height: auto;
-            margin-bottom: 15px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
+            width: 110px;
+            vertical-align: middle;
         }
-        .header h1 {
-            margin: 10px 0 5px;
-            font-size: 28px;
-            font-weight: 700;
+
+        .title-section {
+            text-align: right;
+            vertical-align: middle;
+        }
+
+        h1 {
             color: #3b3183;
-            letter-spacing: 1px;
-        }
-        .header .subtitle {
-            font-size: 16px;
-            color: #666;
+            font-size: 24px;
             margin: 0;
+            font-weight: bold;
+            letter-spacing: 0.5px;
         }
-        .report-title {
+
+        .subtitle {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* META */
+        .meta {
+            font-size: 11px;
+            color: #555;
+            margin: 15px 0 20px;
+            display: table;
+            width: 100%;
+        }
+
+        .meta div {
+            display: table-cell;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: table;
+            width: 100%;
+            margin-bottom: 25px;
+            border-spacing: 10px;
+        }
+
+        .stat-card {
+            display: table-cell;
+            background: #f4f5fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+            width: 25%;
+        }
+
+        .stat-title {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
             font-size: 20px;
             font-weight: bold;
-            margin: 10px 0;
             color: #3b3183;
+            margin-bottom: 4px;
         }
-        .generated {
-            font-size: 12px;
+
+        .stat-note {
+            font-size: 9px;
             color: #777;
-            margin-top: 10px;
         }
-        .summary {
-            display: flex;
-            justify-content: space-around;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .summary-item {
-            text-align: center;
-            min-width: 150px;
-        }
-        .summary-item .value {
-            font-size: 22px;
-            font-weight: bold;
+
+        /* TABLE */
+        h2 {
+            font-size: 14px;
             color: #3b3183;
+            margin-bottom: 8px;
         }
-        .summary-item .label {
-            font-size: 10px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 5px;
-        }
+
         table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin-top: 20px;
+            border-collapse: collapse;
             font-size: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            border-radius: 10px;
-            overflow: hidden;
         }
+
         th {
-            background: linear-gradient(to bottom, #3b3183, #2a2265);
-            color: white;
-            padding: 12px 10px;
+            background: #3b3183;
+            color: #fff;
+            padding: 9px;
+            font-size: 9px;
             text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            font-size: 10px;
+            letter-spacing: 0.4px;
+            border: 1px solid #3b3183;
         }
+
         td {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            vertical-align: top;
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            vertical-align: middle;
         }
+
         tr:nth-child(even) {
-            background-color: #f8f9fa;
+            background: #f9f9fc;
         }
-        tr:hover {
-            background-color: #f1f3f5;
-        }
+
         .text-right {
             text-align: right;
-            font-weight: 600;
         }
-        .status-in-stock {
-            color: #23b07a;
+
+        /* STATUS */
+        .status-badge {
+            padding: 4px 9px;
+            border-radius: 12px;
+            font-size: 8px;
             font-weight: bold;
-            background: rgba(35, 176, 122, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
+            text-transform: uppercase;
+            color: #fff;
         }
-        .status-low-stock {
-            color: #f08a24;
+
+        .status-in-stock { background: #28a745; }
+        .status-low-stock { background: #fd7e14; }
+        .status-out-stock { background: #dc3545; }
+
+        /* FOOTER TOTAL */
+        tfoot td {
+            background: #3b3183;
+            color: #fff;
             font-weight: bold;
-            background: rgba(240, 138, 36, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
+            font-size: 11px;
         }
-        .status-out-of-stock {
-            color: #e05252;
-            font-weight: bold;
-            background: rgba(224, 82, 82, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        .total-row {
-            background: linear-gradient(to right, #3b3183, #2a2265);
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .total-row td {
-            padding: 15px 10px;
-        }
+
+        /* FOOTER */
         .footer {
-            margin-top: 40px;
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
             text-align: center;
-            font-size: 10px;
+            font-size: 9px;
             color: #777;
-            border-top: 2px solid #eee;
-            padding-top: 15px;
         }
-        @page {
-            margin: 1cm;
+
+        .page-number {
+            position: fixed;
+            bottom: 15px;
+            right: 25px;
+            font-size: 9px;
+            color: #666;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <img src="{{ public_path('images/logo1.png') }}" alt="Dora's Oshoppe Logo" class="logo">
-            <h1>Dora's Oshoppe</h1>
-            <p class="subtitle">Gift Shop Inventory Report</p>
-            <p class="generated">Generated on: {{ $generatedAt->format('F j, Y \a\t g:i A') }}</p>
-        </div>
+<div class="container">
 
-        <div class="summary">
-            <div class="summary-item">
-                <div class="value">{{ $products->count() }}</div>
-                <div class="label">Total Products</div>
-            </div>
-            <div class="summary-item">
-                <div class="value">{{ $products->where('current_stock', '>', 0)->count() }}</div>
-                <div class="label">In Stock</div>
-            </div>
-            <div class="summary-item">
-                <div class="value">{{ $products->where('current_stock', '<=', \DB::raw('COALESCE(ReorderLvl, 5)'))->where('current_stock', '>', 0)->count() }}</div>
-                <div class="label">Low Stock</div>
-            </div>
-            <div class="summary-item">
-                <div class="value">{{ $products->where('current_stock', '<=', 0)->count() }}</div>
-                <div class="label">Out of Stock</div>
-            </div>
-            <div class="summary-item">
-                <div class="value">₱{{ number_format($products->sum(\DB::raw('current_stock * COALESCE((SELECT OriginalPrice FROM pricing WHERE pricing.ProductID = products.ProductID AND pricing.IsActive = "yes" ORDER BY EffectiveDate DESC LIMIT 1), 0)')), 2) }}</div>
-                <div class="label">Total Inventory Value (Cost)</div>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Product ID</th>
-                    <th>SKU</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th class="text-right">Current Stock</th>
-                    <th class="text-right">Reorder Level</th>
-                    <th>Status</th>
-                    <th class="text-right">Cost Price</th>
-                    <th class="text-right">Retail Price</th>
-                    <th class="text-right">Total Value (Cost)</th>
-                    <th>Last Updated</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($products as $product)
-                    @php
-                        $status = 'In Stock';
-                        $statusClass = 'status-in-stock';
-                        if ($product->current_stock <= 0) {
-                            $status = 'Out of Stock';
-                            $statusClass = 'status-out-of-stock';
-                        } elseif ($product->current_stock <= ($product->ReorderLvl ?? 5)) {
-                            $status = 'Low Stock';
-                            $statusClass = 'status-low-stock';
-                        }
-                        $costPrice = $product->pricing?->OriginalPrice ?? 0;
-                        $retailPrice = $product->pricing?->RetailPrice ?? 0;
-                        $totalValue = $product->current_stock * $costPrice;
-                    @endphp
-                    <tr>
-                        <td><strong>{{ $product->ProductID }}</strong></td>
-                        <td>{{ $product->SKUNumber }}</td>
-                        <td>{{ $product->ProductName }}</td>
-                        <td>{{ $product->category?->CategoryName ?? 'Uncategorized' }}</td>
-                        <td class="text-right"><strong>{{ $product->current_stock }}</strong></td>
-                        <td class="text-right">{{ $product->ReorderLvl ?? 5 }}</td>
-                        <td class="{{ $statusClass }}">{{ $status }}</td>
-                        <td class="text-right">₱{{ number_format($costPrice, 2) }}</td>
-                        <td class="text-right">₱{{ number_format($retailPrice, 2) }}</td>
-                        <td class="text-right">₱{{ number_format($totalValue, 2) }}</td>
-                        <td>{{ optional($product->updated_at)->format('M j, Y g:i A') }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td colspan="9" style="text-align: right;">GRAND TOTAL INVENTORY VALUE (COST):</td>
-                    <td colspan="2">₱{{ number_format($products->sum(function($p) { return $p->current_stock * ($p->pricing?->OriginalPrice ?? 0); }), 2) }}</td>
-                </tr>
-            </tfoot>
-        </table>
-
-        <div class="footer">
-            <p>This report was generated automatically by the Dora's Oshoppe Management System.</p>
-            <p>&copy; {{ date('Y') }} Dora's Oshoppe. All rights reserved.</p>
+    <!-- HEADER -->
+    <div class="header">
+    <img src="{{ public_path('images/logo1.png') }}" class="logo">
+    <div class="title-section">
+            <h1>Inventory Report</h1>
+            <div class="subtitle">Dora's Oshoppe – Gift Shop</div>
         </div>
     </div>
+
+    <!-- META -->
+    <div class="meta">
+        <div>Generated on: {{ $generatedAt->format('F d, Y h:i A') }}</div>
+        <div style="text-align:right;">Report Date: {{ $generatedAt->format('F d, Y') }}</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Total Products</div>
+            <div class="stat-value">{{ $products->count() }}</div>
+            <div class="stat-note">Active items</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Inventory Value</div>
+            <div class="stat-value">₱{{ number_format($grandTotalValue ?? 0, 2) }}</div>
+            <div class="stat-note">Cost-based</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Low Stock</div>
+            <div class="stat-value">{{ $lowStockCount ?? 0 }}</div>
+            <div class="stat-note">Needs reorder</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Out of Stock</div>
+            <div class="stat-value">{{ $outOfStockCount ?? 0 }}</div>
+            <div class="stat-note">Urgent</div>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <h2>Product Inventory Details</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>SKU</th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Unit</th>
+                <th>Supplier</th>
+                <th class="text-right">Stock</th>
+                <th class="text-right">Reorder</th>
+                <th>Status</th>
+                <th class="text-right">Cost</th>
+                <th class="text-right">Price</th>
+                <th class="text-right">Value</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        @php $computedGrandTotal = 0; @endphp
+        @foreach($products as $product)
+            @php
+                $cost = $product->pricing->OriginalPrice ?? 0;
+                $value = $product->current_stock * $cost;
+                $computedGrandTotal += $value;
+
+                if ($product->current_stock <= 0) {
+                    $status = 'Out of Stock';
+                    $class = 'status-out-stock';
+                } elseif ($product->current_stock <= ($product->ReorderLvl ?? 10)) {
+                    $status = 'Low Stock';
+                    $class = 'status-low-stock';
+                } else {
+                    $status = 'In Stock';
+                    $class = 'status-in-stock';
+                }
+            @endphp
+            <tr>
+                <td>{{ $product->ProductID }}</td>
+                <td>{{ $product->SKUNumber }}</td>
+                <td>{{ $product->ProductName }}</td>
+                <td>{{ $product->category->CategoryName ?? 'N/A' }}</td>
+                <td>{{ $product->unit_of_measure ?? 'pcs' }}</td>
+                <td>{{ $product->supplier->SupplierName ?? 'N/A' }}</td>
+                <td class="text-right">{{ $product->current_stock }}</td>
+                <td class="text-right">{{ $product->ReorderLvl ?? 5 }}</td>
+                <td><span class="status-badge {{ $class }}">{{ $status }}</span></td>
+                <td class="text-right">₱{{ number_format($cost, 2) }}</td>
+                <td class="text-right">₱{{ number_format($product->pricing->RetailPrice ?? 0, 2) }}</td>
+                <td class="text-right">₱{{ number_format($value, 2) }}</td>
+                <td>{{ optional($product->updated_at)->format('Y-m-d') }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <td colspan="11">Grand Total Inventory Value</td>
+                <td class="text-right">₱{{ number_format($computedGrandTotal, 2) }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        Confidential – Dora's Oshoppe Gift Shop | Generated by Inventory System
+    </div>
+
+    <div class="page-number">
+        Page {PAGENO} of {nbpg}
+    </div>
+
+</div>
 </body>
 </html>

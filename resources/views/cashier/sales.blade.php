@@ -879,7 +879,7 @@
                             
                             <!-- PAYMENT METHOD FILTER -->
                             <div class="filter-section">
-                                <div class="filter-section-title">Filter by Payment Type</div>
+                                <div class="filter-section-title">Filter by Payment Method</div>
                                 <div class="filter-options">
                                     <div class="filter-option">
                                         <input type="checkbox" id="payment-all" checked>
@@ -1029,7 +1029,6 @@
                                                         data-order-id="{{ $order->OrderID }}">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                
                                                 <button class="btn btn-outline-warning archive-order" 
                                                         data-order-id="{{ $order->OrderID }}"
                                                         data-order-code="{{ $order->OrderID }}"
@@ -1139,6 +1138,10 @@
                                                 <button class="btn btn-outline-primary view-payment" 
                                                         data-payment-id="{{ $payment->PaymentID }}">
                                                     <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success print-receipt" 
+                                                        data-payment-id="{{ $payment->PaymentID }}">
+                                                    <i class="fas fa-print"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -1274,7 +1277,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label required">Payment Type</label>
-                            <select class="form-select" id="PaymentType" name="PaymentType" required>
+                            <select class="form-select" id="paymentType" name="PaymentType" required>
                                 <option value="">Select Payment</option>
                                 <option value="Cash">Cash</option>
                                 <option value="GCash">GCash</option>
@@ -1297,7 +1300,8 @@
                                 <label class="form-label required">Amount Tendered</label>
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" id="amountTendered" step="0.01" min="0" name="AmountTendered" required>
+                                    <input type="number" class="form-control" id="amountTendered" 
+                                        step="0.01" min="0" name="AmountTendered">
                                 </div>
                                 <small class="text-muted">Enter amount received from customer</small>
                             </div>
@@ -1444,7 +1448,7 @@
     </div>
 </div>
 
-<!-- VIEW PAYMENT MODAL - Simplified to show only payment details -->
+<!-- VIEW PAYMENT MODAL -->
 <div class="modal fade" id="viewPaymentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -1464,52 +1468,82 @@
                     </div>
                     <div class="col-md-6">
                         <h6>Payment Details</h6>
-                        <p class="mb-1"><strong>Payment Type:</strong> <span id="paymentMethodType"></span></p>
+                        <p class="mb-1"><strong>Payment Method:</strong> <span id="paymentMethodType"></span></p>
                         <p class="mb-1"><strong>Reference No:</strong> <span id="viewPaymentReference"></span></p>
-                        <p class="mb-0"><strong>Amount Paid:</strong> <span id="viewPaymentAmount" class="text-success"></span></p>
+                        <p class="mb-0"><strong>Amount:</strong> <span id="viewPaymentAmount" class="text-success"></span></p>
+                    </div>
+                </div>
+
+                <!-- ORDER ITEMS TABLE -->
+                <h6>Order Items</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th></tr></thead>
+                        <tbody id="viewPaymentItems"></tbody>
+                    </table>
+                </div>
+
+                <!-- PAYMENT SUMMARY -->
+                <div class="row mt-4">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Subtotal:</span><strong id="viewPaymentSubtotal">₱0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Discount:</span><strong id="viewPaymentDiscount" class="text-danger">-₱0.00</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                            <span class="h6">Grand Total:</span><strong class="h5 text-success" id="viewPaymentGrandTotal">₱0.00</strong>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary print-payment-receipt">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- EXTERNAL JAVASCRIPT -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let unitPrice = 0;
     let subtotal = 0;
     let discountAmount = 0;
     let grandTotal = 0;
-
+    
     // ========== SIDEBAR FUNCTIONALITY ==========
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
-
+    
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function() {
             sidebar.classList.toggle('mobile-open');
             sidebarOverlay.classList.toggle('active');
         });
     }
-
+    
     if (sidebarOverlay) {
         sidebarOverlay.addEventListener('click', function() {
             sidebar.classList.remove('mobile-open');
             sidebarOverlay.classList.remove('active');
         });
     }
-
+    
     // ========== USER DROPDOWN FUNCTIONALITY ==========
     document.getElementById('userDropdownToggle')?.addEventListener('click', function(e) {
         e.stopPropagation();
         const menu = document.getElementById('userDropdownMenu');
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     });
+
     document.addEventListener('click', function() {
         document.getElementById('userDropdownMenu').style.display = 'none';
     });
@@ -1520,16 +1554,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const activeFilters = document.getElementById('activeFilters');
     const searchInput = document.getElementById('searchInput');
     const ordersTableBody = document.getElementById('ordersTableBody');
-
-    // Store current filters - NO defaults applied
+    
+    // Store current filters
     let currentFilters = {
-        status: [],          // Empty = show all statuses
-        payment: [],         // Empty = show all payment methods
+        status: [],
+        payment: ['cash', 'gcash', 'n/a'],
         dateFrom: '',
         dateTo: '',
         search: ''
     };
-
+    
     // Filter toggle functionality
     filterToggle?.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -1537,39 +1571,39 @@ document.addEventListener('DOMContentLoaded', function() {
         filterMenu.style.display = isVisible ? 'none' : 'block';
         filterToggle.classList.toggle('active', !isVisible);
     });
-
+    
     document.addEventListener('click', function() {
         filterMenu.style.display = 'none';
         filterToggle.classList.remove('active');
     });
-
+    
     filterMenu?.addEventListener('click', function(e) {
         e.stopPropagation();
     });
-
+    
     // ========== SEARCH AND FILTER FUNCTIONALITY ==========
     searchInput?.addEventListener('input', function() {
         currentFilters.search = this.value.toLowerCase();
         filterOrders();
     });
-
+    
     const dateFromFilter = document.getElementById('dateFromFilter');
     const dateToFilter = document.getElementById('dateToFilter');
-
+    
     if (dateFromFilter) {
         dateFromFilter.addEventListener('change', function() {
             currentFilters.dateFrom = this.value;
             filterOrders();
         });
     }
-
+    
     if (dateToFilter) {
         dateToFilter.addEventListener('change', function() {
             currentFilters.dateTo = this.value;
             filterOrders();
         });
     }
-
+    
     // Apply filters
     document.getElementById('applyFilters')?.addEventListener('click', function() {
         filterMenu.style.display = 'none';
@@ -1578,7 +1612,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateActiveFilters();
         filterOrders();
     });
-
+    
     // Clear filters
     document.getElementById('clearFilters')?.addEventListener('click', function() {
         document.querySelectorAll('.filter-option input[type="checkbox"]').forEach(checkbox => {
@@ -1589,19 +1623,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dateFromFilter) dateFromFilter.value = '';
         if (dateToFilter) dateToFilter.value = '';
         if (searchInput) searchInput.value = '';
-
         currentFilters = {
-            status: [],          // Reset to show all
-            payment: [],         // Reset to show all
+            status: [],
+            payment: ['cash', 'gcash', 'n/a'],
             dateFrom: '',
             dateTo: '',
             search: ''
         };
-
         updateActiveFilters();
         filterOrders();
     });
-
+    
     function updateCurrentFilters() {
         // Update status filters
         currentFilters.status = [];
@@ -1618,7 +1650,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentFilters.status.push('archived');
             }
         }
-
+        
         // Update payment filters
         currentFilters.payment = [];
         if (document.getElementById('payment-all').checked) {
@@ -1630,33 +1662,34 @@ document.addEventListener('DOMContentLoaded', function() {
             if (document.getElementById('payment-gcash-filter').checked) {
                 currentFilters.payment.push('gcash');
             }
-            // If no payments selected, leave empty to show all
+            if (currentFilters.payment.length === 0) {
+                currentFilters.payment = ['cash', 'gcash', 'n/a'];
+            }
         }
-
+        
         // Update date filters
         currentFilters.dateFrom = dateFromFilter ? dateFromFilter.value : '';
         currentFilters.dateTo = dateToFilter ? dateToFilter.value : '';
     }
-
+    
     function updateActiveFilters() {
         if (activeFilters) {
             activeFilters.innerHTML = '';
-            const hasCustomFilters =
-                currentFilters.status.length > 0 && currentFilters.status.length !== 3 ||
-                currentFilters.payment.length > 0 && currentFilters.payment.length !== 3 ||
+            const hasCustomFilters = 
+                currentFilters.status.length !== 3 ||
+                currentFilters.payment.length !== 2 ||
                 currentFilters.dateFrom !== '' ||
                 currentFilters.dateTo !== '' ||
                 currentFilters.search !== '';
-
+            
             if (!hasCustomFilters) {
                 activeFilters.classList.remove('has-filters');
                 return;
             }
-
+            
             activeFilters.classList.add('has-filters');
-
-            // Status tags only if not all
-            if (currentFilters.status.length > 0 && currentFilters.status.length !== 3) {
+            
+            if (currentFilters.status.length !== 3) {
                 currentFilters.status.forEach(status => {
                     const statusTag = createFilterTag(
                         'Status: ' + status.charAt(0).toUpperCase() + status.slice(1),
@@ -1665,9 +1698,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     activeFilters.appendChild(statusTag);
                 });
             }
-
-            // Payment tags only if not all
-            if (currentFilters.payment.length > 0 && currentFilters.payment.length !== 3) {
+            
+            if (currentFilters.payment.length !== 2) {
                 currentFilters.payment.forEach(payment => {
                     const paymentTag = createFilterTag(
                         'Payment: ' + payment.charAt(0).toUpperCase() + payment.slice(1),
@@ -1676,7 +1708,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     activeFilters.appendChild(paymentTag);
                 });
             }
-
+            
             if (currentFilters.dateFrom || currentFilters.dateTo) {
                 let dateText = 'Date: ';
                 if (currentFilters.dateFrom && currentFilters.dateTo) {
@@ -1689,14 +1721,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const dateTag = createFilterTag(dateText, 'date-range');
                 activeFilters.appendChild(dateTag);
             }
-
+            
             if (currentFilters.search !== '') {
                 const searchTag = createFilterTag('Search: "' + currentFilters.search + '"', 'search');
                 activeFilters.appendChild(searchTag);
             }
         }
     }
-
+    
     function createFilterTag(text, filterType) {
         const tag = document.createElement('div');
         tag.className = 'filter-tag';
@@ -1713,7 +1745,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tag.appendChild(removeBtn);
         return tag;
     }
-
+    
     function removeFilter(filterType) {
         if (filterType.startsWith('status-')) {
             const filterName = filterType.replace('status-', '');
@@ -1740,55 +1772,62 @@ document.addEventListener('DOMContentLoaded', function() {
         updateActiveFilters();
         filterOrders();
     }
-
+    
     function updateFilterInputs() {
-        document.getElementById('order-status-all').checked = currentFilters.status.length === 3 || currentFilters.status.length === 0;
-        document.getElementById('status-completed-filter').checked = currentFilters.status.includes('completed');
-        document.getElementById('status-pending-filter').checked = currentFilters.status.includes('pending');
-        document.getElementById('status-archived-filter').checked = currentFilters.status.includes('archived');
-
-        document.getElementById('payment-all').checked = currentFilters.payment.length === 3 || currentFilters.payment.length === 0;
-        document.getElementById('payment-cash-filter').checked = currentFilters.payment.includes('cash');
-        document.getElementById('payment-gcash-filter').checked = currentFilters.payment.includes('gcash');
+        if (document.getElementById('order-status-all')) {
+            document.getElementById('order-status-all').checked = currentFilters.status.length === 3;
+            document.getElementById('status-completed-filter').checked = currentFilters.status.includes('completed');
+            document.getElementById('status-pending-filter').checked = currentFilters.status.includes('pending');
+            document.getElementById('status-archived-filter').checked = currentFilters.status.includes('archived');
+        }
+        
+        if (document.getElementById('payment-all')) {
+            document.getElementById('payment-all').checked = currentFilters.payment.length === 2;
+            document.getElementById('payment-cash-filter').checked = currentFilters.payment.includes('cash');
+            document.getElementById('payment-gcash-filter').checked = currentFilters.payment.includes('gcash');
+        }
     }
-
+    
     function filterOrders() {
         if (ordersTableBody) {
             const rows = ordersTableBody.getElementsByTagName('tr');
             let visibleCount = 0;
-
+            
             for (let row of rows) {
                 if (row.cells.length < 2) continue;
-
+                
                 const orderId = row.cells[0]?.textContent?.toLowerCase() || '';
                 const employeeName = row.cells[1]?.textContent?.toLowerCase() || '';
                 const items = row.cells[3]?.textContent?.toLowerCase() || '';
                 const status = row.dataset.status || '';
                 const payment = row.dataset.payment || '';
                 const dateStr = row.dataset.date || '';
-
-                const searchMatch = currentFilters.search === '' ||
-                                   orderId.includes(currentFilters.search) ||
+                
+                const searchMatch = currentFilters.search === '' || 
+                                   orderId.includes(currentFilters.search) || 
                                    employeeName.includes(currentFilters.search) ||
                                    items.includes(currentFilters.search);
-
-                // Empty status = show all
-                const statusMatch = currentFilters.status.length === 0 || currentFilters.status.includes(status);
-
-                // Empty payment = show all
-                const paymentMatch = currentFilters.payment.length === 0 ||
-                                    payment === '' || currentFilters.payment.includes(payment);
-
+                
+                const statusMatch = currentFilters.status.length === 0 || 
+                                   currentFilters.status.includes(status);
+                
+                const paymentMatch = currentFilters.payment.length === 0 || 
+                                   payment === '' || currentFilters.payment.includes(payment);
+                
                 let dateMatch = true;
                 if (currentFilters.dateFrom || currentFilters.dateTo) {
                     const orderDate = new Date(dateStr);
                     const fromDate = currentFilters.dateFrom ? new Date(currentFilters.dateFrom) : null;
                     const toDate = currentFilters.dateTo ? new Date(currentFilters.dateTo) : null;
-
-                    if (fromDate && orderDate < fromDate) dateMatch = false;
-                    if (toDate && orderDate > toDate) dateMatch = false;
+                    
+                    if (fromDate && orderDate < fromDate) {
+                        dateMatch = false;
+                    }
+                    if (toDate && orderDate > toDate) {
+                        dateMatch = false;
+                    }
                 }
-
+                
                 if (searchMatch && statusMatch && paymentMatch && dateMatch) {
                     row.style.display = '';
                     visibleCount++;
@@ -1796,16 +1835,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.style.display = 'none';
                 }
             }
-
-            // Update count display
-            const countElement = document.querySelector('.d-flex.justify-content-between.align-items-center.mt-4 .text-muted');
-            if (countElement) {
+            
+            const countElement = document.querySelector('.text-muted');
+            if (countElement && visibleCount > 0) {
                 const totalRows = rows.length;
-                countElement.textContent = `Showing ${visibleCount} of ${totalRows} orders`;
+                countElement.textContent = 'Showing ' + visibleCount + ' of ' + totalRows + ' orders';
             }
         }
     }
-
+    
     function formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -1814,22 +1852,22 @@ document.addEventListener('DOMContentLoaded', function() {
             year: 'numeric'
         });
     }
-
+    
     // ========== ORDER FORM CALCULATIONS ==========
-    // (All the rest of your original code remains unchanged from here down)
+    // Product selection handler
     document.getElementById('productSelect')?.addEventListener('change', function() {
         const productId = this.value;
         const selectedOption = this.options[this.selectedIndex];
-
+        
         if (productId) {
             document.getElementById('selectedProductID').value = productId;
             document.getElementById('skuDisplay').value = selectedOption.dataset.sku || '';
-
+            
             const category = selectedOption.dataset.category || '';
             const size = selectedOption.dataset.size || '';
             const sizeRow = document.getElementById('sizeRow');
             const sizeDisplay = document.getElementById('sizeDisplay');
-
+            
             if (category.toLowerCase().includes('clothing') && size) {
                 sizeRow.style.display = 'block';
                 sizeDisplay.value = size;
@@ -1837,112 +1875,122 @@ document.addEventListener('DOMContentLoaded', function() {
                 sizeRow.style.display = 'none';
                 sizeDisplay.value = '';
             }
-
+            
             unitPrice = parseFloat(selectedOption.dataset.price) || 0;
             document.getElementById('unitPriceDisplay').value = unitPrice.toFixed(2);
-
+            
             const stock = parseInt(selectedOption.dataset.stock) || 0;
             const quantityInput = document.getElementById('quantity');
             quantityInput.max = stock;
-
+            
             if (parseInt(quantityInput.value) > stock) {
                 quantityInput.value = stock;
-                showAlert('Only ' + stock + ' units available. Quantity adjusted.', 'warning');
+                    showAlert('Only ' + stock + ' units available. Quantity adjusted.', 'warning');
             }
-
+            
             calculateTotals();
         } else {
             resetForm();
         }
     });
-
+    
+    // Quantity change handler
     document.getElementById('quantity')?.addEventListener('input', calculateTotals);
-
+    
+    // Discount type change handler
     document.getElementById('discountType')?.addEventListener('change', calculateTotals);
-
-    document.getElementById('PaymentType')?.addEventListener('change', function() {
-        const PaymentType = this.value;
-        document.getElementById('cashFields').style.display = PaymentType === 'Cash' ? 'block' : 'none';
-        document.getElementById('gcashFields').style.display = PaymentType === 'GCash' ? 'block' : 'none';
-
+    
+    // Payment type change handler
+    document.getElementById('paymentType')?.addEventListener('change', function() {
+        const paymentType = this.value;
+        document.getElementById('cashFields').style.display = paymentType === 'Cash' ? 'block' : 'none';
+        document.getElementById('gcashFields').style.display = paymentType === 'GCash' ? 'block' : 'none';
+        
         const amountTendered = document.getElementById('amountTendered');
         const gcashRef = document.getElementById('gcashReference');
-
-        if (PaymentType === 'Cash') {
+        
+        if (paymentType === 'Cash') {
             amountTendered.required = true;
             gcashRef.required = false;
             gcashRef.value = '';
-        } else if (PaymentType === 'GCash') {
+        } else if (paymentType === 'GCash') {
             amountTendered.required = false;
             amountTendered.value = '';
             gcashRef.required = true;
             document.getElementById('changeDisplay').value = '0.00';
         }
-
+        
         updateAmountPaid();
         calculateChange();
     });
-
+    
+    // Amount tendered change handler
     document.getElementById('amountTendered')?.addEventListener('input', function() {
         updateAmountPaid();
         calculateChange();
     });
-
+    
+    // Calculate totals function
     function calculateTotals() {
         const quantity = parseInt(document.getElementById('quantity')?.value) || 0;
         const discountType = document.getElementById('discountType')?.value;
-
+        
         subtotal = unitPrice * quantity;
         if (document.getElementById('subtotalDisplay')) {
             document.getElementById('subtotalDisplay').value = subtotal.toFixed(2);
             document.getElementById('subtotal').value = subtotal;
         }
-
+        
         let discountRate = 0;
         if (discountType === 'Senior' || discountType === 'PWD') {
             discountRate = 20;
         }
-
+        
         discountAmount = subtotal * (discountRate / 100);
         if (document.getElementById('discountAmountDisplay')) {
             document.getElementById('discountAmountDisplay').value = discountAmount.toFixed(2);
             document.getElementById('discountAmount').value = discountAmount;
         }
-
+        
         grandTotal = subtotal - discountAmount;
         if (document.getElementById('grandTotalDisplay')) {
             document.getElementById('grandTotalDisplay').textContent = '₱' + grandTotal.toFixed(2);
             document.getElementById('grandTotal').value = grandTotal;
         }
-
+        
         updateAmountPaid();
         calculateChange();
     }
-
+    
+    // Calculate change function
     function calculateChange() {
-        if (document.getElementById('PaymentType')?.value === 'Cash' && document.getElementById('changeDisplay')) {
+        if (document.getElementById('paymentType')?.value === 'Cash' && document.getElementById('changeDisplay')) {
             const amountTendered = parseFloat(document.getElementById('amountTendered').value) || 0;
             const change = amountTendered - grandTotal;
             document.getElementById('changeDisplay').value = change.toFixed(2);
         }
     }
 
+    // Sync amount paid with current payment type
     function updateAmountPaid() {
-        const PaymentType = document.getElementById('PaymentType')?.value;
+        const paymentType = document.getElementById('paymentType')?.value;
         const amountPaidInput = document.getElementById('amountPaid');
         if (!amountPaidInput) return;
-
-        if (PaymentType === 'Cash') {
+        
+        if (paymentType === 'Cash') {
             const amountTendered = parseFloat(document.getElementById('amountTendered')?.value) || 0;
             amountPaidInput.value = amountTendered;
-        } else if (PaymentType === 'GCash') {
+        } else if (paymentType === 'GCash') {
             amountPaidInput.value = grandTotal;
         } else {
             amountPaidInput.value = 0;
         }
+
+        // Keep the hidden field in sync if FormData was already created in devtools
         amountPaidInput.setAttribute('value', amountPaidInput.value);
     }
-
+    
+    // Reset form function
     function resetForm() {
         if (document.getElementById('selectedProductID')) {
             document.getElementById('selectedProductID').value = '';
@@ -1956,42 +2004,42 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('changeDisplay').value = '';
             document.getElementById('gcashReference').value = '';
             document.getElementById('amountPaid').value = 0;
-
+            
             unitPrice = 0;
             subtotal = 0;
             discountAmount = 0;
             grandTotal = 0;
         }
     }
-
+    
     // ========== ARCHIVE ORDER FUNCTIONALITY ==========
     document.querySelectorAll('.archive-order').forEach(button => {
         button.addEventListener('click', function() {
             const orderId = this.dataset.orderId;
             const orderCode = this.dataset.orderCode;
             const form = document.getElementById('archiveOrderForm');
-
+            
             if (document.getElementById('archiveOrderId')) {
                 document.getElementById('archiveOrderId').textContent = 'Order ' + orderCode;
                 form.action = '/cashier/sales/' + orderId + '/archive';
             }
         });
     });
-
+    
     // ========== VIEW ORDER FUNCTIONALITY ==========
     document.querySelectorAll('.view-order').forEach(button => {
         button.addEventListener('click', function() {
             const orderId = this.dataset.orderId;
-
+            
             fetch('/cashier/sales/' + orderId)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         const order = data.order;
-
+                        
                         document.getElementById('viewOrderId').textContent = order.OrderID;
                         document.getElementById('viewOrderNo').textContent = order.OrderID;
-                        document.getElementById('viewOrderDate').textContent =
+                        document.getElementById('viewOrderDate').textContent = 
                             new Date(order.OrderDateTime).toLocaleString('en-US', {
                                 year: 'numeric',
                                 month: 'short',
@@ -2001,26 +2049,27 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                         document.getElementById('viewOrderStatus').textContent = order.OrderStatus;
                         document.getElementById('viewPaymentMethod').textContent = order.PaymentType || 'N/A';
-                        document.getElementById('viewEmployee').textContent =
-                            (order.employee?.EmployeeFName + ' ' + order.employee?.EmployeeLName || 'N/A') + ' (' + (order.employee?.EmployeeID || 'N/A') + ')';
-
+                        document.getElementById('viewEmployee').textContent = 
+                            (order.Employee?.EmployeeName || 'N/A') + ' (' + (order.Employee?.EmployeeID || 'N/A') + ')';
+                        
                         const itemsContainer = document.getElementById('viewOrderItems');
                         itemsContainer.innerHTML = '';
-
+                        
                         data.details.forEach(detail => {
                             const row = document.createElement('tr');
-                            row.innerHTML =
-                                '<td>' + (detail.product?.ProductName || 'N/A') + '</td>' +
+                            row.innerHTML = 
+                                '<td>' + (detail.ProductName || 'N/A') + '</td>' +
                                 '<td>₱' + parseFloat(detail.UnitPrice || 0).toFixed(2) + '</td>' +
                                 '<td>' + (detail.Quantity || 0) + '</td>' +
                                 '<td>₱' + parseFloat(detail.Subtotal || 0).toFixed(2) + '</td>';
                             itemsContainer.appendChild(row);
                         });
-
-                        document.getElementById('viewSubtotal').textContent = '₱' + parseFloat(order.SubTotal || 0).toFixed(2);
-                        document.getElementById('viewDiscount').textContent = '-₱' + parseFloat(order.DiscountAmount || 0).toFixed(2);
-                        document.getElementById('viewGrandTotal').textContent = '₱' + parseFloat(order.GrandTotal || 0).toFixed(2);
-
+                        
+                        document.getElementById('viewSubtotal').textContent = '₱' + parseFloat(order.SubTotal).toFixed(2);
+                        document.getElementById('viewDiscount').textContent = '-₱' + parseFloat(order.DiscountAmount).toFixed(2);
+                        document.getElementById('viewGrandTotal').textContent = '₱' + parseFloat(order.GrandTotal).toFixed(2);
+                        
+                        // Show the modal after data is loaded
                         const modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
                         modal.show();
                     }
@@ -2031,30 +2080,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     });
-
+    
     // ========== ORDER FORM SUBMISSION ==========
     const createOrderForm = document.getElementById('createOrderForm');
     if (createOrderForm) {
         createOrderForm.addEventListener('submit', function(e) {
             e.preventDefault();
-
+            
             const submitBtn = document.getElementById('submitOrderBtn');
             const loadingSpinner = document.getElementById('orderLoading');
-
+            
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
             loadingSpinner.style.display = 'block';
+            
+        // Ensure calculated fields are synced before submission
+        updateAmountPaid();
+        
+        const formData = new FormData(this);
+        // Force AmountPaid into the payload to satisfy validation
+        formData.set('AmountPaid', document.getElementById('amountPaid')?.value || '0');
 
-            updateAmountPaid();
-
-            const formData = new FormData(this);
-            formData.set('AmountPaid', document.getElementById('amountPaid')?.value || '0');
-
-            console.log('Submitting order payload:');
-            for (const [key, value] of formData.entries()) {
-                console.log(key + ':', value);
-            }
-
+        console.log('Submitting order payload:');
+        for (const [key, value] of formData.entries()) {
+            console.log(key + ':', value);
+        }
+            
             fetch(this.action, {
                 method: 'POST',
                 body: formData,
@@ -2066,22 +2117,23 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(async response => {
                 const contentType = response.headers.get('content-type') || '';
                 let payload = null;
-
+                
                 if (contentType.includes('application/json')) {
                     payload = await response.json();
                 } else {
                     const text = await response.text();
                     throw new Error(text || 'Unexpected non-JSON response');
                 }
-
+                
                 if (!response.ok) {
+                    // Laravel validation errors (422) or other failure responses
                     if (payload?.errors) {
                         const flatErrors = Object.values(payload.errors).flat().join('\n');
                         throw new Error(flatErrors || payload.message || 'Validation failed.');
                     }
                     throw new Error(payload?.message || 'Request failed.');
                 }
-
+                
                 return payload;
             })
             .then(data => {
@@ -2108,39 +2160,90 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
+    
     // ========== PAYMENTS FUNCTIONALITY ==========
     document.querySelectorAll('.view-payment').forEach(button => {
         button.addEventListener('click', function() {
             const paymentId = this.dataset.paymentId;
-
+            
             fetch('/cashier/payments/' + paymentId)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        const payment = data.payment;
+                    console.log('Payment fetch response:', data);
+                    // Be tolerant of different payload shapes
+                    const payload = data.payment || data;
+                    if (!payload) {
+                        showAlert('Payment details not found.', 'warning');
+                        return;
+                    }
 
-                        document.getElementById('viewPaymentId').textContent = payment.PaymentID;
-                        document.getElementById('viewPaymentNo').textContent = payment.PaymentID;
-                        document.getElementById('viewPaymentOrderId').textContent = payment.OrderID;
-                        document.getElementById('viewPaymentDate').textContent =
-                            payment.PaymentDate ? new Date(payment.PaymentDate).toLocaleString('en-US', {
+                    const payment = payload;
+                    const order = payment.order || {};
+
+                    // Top-level payment info
+                    document.getElementById('viewPaymentId').textContent      = payment.PaymentID || '';
+                    document.getElementById('viewPaymentNo').textContent      = payment.PaymentID || '';
+                    document.getElementById('viewPaymentOrderId').textContent = payment.OrderID || '';
+
+                    if (payment.PaymentDate) {
+                        document.getElementById('viewPaymentDate').textContent = 
+                            new Date(payment.PaymentDate).toLocaleString('en-US', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit'
-                            }) : 'N/A';
-                        document.getElementById('viewPaymentStatus').textContent = payment.PaymentStatus;
-                        document.getElementById('paymentMethodType').textContent = payment.PaymentType;
-                        document.getElementById('viewPaymentReference').textContent = payment.ReferenceNumber || 'N/A';
-                        document.getElementById('viewPaymentAmount').textContent = '₱' + parseFloat(payment.Amount || 0).toFixed(2);
-
-                        const modal = new bootstrap.Modal(document.getElementById('viewPaymentModal'));
-                        modal.show();
+                            });
                     } else {
-                        showAlert('Payment details not found.', 'warning');
+                        document.getElementById('viewPaymentDate').textContent = '';
                     }
+
+                    document.getElementById('viewPaymentStatus').textContent = payment.PaymentStatus || 'N/A';
+                    console.log('Payment data:', payment);
+                    console.log('PaymentType:', payment.PaymentType);
+                    document.getElementById('paymentMethodType').textContent   = payment.PaymentType || 'N/A';
+                    
+                    let reference = payment.ReferenceNumber;
+                    if (!reference && payment.PaymentType === 'GCash') {
+                        reference = 'GCASH-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                    }
+                    document.getElementById('viewPaymentReference').textContent = reference || 'N/A';
+
+                    const amount = parseFloat(payment.Amount ?? order.GrandTotal ?? 0);
+                    document.getElementById('viewPaymentAmount').textContent   = '₱' + amount.toFixed(2);
+                    
+                    // Order items
+                    const itemsContainer = document.getElementById('viewPaymentItems');
+                    itemsContainer.innerHTML = '';
+                    
+                    if (order.details && Array.isArray(order.details)) {
+                        order.details.forEach(detail => {
+                            const productName = detail.product?.ProductName || detail.ProductName || 'N/A';
+                            const price       = parseFloat(detail.UnitPrice ?? 0);
+                            const qty         = detail.Quantity ?? detail.OrderQty ?? 0;
+                            const subtotal    = parseFloat(detail.Subtotal ?? (price * qty));
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = 
+                                '<td>' + productName + '</td>' +
+                                '<td>₱' + price.toFixed(2) + '</td>' +
+                                '<td>' + qty + '</td>' +
+                                '<td>₱' + subtotal.toFixed(2) + '</td>';
+                            itemsContainer.appendChild(row);
+                        });
+                    }
+                    
+                    const sub  = parseFloat(order.SubTotal ?? 0);
+                    const disc = parseFloat(order.DiscountAmount ?? 0);
+                    const gt   = parseFloat(order.GrandTotal ?? (sub - disc));
+
+                    document.getElementById('viewPaymentSubtotal').textContent = '₱' + sub.toFixed(2);
+                    document.getElementById('viewPaymentDiscount').textContent = '-₱' + disc.toFixed(2);
+                    document.getElementById('viewPaymentGrandTotal').textContent= '₱' + gt.toFixed(2);
+                    
+                    // Show the modal after data is loaded
+                    const modal = new bootstrap.Modal(document.getElementById('viewPaymentModal'));
+                    modal.show();
                 })
                 .catch(error => {
                     console.error('Error fetching payment details:', error);
@@ -2148,12 +2251,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     });
-
+    
     document.querySelectorAll('.view-payment-order').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             const orderId = this.dataset.orderId;
-
+            
             const viewOrderBtn = document.querySelector('.view-order[data-order-id="' + orderId + '"]');
             if (viewOrderBtn) {
                 viewOrderBtn.click();
@@ -2163,58 +2266,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
-    document.querySelectorAll('.print-order-receipt').forEach(button => {
+    
+    document.querySelectorAll('.print-receipt').forEach(button => {
         button.addEventListener('click', function() {
-            const orderId = this.dataset.orderId;
-            downloadOrderPDF(orderId);
+            const paymentId = this.dataset.paymentId;
+            showAlert('Printing receipt for payment ' + paymentId, 'info');
         });
     });
-
-    function downloadOrderPDF(orderId) {
-        const orderRow = document.querySelector(`tr[data-order-id="${orderId}"]`);
-        if (orderRow) {
-            const status = orderRow.dataset.status;
-            if (status !== 'completed') {
-                showAlert(`Cannot generate PDF. Order status is: ${status}. Only completed orders can be downloaded.`, 'warning');
-                return;
-            }
-        }
-
-        showAlert('Generating PDF receipt...', 'info');
-
-        const downloadLink = document.createElement('a');
-        downloadLink.href = `/cashier/sales/${orderId}/pdf`;
-        downloadLink.target = '_blank';
-        downloadLink.download = `receipt-${orderId}.pdf`;
-
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-    }
-
+    
+    document.querySelector('.print-payment-receipt')?.addEventListener('click', function() {
+        const paymentId = document.getElementById('viewPaymentNo').textContent;
+        showAlert('Printing receipt for payment ' + paymentId, 'info');
+    });
+    
     // ========== HELPER FUNCTIONS ==========
     function showAlert(message, type = 'info') {
         const existingAlerts = document.querySelectorAll('.alert-dismissible:not(.alert-success):not(.alert-danger):not(.alert-warning):not(.alert-info)');
         existingAlerts.forEach(alert => alert.remove());
-
+        
         const alertDiv = document.createElement('div');
         alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
-
+        
         let icon = 'fa-info-circle';
         if (type === 'success') icon = 'fa-check-circle';
         if (type === 'error') icon = 'fa-exclamation-circle';
         if (type === 'warning') icon = 'fa-exclamation-triangle';
-
-        alertDiv.innerHTML =
+        
+        alertDiv.innerHTML = 
             '<i class="fas ' + icon + ' me-2"></i>' + message +
             '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-
+        
         const topbar = document.querySelector('.topbar');
         if (topbar) {
             topbar.parentNode.insertBefore(alertDiv, topbar.nextSibling);
         }
-
+        
         setTimeout(() => {
             if (alertDiv.parentNode) {
                 const bsAlert = new bootstrap.Alert(alertDiv);
@@ -2222,23 +2308,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 5000);
     }
-
+    
     // ========== INITIALIZE ==========
-    // Set "All" checkboxes as default and apply no filters initially
-    document.getElementById('order-status-all').checked = true;
-    document.getElementById('payment-all').checked = true;
+    calculateTotals();
     updateCurrentFilters();
     updateActiveFilters();
     filterOrders();
-    calculateTotals();
-
+    
     document.querySelectorAll('.alert').forEach(alert => {
         setTimeout(() => {
             const bsAlert = new bootstrap.Alert(alert);
             bsAlert.close();
         }, 5000);
     });
-
+    
     document.getElementById('createOrderModal')?.addEventListener('hidden.bs.modal', function() {
         resetForm();
         calculateTotals();

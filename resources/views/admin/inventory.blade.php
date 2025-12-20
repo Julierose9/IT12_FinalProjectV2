@@ -386,6 +386,22 @@
     .stock-medium { background: #f08a24; }
     .stock-low { background: #e05252; }
 
+    /* Export Button */
+    .export-btn {
+      background: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .export-btn:hover {
+      background: #c0392b;
+    }
+
     /* Responsive */
     @media (max-width: 991.98px) {
       .sidebar { transform: translateX(-100%); width: 280px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
@@ -435,7 +451,6 @@
             // Calculate total pulled out quantity for this product
             $totalPullOut = 0;
             try {
-                // Try different table names
                 if (\Schema::hasTable('pull_outs')) {
                     $totalPullOut = \App\Models\PullOut::where('ProductID', $product->ProductID)
                         ->sum('PullOutQty');
@@ -715,9 +730,9 @@
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <h5 class="card-title mb-0">Current Inventory</h5>
         <div class="d-flex gap-2">
-          <a href="{{ route('admin.reports.inventory.export') . '?' . http_build_query(request()->except('page')) }}" class="btn btn-danger">
-            <i class="fas fa-file-pdf me-1"></i> Export PDF
-          </a>
+          <button class="export-btn" id="exportPdfBtn">
+            <i class="fas fa-file-pdf"></i> Export PDF
+          </button>
         </div>
       </div>
 
@@ -769,20 +784,6 @@
                     <strong>{{ $product->StockQty ?? 0 }}</strong>
                     <span class="text-muted" style="font-size: 0.75rem;">units</span>
                     <div class="stock-bar">
-                      @php
-                        $currentStock = $product->StockQty ?? 0;
-                        $reorderLevel = $product->ReorderLvl ?? 5;
-                        $maxStock = max($reorderLevel * 3, $currentStock, 1);
-                        $percent = $currentStock > 0 ? min(100, ($currentStock / $maxStock) * 100) : 0;
-                        $fill = 'stock-high';
-                        if ($currentStock <= 0) {
-                            $fill = 'stock-low';
-                        } elseif ($currentStock <= $reorderLevel) {
-                            $fill = 'stock-low';
-                        } elseif ($currentStock <= $reorderLevel * 2) {
-                            $fill = 'stock-medium';
-                        }
-                      @endphp
                       <div class="stock-fill {{ $fill }}" style="width:{{ $percent }}%"></div>
                     </div>
                   </div>
@@ -855,14 +856,12 @@
           @endphp
           <nav>
             <ul class="pagination mb-0">
-              {{-- Previous Page Link --}}
               <li class="page-item {{ $currentPage == 1 ? 'disabled' : '' }}">
                 <a class="page-link" href="?page={{ $currentPage - 1 }}&{{ http_build_query($queryParams) }}">
                   &laquo;
                 </a>
               </li>
               
-              {{-- Page Numbers --}}
               @for($i = 1; $i <= $totalPages; $i++)
                 <li class="page-item {{ $i == $currentPage ? 'active' : '' }}">
                   <a class="page-link" href="?page={{ $i }}&{{ http_build_query($queryParams) }}">
@@ -871,7 +870,6 @@
                 </li>
               @endfor
               
-              {{-- Next Page Link --}}
               <li class="page-item {{ $currentPage == $totalPages ? 'disabled' : '' }}">
                 <a class="page-link" href="?page={{ $currentPage + 1 }}&{{ http_build_query($queryParams) }}">
                   &raquo;
@@ -898,6 +896,37 @@
       </div>
       <div class="modal-footer border-0">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Date Range Modal -->
+<div class="modal fade" id="exportDateRangeModal" tabindex="-1" aria-labelledby="exportDateRangeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exportDateRangeModalLabel">Select Date Range for Export</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="exportDateForm">
+          <div class="mb-3">
+            <label for="exportFromDate" class="form-label">From Date</label>
+            <input type="date" class="form-control" id="exportFromDate" name="start_date" value="{{ request('start_date') }}">
+          </div>
+          <div class="mb-3">
+            <label for="exportToDate" class="form-label">To Date</label>
+            <input type="date" class="form-control" id="exportToDate" name="end_date" value="{{ request('end_date') }}">
+          </div>
+          <div class="text-muted small">
+            Leave blank to export the current filtered view (all time).
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmExport">Export PDF</button>
       </div>
     </div>
   </div>
@@ -955,10 +984,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Clear filters button
   document.getElementById('clearFilters')?.addEventListener('click', function() {
-    // Reset form and submit
     filterForm.reset();
-    
-    // Remove all query parameters and submit
     const url = new URL(window.location.href);
     url.search = '';
     window.location.href = url.toString();
@@ -980,7 +1006,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const productId = this.dataset.productId;
         const modalContent = document.getElementById('transactionHistoryContent');
         
-        // Show loading
         modalContent.innerHTML = `
             <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status">
@@ -990,7 +1015,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Load transaction history via AJAX
         fetch(`/admin/inventory/${productId}/transactions`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -1034,9 +1058,41 @@ document.addEventListener('DOMContentLoaded', function() {
       const text = row.textContent.toLowerCase();
       const searchMatch = searchTerm === '' || text.includes(searchTerm);
       
-      // Show/hide row
       row.style.display = searchMatch ? '' : 'none';
     });
+  });
+  
+  // Export PDF - Open date range modal
+  document.getElementById('exportPdfBtn')?.addEventListener('click', function() {
+    const modal = new bootstrap.Modal(document.getElementById('exportDateRangeModal'));
+    modal.show();
+  });
+
+  // Confirm export with selected dates
+  document.getElementById('confirmExport')?.addEventListener('click', function() {
+    const startDate = document.getElementById('exportFromDate').value;
+    const endDate = document.getElementById('exportToDate').value;
+
+    // Get current filters
+    const currentUrl = new URL(window.location.href);
+    const params = new URLSearchParams(currentUrl.search);
+
+    // Add or update date range if selected
+    if (startDate) {
+      params.set('start_date', startDate);
+    }
+    if (endDate) {
+      params.set('end_date', endDate);
+    }
+
+    // Build export URL with all current filters + dates
+    const exportUrl = '{{ route('admin.reports.inventory.export') }}?' + params.toString();
+
+    // Open in new tab
+    window.open(exportUrl, '_blank');
+
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('exportDateRangeModal')).hide();
   });
   
   // Auto-hide alerts after 5 seconds
